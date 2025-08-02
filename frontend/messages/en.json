@@ -1,0 +1,25 @@
+{
+  "app": {
+    "title": "Pilgrim Accommodation System",
+    "description": "Comprehensive system for managing pilgrim accommodations",
+    "welcome": "Welcome to the Pilgrim Accommodation Management System"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "pilgrims": "Pilgrims",
+    "halls": "Halls",
+    "reports": "Reports",
+    "settings": "Settings"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "search": "Search",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Operation successful"
+  }
+}
