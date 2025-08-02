@@ -20,6 +20,69 @@
     "search": "بحث",
     "loading": "جاري التحميل...",
     "error": "حدث خطأ",
-    "success": "تمت العملية بنجاح"
+    "success": "تمت العملية بنجاح",
+    "back": "العودة",
+    "export": "تصدير",
+    "configure": "إعدادات",
+    "view": "عرض",
+    "all": "الكل"
+  },
+  "halls": {
+    "title": "إدارة القاعات",
+    "subtitle": "إدارة القاعات وتوزيع الأسرّة",
+    "addNew": "إضافة قاعة جديدة",
+    "maleSection": "قسم الرجال",
+    "femaleSection": "قسم النساء",
+    "allHalls": "جميع القاعات",
+    "maleHalls": "قاعات الرجال",
+    "femaleHalls": "قاعات النساء",
+    "totalHalls": "إجمالي القاعات",
+    "totalBeds": "إجمالي الأسرّة",
+    "occupiedBeds": "الأسرّة المشغولة",
+    "availableBeds": "الأسرّة الشاغرة",
+    "occupancyRate": "نسبة الإشغال",
+    "specialNeeds": "احتياجات خاصة",
+    "bedMap": "خريطة الأسرّة",
+    "searchBeds": "البحث برقم السرير...",
+    "searchHalls": "البحث في القاعات...",
+    "hallDetails": "تفاصيل القاعة",
+    "capacity": "السعة",
+    "occupancy": "الإشغال",
+    "available": "متاح",
+    "occupied": "مشغول",
+    "reserved": "محجوز",
+    "maintenance": "صيانة",
+    "bedStatus": {
+      "vacant": "شاغر",
+      "occupied": "مشغول",
+      "reserved": "محجوز",
+      "maintenance": "صيانة"
+    },
+    "hallType": {
+      "male": "قاعة رجال",
+      "female": "قاعة نساء"
+    },
+    "filters": {
+      "all": "جميع الحالات",
+      "status": "حالة السرير",
+      "type": "نوع القاعة"
+    },
+    "stats": {
+      "bed": "سرير",
+      "beds": "أسرّة",
+      "pilgrim": "حاج",
+      "pilgrims": "حجاج"
+    },
+    "messages": {
+      "notFound": "لم يتم العثور على القاعة",
+      "noHalls": "لا توجد قاعات",
+      "noMaleHalls": "لا توجد قاعات في قسم الرجال",
+      "noFemaleHalls": "لا توجد قاعات في قسم النساء",
+      "loadError": "فشل في تحميل القاعات",
+      "deleteError": "لا يمكن حذف قاعة بها نزلاء",
+      "bedNotAvailable": "السرير غير متاح",
+      "bedAssigned": "تم تخصيص السرير بنجاح",
+      "bedVacated": "تم إخلاء السرير بنجاح"
+    }
   }
 }

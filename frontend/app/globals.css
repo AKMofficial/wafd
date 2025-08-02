@@ -99,6 +99,15 @@ body {
     font-weight: 800;
   }
   
+  /* RTL Select fixes */
+  [dir="rtl"] [role="combobox"] {
+    text-align: right;
+  }
+  
+  [dir="rtl"] [data-radix-select-viewport] {
+    direction: rtl;
+  }
+  
   .animate-in {
     animation-duration: var(--transition);
     animation-fill-mode: both;

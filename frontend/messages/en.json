@@ -20,6 +20,69 @@
     "search": "Search",
     "loading": "Loading...",
     "error": "An error occurred",
-    "success": "Operation successful"
+    "success": "Operation successful",
+    "back": "Back",
+    "export": "Export",
+    "configure": "Configure",
+    "view": "View",
+    "all": "All"
+  },
+  "halls": {
+    "title": "Hall Management",
+    "subtitle": "Manage halls and bed distribution",
+    "addNew": "Add New Hall",
+    "maleSection": "Male Section",
+    "femaleSection": "Female Section",
+    "allHalls": "All Halls",
+    "maleHalls": "Male Halls",
+    "femaleHalls": "Female Halls",
+    "totalHalls": "Total Halls",
+    "totalBeds": "Total Beds",
+    "occupiedBeds": "Occupied Beds",
+    "availableBeds": "Available Beds",
+    "occupancyRate": "Occupancy Rate",
+    "specialNeeds": "Special Needs",
+    "bedMap": "Bed Map",
+    "searchBeds": "Search by bed number...",
+    "searchHalls": "Search halls...",
+    "hallDetails": "Hall Details",
+    "capacity": "Capacity",
+    "occupancy": "Occupancy",
+    "available": "Available",
+    "occupied": "Occupied",
+    "reserved": "Reserved",
+    "maintenance": "Maintenance",
+    "bedStatus": {
+      "vacant": "Vacant",
+      "occupied": "Occupied",
+      "reserved": "Reserved",
+      "maintenance": "Maintenance"
+    },
+    "hallType": {
+      "male": "Male Hall",
+      "female": "Female Hall"
+    },
+    "filters": {
+      "all": "All Status",
+      "status": "Bed Status",
+      "type": "Hall Type"
+    },
+    "stats": {
+      "bed": "bed",
+      "beds": "beds",
+      "pilgrim": "pilgrim",
+      "pilgrims": "pilgrims"
+    },
+    "messages": {
+      "notFound": "Hall not found",
+      "noHalls": "No halls available",
+      "noMaleHalls": "No male halls available",
+      "noFemaleHalls": "No female halls available",
+      "loadError": "Failed to load halls",
+      "deleteError": "Cannot delete hall with occupants",
+      "bedNotAvailable": "Bed is not available",
+      "bedAssigned": "Bed assigned successfully",
+      "bedVacated": "Bed vacated successfully"
+    }
   }
 }
