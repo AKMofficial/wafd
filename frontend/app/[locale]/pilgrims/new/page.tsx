@@ -8,7 +8,7 @@ import { PilgrimForm } from '@/components/pilgrims/pilgrim-form';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
-import { CreatePilgrimDto } from '@/types/pilgrim';
+import { CreatePilgrimDto, UpdatePilgrimDto } from '@/types/pilgrim';
 
 export default function NewPilgrimPage() {
   const router = useRouter();
@@ -19,10 +19,12 @@ export default function NewPilgrimPage() {
   
   const { createPilgrim } = usePilgrimStore();
 
-  const handleSubmit = async (data: CreatePilgrimDto) => {
+  const handleSubmit = async (data: CreatePilgrimDto | UpdatePilgrimDto) => {
+    // For new pilgrims, we only deal with CreatePilgrimDto
+    // But the form component expects to handle both types
     setIsSubmitting(true);
     try {
-      const newPilgrim = await createPilgrim(data);
+      const newPilgrim = await createPilgrim(data as CreatePilgrimDto);
       router.push(`/${locale}/pilgrims/${newPilgrim.id}`);
     } catch (error) {
       console.error('Failed to create pilgrim:', error);

@@ -2,7 +2,6 @@
 
 import { ReactNode } from 'react';
 import Sidebar from './Sidebar';
-import Header from './Header';
 import { useLocale } from '@/lib/i18n';
 import { SidebarProvider, useSidebar } from '@/lib/sidebar-context';
 import { ToastProvider } from '@/components/ui/toast';
@@ -26,7 +25,6 @@ const RootLayoutContent = ({ children }: RootLayoutWrapperProps) => {
           ? (isCollapsed ? 'lg:mr-16' : 'lg:mr-64') 
           : (isCollapsed ? 'lg:ml-16' : 'lg:ml-64')
       )}>
-        <Header />
         <main className="p-4 md:p-6 lg:p-8">
           <div className="mx-auto max-w-7xl">
             {children}

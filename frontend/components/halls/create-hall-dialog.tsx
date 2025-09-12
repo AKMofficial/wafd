@@ -37,9 +37,10 @@ type CreateHallFormData = z.infer<typeof createHallSchema>;
 interface CreateHallDialogProps {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
-export function CreateHallDialog({ isOpen, onClose }: CreateHallDialogProps) {
+export function CreateHallDialog({ isOpen, onClose, onSuccess }: CreateHallDialogProps) {
   const locale = useLocale();
   const isRTL = locale === 'ar';
   const { createHall, halls } = useHallStore();
@@ -103,6 +104,7 @@ export function CreateHallDialog({ isOpen, onClose }: CreateHallDialogProps) {
       
       await createHall(hallData);
       reset();
+      onSuccess?.();
       onClose();
     } catch (error) {
       console.error('Failed to create hall:', error);
@@ -116,8 +118,11 @@ export function CreateHallDialog({ isOpen, onClose }: CreateHallDialogProps) {
   const previewNumbers = hallCode ? getBedNumberingPreview(hallCode, hallType, numberingConfig, 5) : [];
   
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+    <Dialog open={isOpen} onOpenChange={() => {
+      reset();
+      onClose();
+    }}>
+      <DialogContent className="max-w-md" onClose={onClose}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Building className="h-5 w-5" />

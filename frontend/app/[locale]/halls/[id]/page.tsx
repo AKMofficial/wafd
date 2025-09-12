@@ -23,15 +23,11 @@ import {
   Search,
   Filter,
   Settings,
-  Download,
-  Accessibility,
-  FileSpreadsheet,
-  FileText
+  Accessibility
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { BedStatus } from '@/types/pilgrim';
 import { Bed as BedType } from '@/types/hall';
-import { exportHallToExcel, exportHallToPDF } from '@/lib/hall-export';
 
 export default function HallDetailPage() {
   const params = useParams();
@@ -47,7 +43,6 @@ export default function HallDetailPage() {
   const [selectedBed, setSelectedBed] = useState<BedType | null>(null);
   const [showBedDetails, setShowBedDetails] = useState(false);
   const [showHallSettings, setShowHallSettings] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
   
   const {
     selectedHall,
@@ -130,34 +125,6 @@ export default function HallDetailPage() {
     setShowBedDetails(true);
   };
   
-  const handleExportExcel = async () => {
-    if (!selectedHall) return;
-    
-    setIsExporting(true);
-    try {
-      // Create a map of pilgrims for quick lookup
-      const pilgrimMap = new Map(pilgrims.map(p => [p.id, p]));
-      await exportHallToExcel(selectedHall, pilgrimMap, locale);
-    } catch (error) {
-      console.error('Export failed:', error);
-      alert(locale === 'ar' ? 'فشل في تصدير البيانات' : 'Failed to export data');
-    }
-    setIsExporting(false);
-  };
-  
-  const handleExportPDF = async () => {
-    if (!selectedHall) return;
-    
-    setIsExporting(true);
-    try {
-      const pilgrimMap = new Map(pilgrims.map(p => [p.id, p]));
-      await exportHallToPDF(selectedHall, pilgrimMap, locale);
-    } catch (error) {
-      console.error('Export failed:', error);
-      alert(locale === 'ar' ? 'فشل في تصدير البيانات' : 'Failed to export data');
-    }
-    setIsExporting(false);
-  };
   
   const handleAssignPilgrim = (bedId: string) => {
     // In a real app, this would open a pilgrim selection dialog
@@ -226,46 +193,6 @@ export default function HallDetailPage() {
             </div>
             
             <div className="flex gap-2">
-              <div className="relative">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    const dropdown = document.getElementById('export-dropdown');
-                    if (dropdown) {
-                      dropdown.classList.toggle('hidden');
-                    }
-                  }}
-                  disabled={isExporting}
-                >
-                  <Download className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
-                  {isExporting ? 'جاري التصدير...' : 'تصدير'}
-                </Button>
-                <div
-                  id="export-dropdown"
-                  className="hidden absolute top-full mt-1 right-0 bg-white border rounded-md shadow-lg z-10 min-w-[150px]"
-                >
-                  <button
-                    className="w-full px-4 py-2 text-right hover:bg-gray-100 flex items-center gap-2"
-                    onClick={() => {
-                      document.getElementById('export-dropdown')?.classList.add('hidden');
-                      handleExportExcel();
-                    }}
-                  >
-                    <FileSpreadsheet className="h-4 w-4" />
-                    Excel
-                  </button>
-                  <button
-                    className="w-full px-4 py-2 text-right hover:bg-gray-100 flex items-center gap-2"
-                    onClick={() => {
-                      document.getElementById('export-dropdown')?.classList.add('hidden');
-                      handleExportPDF();
-                    }}
-                  >
-                    <FileText className="h-4 w-4" />
-                    PDF
-                  </button>
-                </div>
-              </div>
               <Button variant="outline" onClick={() => setShowHallSettings(true)}>
                 <Settings className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
                 إعدادات القاعة
@@ -285,7 +212,7 @@ export default function HallDetailPage() {
             <CardContent className="p-4 pt-0">
               <div className="flex items-center justify-between">
                 <span className="text-2xl font-bold">{selectedHall.capacity}</span>
-                <Building className="h-8 w-8 text-gray-200" />
+                <Building className="h-8 w-8 text-gray-400" />
               </div>
             </CardContent>
           </Card>
@@ -301,7 +228,7 @@ export default function HallDetailPage() {
                 <span className="text-2xl font-bold text-green-600">
                   {selectedHall.currentOccupancy}
                 </span>
-                <Users className="h-8 w-8 text-green-100" />
+                <Users className="h-8 w-8 text-green-500" />
               </div>
             </CardContent>
           </Card>
@@ -317,7 +244,7 @@ export default function HallDetailPage() {
                 <span className="text-2xl font-bold text-blue-600">
                   {selectedHall.availableBeds}
                 </span>
-                <Bed className="h-8 w-8 text-blue-100" />
+                <Bed className="h-8 w-8 text-blue-500" />
               </div>
             </CardContent>
           </Card>
@@ -333,7 +260,7 @@ export default function HallDetailPage() {
                 <span className="text-2xl font-bold text-purple-600">
                   {selectedHall.specialNeedsOccupancy}
                 </span>
-                <Accessibility className="h-8 w-8 text-purple-100" />
+                <Accessibility className="h-8 w-8 text-purple-500" />
               </div>
             </CardContent>
           </Card>
@@ -395,10 +322,8 @@ export default function HallDetailPage() {
         <HallSettingsDialog
           hall={selectedHall}
           isOpen={showHallSettings}
-          onClose={() => {
-            setShowHallSettings(false);
-            fetchHallById(hallId);
-          }}
+          onClose={() => setShowHallSettings(false)}
+          onSuccess={() => fetchHallById(hallId)}
         />
       </div>
     </main>

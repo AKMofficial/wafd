@@ -14,6 +14,14 @@ import {
   DEFAULT_NUMBERING_CONFIG,
 } from '@/types/hall';
 import { PaginationParams } from '@/types/pilgrim';
+
+// Hall-specific pagination params
+interface HallPaginationParams {
+  page: number;
+  limit: number;
+  sortBy?: keyof Hall;
+  sortOrder?: 'asc' | 'desc';
+}
 import { generateMockHalls } from '@/lib/mock-halls';
 
 interface HallState {
@@ -21,7 +29,7 @@ interface HallState {
   selectedHall: Hall | null;
   filters: HallFilters;
   bedFilters: BedFilters;
-  pagination: PaginationParams;
+  pagination: HallPaginationParams;
   isLoading: boolean;
   error: string | null;
 
@@ -29,7 +37,7 @@ interface HallState {
   setSelectedHall: (hall: Hall | null) => void;
   setFilters: (filters: HallFilters) => void;
   setBedFilters: (filters: BedFilters) => void;
-  setPagination: (pagination: Partial<PaginationParams>) => void;
+  setPagination: (pagination: Partial<HallPaginationParams>) => void;
   setLoading: (isLoading: boolean) => void;
   setError: (error: string | null) => void;
 
@@ -54,7 +62,7 @@ interface HallState {
 
 const initialFilters: HallFilters = {};
 const initialBedFilters: BedFilters = {};
-const initialPagination: PaginationParams = {
+const initialPagination: HallPaginationParams = {
   page: 1,
   limit: 12,
   sortBy: 'name',
@@ -127,6 +135,12 @@ export const useHallStore = create<HallState>()(
             filtered.sort((a, b) => {
               const aVal = a[pagination.sortBy as keyof Hall];
               const bVal = b[pagination.sortBy as keyof Hall];
+              
+              // Handle undefined values
+              if (aVal == null && bVal == null) return 0;
+              if (aVal == null) return pagination.sortOrder === 'asc' ? -1 : 1;
+              if (bVal == null) return pagination.sortOrder === 'asc' ? 1 : -1;
+              
               if (aVal < bVal) return pagination.sortOrder === 'asc' ? -1 : 1;
               if (aVal > bVal) return pagination.sortOrder === 'asc' ? 1 : -1;
               return 0;

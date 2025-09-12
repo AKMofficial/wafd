@@ -1,5 +1,5 @@
 export type Gender = 'male' | 'female';
-export type SpecialNeedsType = 'wheelchair' | 'visual' | 'hearing' | 'mobility' | 'other' | null;
+export type SpecialNeedsType = 'mobility' | 'vision_hearing' | 'medical_care' | 'elderly_cognitive' | 'dietary_language' | 'other' | null;
 export type PilgrimStatus = 'expected' | 'arrived' | 'departed' | 'no_show';
 export type BedStatus = 'vacant' | 'occupied' | 'reserved' | 'maintenance';
 
@@ -11,7 +11,7 @@ export interface Pilgrim {
   firstName: string;
   lastName: string;
   fullName: string;
-  birthDate: Date;
+  birthDate: Date; // Internal storage only - always display as Hijri
   age: number;
   gender: Gender;
   nationality: string;
@@ -22,15 +22,15 @@ export interface Pilgrim {
   specialNeedsType?: SpecialNeedsType;
   specialNeedsNotes?: string;
   status: PilgrimStatus;
-  arrivalDate?: Date;
-  departureDate?: Date;
+  arrivalDate?: Date; // Internal storage only - always display as Hijri
+  departureDate?: Date; // Internal storage only - always display as Hijri
   assignedBed?: string;
   assignedHall?: string;
   groupId?: string;
   groupName?: string;
   notes?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date; // Internal storage only - always display as Hijri
+  updatedAt: Date; // Internal storage only - always display as Hijri
 }
 
 export interface PilgrimGroup {
@@ -123,17 +123,14 @@ export interface PilgrimStatistics {
 }
 
 export interface CreatePilgrimDto {
-  registrationNumber: string;
   nationalId: string;
   passportNumber?: string;
   firstName: string;
   lastName: string;
-  birthDate: Date;
+  age: number;
   gender: Gender;
   nationality: string;
   phoneNumber: string;
-  emergencyContact?: string;
-  emergencyPhone?: string;
   hasSpecialNeeds?: boolean;
   specialNeedsType?: SpecialNeedsType;
   specialNeedsNotes?: string;
@@ -145,28 +142,27 @@ export interface UpdatePilgrimDto extends Partial<CreatePilgrimDto> {
   status?: PilgrimStatus;
   arrivalDate?: Date;
   departureDate?: Date;
+  assignedBed?: string;
+  assignedHall?: string;
 }
 
 export interface ExcelImportColumn {
   header: string;
   field: keyof CreatePilgrimDto;
   required: boolean;
-  type: 'string' | 'number' | 'date' | 'gender' | 'boolean';
+  type: 'string' | 'number' | 'date' | 'gender' | 'boolean' | 'specialneeds';
   transform?: (value: any) => any;
 }
 
 export const EXCEL_IMPORT_COLUMNS: ExcelImportColumn[] = [
-  { header: 'رقم التسجيل', field: 'registrationNumber', required: true, type: 'string' },
   { header: 'رقم الهوية', field: 'nationalId', required: true, type: 'string' },
   { header: 'رقم الجواز', field: 'passportNumber', required: false, type: 'string' },
   { header: 'الاسم الأول', field: 'firstName', required: true, type: 'string' },
   { header: 'الاسم الأخير', field: 'lastName', required: true, type: 'string' },
-  { header: 'تاريخ الميلاد', field: 'birthDate', required: true, type: 'date' },
+  { header: 'العمر', field: 'age', required: true, type: 'number' },
   { header: 'الجنس', field: 'gender', required: true, type: 'gender' },
   { header: 'الجنسية', field: 'nationality', required: true, type: 'string' },
   { header: 'رقم الهاتف', field: 'phoneNumber', required: true, type: 'string' },
-  { header: 'جهة اتصال الطوارئ', field: 'emergencyContact', required: false, type: 'string' },
-  { header: 'هاتف الطوارئ', field: 'emergencyPhone', required: false, type: 'string' },
-  { header: 'احتياجات خاصة', field: 'hasSpecialNeeds', required: false, type: 'boolean' },
+  { header: 'نوع الإعاقة', field: 'specialNeedsType', required: false, type: 'specialneeds' },
   { header: 'ملاحظات', field: 'notes', required: false, type: 'string' },
 ];

@@ -1,40 +1,94 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useTranslations, useLocale } from '@/lib/i18n';
+import { usePilgrimStore } from '@/store/pilgrim-store';
+import { useHallStore } from '@/store/hall-store';
+import { StatisticsCards } from '@/components/dashboard/statistics-cards';
+import { Charts } from '@/components/dashboard/charts';
+import { QuickActions } from '@/components/dashboard/quick-actions';
 
 export default function Home() {
   const t = useTranslations();
   const locale = useLocale();
+  const [isMounted, setIsMounted] = useState(false);
+  
+  const { getStatistics: getPilgrimStats, fetchPilgrims } = usePilgrimStore();
+  const { getStatistics: getHallStats, fetchHalls } = useHallStore();
+  
+  const pilgrimStats = isMounted ? getPilgrimStats() : {
+    total: 0,
+    arrived: 0,
+    expected: 0,
+    departed: 0,
+    noShow: 0,
+    specialNeeds: 0,
+    maleCount: 0,
+    femaleCount: 0,
+    occupancyRate: 0,
+    byNationality: {},
+    byAgeGroup: {}
+  };
+  
+  const hallStats = isMounted ? getHallStats() : {
+    totalHalls: 0,
+    totalBeds: 0,
+    totalOccupied: 0,
+    occupancyRate: 0,
+    maleHalls: { total: 0, beds: 0, occupied: 0 },
+    femaleHalls: { total: 0, beds: 0, occupied: 0 }
+  };
+  
+  useEffect(() => {
+    setIsMounted(true);
+    fetchPilgrims();
+    fetchHalls();
+  }, []);
   
   return (
-    <main className="p-6">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">
-          {t('app.title')}
-        </h1>
-        <p className="text-gray-600 mb-8">
-          {t('app.welcome')}
-        </p>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">إجمالي الحجاج</h3>
-            <p className="text-3xl font-bold text-primary-600">0</p>
+    <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+      <div className="p-6">
+        <div className="max-w-[1600px] mx-auto">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h1 className="text-4xl font-bold text-gray-900 mb-2">
+                {locale === 'ar' ? 'لوحة التحكم' : 'Dashboard'}
+              </h1>
+              <p className="text-gray-600">
+                {locale === 'ar' 
+                  ? `مرحباً بك في نظام إدارة الحجاج - ${new Date().toLocaleDateString('ar-SA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`
+                  : `Welcome to Pilgrim Management System - ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`
+                }
+              </p>
+            </div>
+            <QuickActions locale={locale} />
           </div>
           
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">الأسرّة المشغولة</h3>
-            <p className="text-3xl font-bold text-green-600">0</p>
-          </div>
-          
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">الأسرّة الشاغرة</h3>
-            <p className="text-3xl font-bold text-blue-600">0</p>
-          </div>
-          
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">نسبة الإشغال</h3>
-            <p className="text-3xl font-bold text-orange-600">0%</p>
+          <div className="space-y-8">
+            {/* Statistics Cards */}
+            <div>
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                {locale === 'ar' ? 'نظرة عامة' : 'Overview'}
+              </h2>
+              <StatisticsCards
+                pilgrimStats={pilgrimStats}
+                hallStats={hallStats}
+                isLoading={!isMounted}
+                locale={locale}
+              />
+            </div>
+
+            {/* Charts Section */}
+            <div>
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                {locale === 'ar' ? 'التحليلات والإحصائيات' : 'Analytics & Statistics'}
+              </h2>
+              <Charts
+                pilgrimStats={pilgrimStats}
+                hallStats={hallStats}
+                locale={locale}
+              />
+            </div>
           </div>
         </div>
       </div>

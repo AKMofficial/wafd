@@ -8,26 +8,29 @@ import { useTranslations, useLocale } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { CreatePilgrimDto, UpdatePilgrimDto, Pilgrim } from '@/types/pilgrim';
 import { CalendarIcon, Loader2 } from 'lucide-react';
+import { formatDateAsHijri } from '@/lib/hijri-date';
+import { getNationalityOptions } from '@/lib/nationalities';
+import { mockGroups } from '@/lib/mock-data';
 
 const pilgrimSchema = z.object({
-  registrationNumber: z.string().min(1, 'رقم التسجيل مطلوب'),
   nationalId: z.string().min(10, 'رقم الهوية يجب أن يكون 10 أرقام على الأقل'),
   passportNumber: z.string().optional(),
   firstName: z.string().min(2, 'الاسم الأول مطلوب'),
   lastName: z.string().min(2, 'الاسم الأخير مطلوب'),
-  birthDate: z.string().min(1, 'تاريخ الميلاد مطلوب'),
+  age: z.string().min(1, 'العمر مطلوب').refine((val) => {
+    const num = parseInt(val);
+    return !isNaN(num) && num >= 1;
+  }, 'يجب أن يكون العمر رقم صحيح'),
   gender: z.enum(['male', 'female']),
   nationality: z.string().min(1, 'الجنسية مطلوبة'),
   phoneNumber: z.string().min(10, 'رقم الهاتف مطلوب'),
-  emergencyContact: z.string().optional(),
-  emergencyPhone: z.string().optional(),
-  hasSpecialNeeds: z.boolean().default(false),
   specialNeedsType: z.string().optional(),
   specialNeedsNotes: z.string().optional(),
   groupId: z.string().optional(),
@@ -58,65 +61,49 @@ export function PilgrimForm({ pilgrim, onSubmit, onCancel, isLoading = false }: 
   } = useForm<PilgrimFormData>({
     resolver: zodResolver(pilgrimSchema),
     defaultValues: pilgrim ? {
-      registrationNumber: pilgrim.registrationNumber,
       nationalId: pilgrim.nationalId,
       passportNumber: pilgrim.passportNumber || '',
       firstName: pilgrim.firstName,
       lastName: pilgrim.lastName,
-      birthDate: new Date(pilgrim.birthDate).toISOString().split('T')[0],
+      age: pilgrim.age?.toString() || '',
       gender: pilgrim.gender,
       nationality: pilgrim.nationality,
       phoneNumber: pilgrim.phoneNumber,
-      emergencyContact: pilgrim.emergencyContact || '',
-      emergencyPhone: pilgrim.emergencyPhone || '',
-      hasSpecialNeeds: pilgrim.hasSpecialNeeds,
       specialNeedsType: pilgrim.specialNeedsType || '',
       specialNeedsNotes: pilgrim.specialNeedsNotes || '',
       groupId: pilgrim.groupId || '',
       notes: pilgrim.notes || '',
     } : {
-      gender: 'male',
-      hasSpecialNeeds: false,
+      gender: 'male' as const,
       nationality: 'السعودية',
     },
   });
 
-  const hasSpecialNeeds = watch('hasSpecialNeeds');
+  // Get nationality options from the comprehensive list
+  const nationalityOptions = getNationalityOptions();
+
+  // Get group options from mock data
+  const groupOptions = mockGroups.map(group => ({
+    value: group.id,
+    label: group.name
+  }));
 
   const onFormSubmit = async (data: PilgrimFormData) => {
     const formData: any = {
       ...data,
-      birthDate: new Date(data.birthDate),
+      age: parseInt(data.age), // Convert age string to number
+      hasSpecialNeeds: !!data.specialNeedsType && data.specialNeedsType !== '' && data.specialNeedsType !== '__placeholder__', // Set based on whether disability type is selected
     };
 
-    if (!hasSpecialNeeds) {
+    // Clean up empty values and placeholder
+    if (!formData.specialNeedsType || formData.specialNeedsType === '' || formData.specialNeedsType === '__placeholder__') {
       delete formData.specialNeedsType;
       delete formData.specialNeedsNotes;
+      formData.hasSpecialNeeds = false;
     }
 
     await onSubmit(formData);
   };
-
-  const nationalities = [
-    'السعودية',
-    'الكويت',
-    'البحرين',
-    'قطر',
-    'الإمارات',
-    'عمان',
-    'اليمن',
-    'مصر',
-    'الأردن',
-    'فلسطين',
-    'لبنان',
-    'سوريا',
-    'العراق',
-    'المغرب',
-    'الجزائر',
-    'تونس',
-    'ليبيا',
-    'السودان',
-  ];
 
   return (
     <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
@@ -126,21 +113,6 @@ export function PilgrimForm({ pilgrim, onSubmit, onCancel, isLoading = false }: 
         </h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="registrationNumber">
-              {locale === 'ar' ? 'رقم التسجيل' : 'Registration Number'} *
-            </Label>
-            <Input
-              id="registrationNumber"
-              {...register('registrationNumber')}
-              disabled={isEdit}
-              className={cn(errors.registrationNumber && 'border-red-500')}
-            />
-            {errors.registrationNumber && (
-              <p className="text-sm text-red-500">{errors.registrationNumber.message}</p>
-            )}
-          </div>
-
           <div className="space-y-2">
             <Label htmlFor="nationalId">
               {locale === 'ar' ? 'رقم الهوية' : 'National ID'} *
@@ -169,23 +141,94 @@ export function PilgrimForm({ pilgrim, onSubmit, onCancel, isLoading = false }: 
             <Label htmlFor="nationality">
               {locale === 'ar' ? 'الجنسية' : 'Nationality'} *
             </Label>
-            <Select
-              value={watch('nationality')}
+            <SearchableSelect
+              value={watch('nationality') || ''}
               onValueChange={(value) => setValue('nationality', value)}
-            >
-              <SelectTrigger className={cn(errors.nationality && 'border-red-500')}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {nationalities.map((nationality) => (
-                  <SelectItem key={nationality} value={nationality}>
-                    {nationality}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              options={nationalityOptions}
+              placeholder={locale === 'ar' ? 'اختر الجنسية' : 'Select Nationality'}
+              searchPlaceholder={locale === 'ar' ? 'البحث في الجنسيات...' : 'Search nationalities...'}
+              noResultsText={locale === 'ar' ? 'لا توجد نتائج' : 'No results found'}
+              clearable={false}
+              isRTL={isRTL}
+              className={cn(errors.nationality && 'border-red-500')}
+            />
             {errors.nationality && (
               <p className="text-sm text-red-500">{errors.nationality.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="phoneNumber">
+              {locale === 'ar' ? 'رقم الهاتف' : 'Phone Number'} *
+            </Label>
+            <Input
+              id="phoneNumber"
+              {...register('phoneNumber')}
+              placeholder="+966501234567"
+              className={cn(errors.phoneNumber && 'border-red-500')}
+            />
+            {errors.phoneNumber && (
+              <p className="text-sm text-red-500">{errors.phoneNumber.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="groupId">
+              {locale === 'ar' ? 'المجموعة' : 'Group'}
+            </Label>
+            <SearchableSelect
+              value={watch('groupId') || ''}
+              onValueChange={(value) => setValue('groupId', value)}
+              options={groupOptions}
+              placeholder={locale === 'ar' ? 'اختر المجموعة' : 'Select Group'}
+              searchPlaceholder={locale === 'ar' ? 'البحث في المجموعات...' : 'Search groups...'}
+              noResultsText={locale === 'ar' ? 'لا توجد نتائج' : 'No results found'}
+              clearable={true}
+              isRTL={isRTL}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="specialNeedsType">
+              {locale === 'ar' ? 'نوع الإعاقة' : 'Disability Type'}
+            </Label>
+            <Select
+              value={watch('specialNeedsType') || ''}
+              onValueChange={(value) => setValue('specialNeedsType', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={locale === 'ar' ? 'اختر نوع الإعاقة' : 'Select disability type'} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__placeholder__" disabled>
+                  {locale === 'ar' ? 'اختر نوع الإعاقة' : 'Select disability type'}
+                </SelectItem>
+                <SelectItem value="mobility">
+                  {locale === 'ar' ? 'مساعدة في الحركة (كرسي متحرك، مشي)' : 'Mobility assistance (wheelchair, walking)'}
+                </SelectItem>
+                <SelectItem value="vision_hearing">
+                  {locale === 'ar' ? 'مشاكل في البصر أو السمع' : 'Vision or hearing issues'}
+                </SelectItem>
+                <SelectItem value="medical_care">
+                  {locale === 'ar' ? 'رعاية طبية خاصة' : 'Special medical care'}
+                </SelectItem>
+                <SelectItem value="elderly_cognitive">
+                  {locale === 'ar' ? 'رعاية كبار السن أو إعاقة ذهنية' : 'Elderly care or cognitive disability'}
+                </SelectItem>
+                <SelectItem value="dietary_language">
+                  {locale === 'ar' ? 'احتياجات غذائية أو لغوية' : 'Dietary or language assistance'}
+                </SelectItem>
+                <SelectItem value="other">
+                  {locale === 'ar' ? 'أخرى' : 'Other'}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+            {watch('specialNeedsType') === 'other' && (
+              <p className="text-sm text-blue-600 bg-blue-50 p-2 rounded border border-blue-200">
+                {locale === 'ar' 
+                  ? 'يرجى كتابة تفاصيل الإعاقة في حقل الملاحظات أدناه' 
+                  : 'Please write the disability details in the Notes field below'}
+              </p>
             )}
           </div>
         </div>
@@ -226,17 +269,19 @@ export function PilgrimForm({ pilgrim, onSubmit, onCancel, isLoading = false }: 
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="birthDate">
-              {locale === 'ar' ? 'تاريخ الميلاد' : 'Birth Date'} *
+            <Label htmlFor="age">
+              {locale === 'ar' ? 'العمر' : 'Age'} *
             </Label>
             <Input
-              id="birthDate"
-              type="date"
-              {...register('birthDate')}
-              className={cn(errors.birthDate && 'border-red-500')}
+              id="age"
+              type="number"
+              min="1"
+              {...register('age')}
+              placeholder={locale === 'ar' ? 'أدخل العمر' : 'Enter age'}
+              className={cn(errors.age && 'border-red-500')}
             />
-            {errors.birthDate && (
-              <p className="text-sm text-red-500">{errors.birthDate.message}</p>
+            {errors.age && (
+              <p className="text-sm text-red-500">{errors.age.message}</p>
             )}
           </div>
 
@@ -261,115 +306,6 @@ export function PilgrimForm({ pilgrim, onSubmit, onCancel, isLoading = false }: 
               </SelectContent>
             </Select>
           </div>
-        </div>
-      </Card>
-
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4">
-          {locale === 'ar' ? 'معلومات الاتصال' : 'Contact Information'}
-        </h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="phoneNumber">
-              {locale === 'ar' ? 'رقم الهاتف' : 'Phone Number'} *
-            </Label>
-            <Input
-              id="phoneNumber"
-              {...register('phoneNumber')}
-              placeholder="+966501234567"
-              className={cn(errors.phoneNumber && 'border-red-500')}
-            />
-            {errors.phoneNumber && (
-              <p className="text-sm text-red-500">{errors.phoneNumber.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="emergencyContact">
-              {locale === 'ar' ? 'جهة اتصال الطوارئ' : 'Emergency Contact'}
-            </Label>
-            <Input
-              id="emergencyContact"
-              {...register('emergencyContact')}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="emergencyPhone">
-              {locale === 'ar' ? 'هاتف الطوارئ' : 'Emergency Phone'}
-            </Label>
-            <Input
-              id="emergencyPhone"
-              {...register('emergencyPhone')}
-              placeholder="+966502345678"
-            />
-          </div>
-        </div>
-      </Card>
-
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4">
-          {locale === 'ar' ? 'الاحتياجات الخاصة' : 'Special Needs'}
-        </h3>
-        
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="hasSpecialNeeds"
-              checked={hasSpecialNeeds}
-              onCheckedChange={(checked) => setValue('hasSpecialNeeds', checked as boolean)}
-            />
-            <Label htmlFor="hasSpecialNeeds" className="cursor-pointer">
-              {locale === 'ar' ? 'لديه احتياجات خاصة' : 'Has special needs'}
-            </Label>
-          </div>
-
-          {hasSpecialNeeds && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-              <div className="space-y-2">
-                <Label htmlFor="specialNeedsType">
-                  {locale === 'ar' ? 'نوع الاحتياج' : 'Need Type'}
-                </Label>
-                <Select
-                  value={watch('specialNeedsType') || ''}
-                  onValueChange={(value) => setValue('specialNeedsType', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={locale === 'ar' ? 'اختر النوع' : 'Select type'} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="wheelchair">
-                      {locale === 'ar' ? 'كرسي متحرك' : 'Wheelchair'}
-                    </SelectItem>
-                    <SelectItem value="visual">
-                      {locale === 'ar' ? 'إعاقة بصرية' : 'Visual impairment'}
-                    </SelectItem>
-                    <SelectItem value="hearing">
-                      {locale === 'ar' ? 'إعاقة سمعية' : 'Hearing impairment'}
-                    </SelectItem>
-                    <SelectItem value="mobility">
-                      {locale === 'ar' ? 'صعوبة في الحركة' : 'Mobility issues'}
-                    </SelectItem>
-                    <SelectItem value="other">
-                      {locale === 'ar' ? 'أخرى' : 'Other'}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="specialNeedsNotes">
-                  {locale === 'ar' ? 'ملاحظات' : 'Notes'}
-                </Label>
-                <Input
-                  id="specialNeedsNotes"
-                  {...register('specialNeedsNotes')}
-                  placeholder={locale === 'ar' ? 'تفاصيل إضافية...' : 'Additional details...'}
-                />
-              </div>
-            </div>
-          )}
         </div>
       </Card>
 

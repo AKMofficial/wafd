@@ -17,12 +17,17 @@ import {
   Menu,
   Globe,
   Settings,
-  LayoutDashboard
+  LayoutDashboard,
+  User,
+  LogOut,
+  ChevronDown
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const Sidebar = () => {
   const { isCollapsed, setIsCollapsed } = useSidebar();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const pathname = usePathname();
   const t = useTranslations();
   const locale = useLocale();
@@ -167,7 +172,58 @@ const Sidebar = () => {
           </ul>
         </nav>
 
-        <div className="p-4 border-t border-border mt-auto">
+        <div className="p-4 border-t border-border mt-auto space-y-2">
+          <div className="relative">
+            <button
+              onClick={() => setShowUserMenu(!showUserMenu)}
+              className={cn(
+                "w-full flex items-center px-3 py-2.5 rounded-lg transition-all duration-200",
+                "bg-muted hover:bg-muted/80 text-foreground",
+                isCollapsed ? 'justify-center' : 'justify-between'
+              )}
+            >
+              <div className={cn(
+                "flex items-center",
+                isCollapsed ? '' : 'gap-2'
+              )}>
+                <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
+                  <User size={16} className="text-primary-600" />
+                </div>
+                {!isCollapsed && (
+                  <div className="text-right rtl:text-left">
+                    <p className="text-sm font-medium">
+                      {locale === 'ar' ? 'المسؤول' : 'Admin'}
+                    </p>
+                    <p className="text-xs text-muted-foreground">admin@mawa.sa</p>
+                  </div>
+                )}
+              </div>
+              {!isCollapsed && (
+                <ChevronDown size={16} className={cn(
+                  "transition-transform flex-shrink-0",
+                  showUserMenu && "rotate-180"
+                )} />
+              )}
+            </button>
+            
+            {showUserMenu && (
+              <div className={cn(
+                "absolute bottom-full mb-2 w-full bg-card rounded-lg shadow-lg border border-border py-1 z-50 animate-in slide-in-from-bottom-2",
+                isCollapsed && (isRtl ? "right-0 w-48" : "left-0 w-48")
+              )}>
+                <button 
+                  onClick={() => {
+                    setShowUserMenu(false);
+                  }}
+                  className="w-full text-right rtl:text-left px-4 py-2 text-sm hover:bg-muted transition-colors flex items-center gap-2 text-error-600"
+                >
+                  <LogOut size={16} />
+                  <span>{locale === 'ar' ? 'تسجيل الخروج' : 'Logout'}</span>
+                </button>
+              </div>
+            )}
+          </div>
+          
           <button
             onClick={switchLanguage}
             className={cn(
@@ -187,13 +243,6 @@ const Sidebar = () => {
               </span>
             )}
           </button>
-          {!isCollapsed && (
-            <div className="mt-4 pt-4 border-t border-border">
-              <p className="text-xs text-muted-foreground text-center">
-                {locale === 'ar' ? 'الإصدار 1.0.0' : 'Version 1.0.0'}
-              </p>
-            </div>
-          )}
         </div>
       </div>
 

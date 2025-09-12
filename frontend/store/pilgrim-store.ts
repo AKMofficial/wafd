@@ -10,7 +10,8 @@ import {
   ImportResult,
   PilgrimStatistics
 } from '@/types/pilgrim';
-import { generateMockPilgrims } from '@/lib/mock-data';
+import { generateMockPilgrims, mockGroups } from '@/lib/mock-data';
+import { gregorianToHijri } from '@/lib/hijri-date';
 
 interface PilgrimState {
   pilgrims: Pilgrim[];
@@ -49,6 +50,15 @@ const initialPagination: PaginationParams = {
 };
 
 const allPilgrims = generateMockPilgrims(150);
+
+// Generate registration number helper function
+const generateRegistrationNumber = (): string => {
+  const currentDate = new Date();
+  const hijriDate = gregorianToHijri(currentDate);
+  const hijriYear = hijriDate.year;
+  const random = Math.floor(Math.random() * 999999).toString().padStart(6, '0');
+  return `H${hijriYear}${random}`;
+};
 
 export const usePilgrimStore = create<PilgrimState>()(
   devtools(
@@ -125,6 +135,12 @@ export const usePilgrimStore = create<PilgrimState>()(
             filtered.sort((a, b) => {
               const aVal = a[pagination.sortBy!];
               const bVal = b[pagination.sortBy!];
+              
+              // Handle null/undefined values
+              if (aVal == null && bVal == null) return 0;
+              if (aVal == null) return pagination.sortOrder === 'asc' ? -1 : 1;
+              if (bVal == null) return pagination.sortOrder === 'asc' ? 1 : -1;
+              
               if (aVal < bVal) return pagination.sortOrder === 'asc' ? -1 : 1;
               if (aVal > bVal) return pagination.sortOrder === 'asc' ? 1 : -1;
               return 0;
@@ -171,11 +187,18 @@ export const usePilgrimStore = create<PilgrimState>()(
         try {
           await new Promise(resolve => setTimeout(resolve, 500));
           
+          // Find group name if groupId is provided
+          const groupName = data.groupId 
+            ? mockGroups.find(g => g.id === data.groupId)?.name
+            : undefined;
+          
           const newPilgrim: Pilgrim = {
             id: (allPilgrims.length + 1).toString(),
+            registrationNumber: generateRegistrationNumber(),
             ...data,
             fullName: `${data.firstName} ${data.lastName}`,
-            age: new Date().getFullYear() - new Date(data.birthDate).getFullYear(),
+            groupName,
+            birthDate: new Date(), // Will be calculated from age if needed
             status: 'expected',
             hasSpecialNeeds: data.hasSpecialNeeds || false,
             createdAt: new Date(),
@@ -199,15 +222,20 @@ export const usePilgrimStore = create<PilgrimState>()(
           const index = allPilgrims.findIndex(p => p.id === id);
           if (index === -1) throw new Error('لم يتم العثور على الحاج');
           
+          // Find group name if groupId is being updated
+          const groupName = data.groupId !== undefined
+            ? data.groupId 
+              ? mockGroups.find(g => g.id === data.groupId)?.name
+              : undefined
+            : allPilgrims[index].groupName;
+          
           const updated = {
             ...allPilgrims[index],
             ...data,
             fullName: data.firstName && data.lastName 
               ? `${data.firstName} ${data.lastName}`
               : allPilgrims[index].fullName,
-            age: data.birthDate 
-              ? new Date().getFullYear() - new Date(data.birthDate).getFullYear()
-              : allPilgrims[index].age,
+            groupName,
             updatedAt: new Date(),
           };
           
@@ -245,30 +273,160 @@ export const usePilgrimStore = create<PilgrimState>()(
       },
       
       assignBed: async (pilgrimId, hallId, bedNumber) => {
-        return get().updatePilgrim(pilgrimId, {
-          assignedHall: hallId,
-          assignedBed: bedNumber,
-          status: 'arrived',
-          arrivalDate: new Date()
-        });
+        // First update the pilgrim in the mock data directly
+        const index = allPilgrims.findIndex(p => p.id === pilgrimId);
+        if (index !== -1) {
+          allPilgrims[index] = {
+            ...allPilgrims[index],
+            assignedHall: hallId,
+            assignedBed: bedNumber,
+            status: 'arrived',
+            arrivalDate: new Date(),
+            updatedAt: new Date()
+          };
+          return allPilgrims[index];
+        }
+        throw new Error('لم يتم العثور على الحاج');
       },
       
       importFromExcel: async (file) => {
         set({ isLoading: true, error: null });
         try {
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          // Read Excel file
+          const ExcelJS = require('exceljs');
+          const workbook = new ExcelJS.Workbook();
+          await workbook.xlsx.load(await file.arrayBuffer());
+          const worksheet = workbook.getWorksheet(1);
           
-          return {
+          const errors: any[] = [];
+          const duplicates: string[] = [];
+          let importedCount = 0;
+          const totalRecords = worksheet.rowCount - 1; // Excluding header
+          
+          // Process each row
+          for (let rowIndex = 2; rowIndex <= worksheet.rowCount; rowIndex++) {
+            const row = worksheet.getRow(rowIndex);
+            const pilgrimData: any = {};
+            let hasError = false;
+            
+            // Map columns according to EXCEL_IMPORT_COLUMNS
+            const nationalId = row.getCell(1).value?.toString() || '';
+            const passportNumber = row.getCell(2).value?.toString() || undefined;
+            const firstName = row.getCell(3).value?.toString() || '';
+            const lastName = row.getCell(4).value?.toString() || '';
+            const age = parseInt(row.getCell(5).value?.toString() || '0');
+            const genderText = row.getCell(6).value?.toString() || '';
+            const nationality = row.getCell(7).value?.toString() || '';
+            const phoneNumber = row.getCell(8).value?.toString() || '';
+            const specialNeedsTypeText = row.getCell(9).value?.toString() || '';
+            const notes = row.getCell(10).value?.toString() || undefined;
+            
+            // Validate required fields
+            if (!nationalId) {
+              errors.push({ row: rowIndex, field: 'nationalId', value: nationalId, message: 'رقم الهوية مطلوب' });
+              hasError = true;
+            }
+            if (!firstName) {
+              errors.push({ row: rowIndex, field: 'firstName', value: firstName, message: 'الاسم الأول مطلوب' });
+              hasError = true;
+            }
+            if (!lastName) {
+              errors.push({ row: rowIndex, field: 'lastName', value: lastName, message: 'الاسم الأخير مطلوب' });
+              hasError = true;
+            }
+            if (!age || age < 1 || age > 120) {
+              errors.push({ row: rowIndex, field: 'age', value: age, message: 'عمر غير صالح' });
+              hasError = true;
+            }
+            if (!nationality) {
+              errors.push({ row: rowIndex, field: 'nationality', value: nationality, message: 'الجنسية مطلوبة' });
+              hasError = true;
+            }
+            if (!phoneNumber) {
+              errors.push({ row: rowIndex, field: 'phoneNumber', value: phoneNumber, message: 'رقم الهاتف مطلوب' });
+              hasError = true;
+            }
+            
+            // Process gender
+            let gender: 'male' | 'female' | undefined;
+            if (genderText === 'ذكر' || genderText.toLowerCase() === 'male') {
+              gender = 'male';
+            } else if (genderText === 'أنثى' || genderText.toLowerCase() === 'female') {
+              gender = 'female';
+            } else {
+              errors.push({ row: rowIndex, field: 'gender', value: genderText, message: 'الجنس يجب أن يكون ذكر أو أنثى' });
+              hasError = true;
+            }
+            
+            // Process special needs type
+            let specialNeedsType: any = null;
+            let hasSpecialNeeds = false;
+            if (specialNeedsTypeText) {
+              hasSpecialNeeds = true;
+              const specialNeedsMap: Record<string, any> = {
+                'مساعدة في الحركة': 'mobility',
+                'mobility': 'mobility',
+                'كرسي متحرك': 'mobility',
+                'مشاكل في البصر أو السمع': 'vision_hearing',
+                'vision_hearing': 'vision_hearing',
+                'بصر': 'vision_hearing',
+                'سمع': 'vision_hearing',
+                'رعاية طبية خاصة': 'medical_care',
+                'medical_care': 'medical_care',
+                'طبية': 'medical_care',
+                'رعاية كبار السن': 'elderly_cognitive',
+                'elderly_cognitive': 'elderly_cognitive',
+                'كبار السن': 'elderly_cognitive',
+                'احتياجات غذائية': 'dietary_language',
+                'dietary_language': 'dietary_language',
+                'غذائية': 'dietary_language',
+                'أخرى': 'other',
+                'other': 'other'
+              };
+              
+              specialNeedsType = specialNeedsMap[specialNeedsTypeText.toLowerCase()] || 'other';
+            }
+            
+            // Check for duplicates
+            if (allPilgrims.some(p => p.nationalId === nationalId)) {
+              duplicates.push(nationalId);
+              hasError = true;
+            }
+            
+            if (!hasError && gender) {
+              // Create pilgrim data
+              const newPilgrim: CreatePilgrimDto = {
+                nationalId,
+                passportNumber,
+                firstName,
+                lastName,
+                age,
+                gender,
+                nationality,
+                phoneNumber,
+                hasSpecialNeeds,
+                specialNeedsType,
+                notes
+              };
+              
+              // This would normally call the API to create the pilgrim
+              // For now, we just count it as imported
+              importedCount++;
+            }
+          }
+          
+          const result: ImportResult = {
             success: true,
-            totalRecords: 50,
-            importedCount: 48,
-            failedCount: 2,
-            errors: [
-              { row: 15, field: 'nationalId', value: '', message: 'رقم الهوية مطلوب' },
-              { row: 23, field: 'birthDate', value: '32/13/2000', message: 'تاريخ غير صالح' }
-            ],
-            duplicates: ['HAJ2024010', 'HAJ2024025']
+            totalRecords,
+            importedCount,
+            failedCount: totalRecords - importedCount,
+            errors,
+            duplicates
           };
+          
+          set({ isLoading: false });
+          return result;
+          
         } catch (error) {
           set({ error: 'فشل في استيراد الملف', isLoading: false });
           throw error;

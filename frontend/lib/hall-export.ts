@@ -1,6 +1,7 @@
 import { Hall, Bed } from '@/types/hall';
 import { Pilgrim } from '@/types/pilgrim';
 import * as XLSX from 'xlsx';
+import { formatDateAsHijriShort } from '@/lib/hijri-date';
 
 export interface HallExportData {
   hallInfo: {
@@ -54,7 +55,7 @@ export async function exportHallToExcel(
       [isArabic ? 'رقم التسجيل' : 'Registration No.']: pilgrim?.registrationNumber || '-',
       [isArabic ? 'الجنسية' : 'Nationality']: pilgrim?.nationality || '-',
       [isArabic ? 'تاريخ الوصول' : 'Arrival Date']: pilgrim?.arrivalDate 
-        ? new Date(pilgrim.arrivalDate).toLocaleDateString(isArabic ? 'ar-SA' : 'en-US')
+        ? formatDateAsHijriShort(pilgrim.arrivalDate, isArabic ? 'ar' : 'en')
         : '-',
       [isArabic ? 'احتياجات خاصة' : 'Special Needs']: bed.isSpecialNeeds 
         ? (isArabic ? 'نعم' : 'Yes')
@@ -73,8 +74,10 @@ export async function exportHallToExcel(
   const bedsSheet = XLSX.utils.json_to_sheet(bedsData);
   XLSX.utils.book_append_sheet(wb, bedsSheet, isArabic ? 'الأسرّة' : 'Beds');
   
-  // Generate filename
-  const fileName = `${hall.name}_${hall.code}_${new Date().toISOString().split('T')[0]}.xlsx`;
+  // Generate filename with Hijri date
+  const today = new Date();
+  const hijriToday = formatDateAsHijriShort(today, isArabic ? 'ar' : 'en').replace(/\//g, '-');
+  const fileName = `${hall.name}_${hall.code}_${hijriToday}.xlsx`;
   
   // Write file
   XLSX.writeFile(wb, fileName);

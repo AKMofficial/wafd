@@ -166,8 +166,8 @@ export function ExcelImportDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+    <Dialog open={open} onOpenChange={() => handleClose()}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col" onClose={handleClose}>
         <DialogHeader>
           <DialogTitle>
             {locale === 'ar' ? 'استيراد بيانات الحجاج من Excel' : 'Import Pilgrims from Excel'}

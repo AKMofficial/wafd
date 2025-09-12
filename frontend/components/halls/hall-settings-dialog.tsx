@@ -18,7 +18,13 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Settings, AlertCircle } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { Settings, AlertCircle, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getBedNumberingPreview } from '@/lib/bed-numbering';
 
@@ -26,14 +32,16 @@ interface HallSettingsDialogProps {
   hall: Hall | null;
   isOpen: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
-export function HallSettingsDialog({ hall, isOpen, onClose }: HallSettingsDialogProps) {
+export function HallSettingsDialog({ hall, isOpen, onClose, onSuccess }: HallSettingsDialogProps) {
   const locale = useLocale();
   const isRTL = locale === 'ar';
-  const { updateHall } = useHallStore();
+  const { updateHall, deleteHall } = useHallStore();
   
   const [isLoading, setIsLoading] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [formData, setFormData] = useState<UpdateHallDto>({
     id: '',
     name: '',
@@ -59,6 +67,7 @@ export function HallSettingsDialog({ hall, isOpen, onClose }: HallSettingsDialog
     
     try {
       await updateHall(hall.id, formData);
+      onSuccess?.();
       onClose();
     } catch (error) {
       console.error('Failed to update hall:', error);
@@ -68,11 +77,46 @@ export function HallSettingsDialog({ hall, isOpen, onClose }: HallSettingsDialog
     setIsLoading(false);
   };
   
+  const handleDelete = async () => {
+    setIsLoading(true);
+    
+    try {
+      const success = await deleteHall(hall.id);
+      if (success) {
+        onSuccess?.();
+        onClose();
+        // Navigate back to halls page after deletion
+        window.location.href = `/${locale}/halls`;
+      } else {
+        alert(locale === 'ar' ? 'فشل في حذف القاعة' : 'Failed to delete hall');
+      }
+    } catch (error) {
+      console.error('Failed to delete hall:', error);
+      alert(locale === 'ar' ? 'فشل في حذف القاعة' : 'Failed to delete hall');
+    }
+    
+    setIsLoading(false);
+    setShowDeleteConfirm(false);
+  };
+  
   const canChangeCapacity = hall.currentOccupancy === 0;
+  const canDelete = hall.currentOccupancy === 0;
   
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+    <>
+      <Dialog open={isOpen} onOpenChange={() => {
+        // Reset form data when closing
+        if (hall) {
+          setFormData({
+            id: hall.id,
+            name: hall.name,
+            capacity: hall.capacity,
+          });
+        }
+        setShowDeleteConfirm(false);
+        onClose();
+      }}>
+        <DialogContent className="max-w-md" onClose={onClose}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
@@ -183,19 +227,97 @@ export function HallSettingsDialog({ hall, isOpen, onClose }: HallSettingsDialog
             </Card>
           )}
           
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
-              {locale === 'ar' ? 'إلغاء' : 'Cancel'}
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading 
-                ? (locale === 'ar' ? 'جاري الحفظ...' : 'Saving...') 
-                : (locale === 'ar' ? 'حفظ التغييرات' : 'Save Changes')
-              }
-            </Button>
+          <DialogFooter className="flex justify-between pt-4">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span tabIndex={0}>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => setShowDeleteConfirm(true)}
+                      disabled={!canDelete || isLoading}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-4 w-4 ml-1" />
+                      {locale === 'ar' ? 'حذف القاعة' : 'Delete Hall'}
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                {!canDelete && (
+                  <TooltipContent>
+                    <p>{locale === 'ar' 
+                      ? 'لا يمكن حذف القاعة عندما تكون هناك أسرّة مشغولة' 
+                      : 'Cannot delete hall when beds are occupied'}</p>
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" onClick={onClose}>
+                {locale === 'ar' ? 'إلغاء' : 'Cancel'}
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading 
+                  ? (locale === 'ar' ? 'جاري الحفظ...' : 'Saving...') 
+                  : (locale === 'ar' ? 'حفظ التغييرات' : 'Save Changes')
+                }
+              </Button>
+            </div>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
+    
+    {/* Delete Confirmation Dialog */}
+    <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-red-600">
+            <AlertCircle className="h-5 w-5" />
+            {locale === 'ar' ? 'تأكيد حذف القاعة' : 'Confirm Hall Deletion'}
+          </DialogTitle>
+          <DialogDescription>
+            {locale === 'ar' 
+              ? `هل أنت متأكد من رغبتك في حذف قاعة "${hall?.name}"؟ هذا الإجراء لا يمكن التراجع عنه.`
+              : `Are you sure you want to delete hall "${hall?.name}"? This action cannot be undone.`}
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 my-4">
+          <div className="flex items-center gap-2 text-yellow-800">
+            <AlertCircle className="h-4 w-4 flex-shrink-0" />
+            <p className="text-sm">
+              {locale === 'ar'
+                ? 'سيتم حذف جميع بيانات القاعة بما في ذلك معلومات الأسرّة. تأكد من عدم وجود حجوزات نشطة.'
+                : 'All hall data including bed information will be deleted. Make sure there are no active reservations.'}
+            </p>
+          </div>
+        </div>
+        
+        <DialogFooter>
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={() => setShowDeleteConfirm(false)}
+            disabled={isLoading}
+          >
+            {locale === 'ar' ? 'إلغاء' : 'Cancel'}
+          </Button>
+          <Button 
+            type="button" 
+            variant="destructive" 
+            onClick={handleDelete}
+            disabled={isLoading}
+          >
+            {isLoading 
+              ? (locale === 'ar' ? 'جاري الحذف...' : 'Deleting...') 
+              : (locale === 'ar' ? 'حذف القاعة' : 'Delete Hall')
+            }
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }

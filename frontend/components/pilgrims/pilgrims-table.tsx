@@ -17,9 +17,17 @@ import {
   MapPin,
   Calendar,
   Users,
-  AlertCircle
+  AlertCircle,
+  Accessibility,
+  Hash,
+  User,
+  Flag,
+  Home,
+  Activity,
+  Settings2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatDateAsHijri } from '@/lib/hijri-date';
 
 interface PilgrimsTableProps {
   pilgrims: Pilgrim[];
@@ -61,12 +69,7 @@ export function PilgrimsTable({
   };
 
   const formatDate = (date?: Date) => {
-    if (!date) return '-';
-    return new Intl.DateTimeFormat(locale === 'ar' ? 'ar-SA' : 'en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    }).format(new Date(date));
+    return formatDateAsHijri(date, locale);
   };
 
   const getStatusLabel = (status: PilgrimStatus) => {
@@ -98,219 +101,196 @@ export function PilgrimsTable({
   return (
     <div className="w-full">
       <div className="hidden lg:block">
-        <Table>
+        <div className="rounded-lg border">
+          <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className={cn(isRTL && "text-right")}>
-                {locale === 'ar' ? 'رقم التسجيل' : 'Registration No.'}
+              <TableHead className="w-[140px]">
+                <div className="flex items-center gap-2">
+                  <Hash className="h-4 w-4" />
+                  <span>رقم التسجيل</span>
+                </div>
               </TableHead>
-              <TableHead className={cn(isRTL && "text-right")}>
-                {locale === 'ar' ? 'الاسم الكامل' : 'Full Name'}
+              <TableHead>
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  <span>الاسم الكامل</span>
+                </div>
               </TableHead>
-              <TableHead className={cn(isRTL && "text-right")}>
-                {locale === 'ar' ? 'الجنسية' : 'Nationality'}
+              <TableHead className="text-center">
+                <div className="flex items-center justify-center gap-2">
+                  <Flag className="h-4 w-4" />
+                  <span>الجنسية</span>
+                </div>
               </TableHead>
-              <TableHead className={cn(isRTL && "text-right")}>
-                {locale === 'ar' ? 'المجموعة' : 'Group'}
+              <TableHead className="text-center">
+                <div className="flex items-center justify-center gap-2">
+                  <Users className="h-4 w-4" />
+                  <span>المجموعة</span>
+                </div>
               </TableHead>
-              <TableHead className={cn(isRTL && "text-right")}>
-                {locale === 'ar' ? 'السرير' : 'Bed'}
+              <TableHead className="text-center">
+                <div className="flex items-center justify-center gap-2">
+                  <Home className="h-4 w-4" />
+                  <span>القاعة</span>
+                </div>
               </TableHead>
-              <TableHead className={cn(isRTL && "text-right")}>
-                {locale === 'ar' ? 'الحالة' : 'Status'}
+              <TableHead className="text-center">
+                <div className="flex items-center justify-center gap-2">
+                  <Activity className="h-4 w-4" />
+                  <span>الحالة</span>
+                </div>
               </TableHead>
-              <TableHead className={cn(isRTL && "text-right")}>
-                {locale === 'ar' ? 'تاريخ الوصول' : 'Arrival Date'}
-              </TableHead>
-              <TableHead className={cn(isRTL && "text-right", "w-[100px]")}>
-                {locale === 'ar' ? 'الإجراءات' : 'Actions'}
+              <TableHead className="text-center">
+                <div className="flex items-center justify-center gap-2">
+                  <Settings2 className="h-4 w-4" />
+                  <span>الإجراءات</span>
+                </div>
               </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {pilgrims.map((pilgrim) => (
-              <TableRow key={pilgrim.id}>
-                <TableCell className="font-medium">{pilgrim.registrationNumber}</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <span>{pilgrim.fullName}</span>
-                    {pilgrim.hasSpecialNeeds && (
-                      <AlertCircle className="h-4 w-4 text-orange-500" />
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell>{pilgrim.nationality}</TableCell>
-                <TableCell>{pilgrim.groupName || '-'}</TableCell>
-                <TableCell>
-                  {pilgrim.assignedBed ? (
-                    <div className="flex items-center gap-1">
-                      <MapPin className="h-3 w-3 text-gray-500" />
-                      <span>{pilgrim.assignedBed}</span>
-                    </div>
-                  ) : '-'}
-                </TableCell>
-                <TableCell>
-                  <Badge 
-                    variant="outline" 
-                    className={cn("gap-1", statusConfig[pilgrim.status].color)}
-                  >
-                    {statusConfig[pilgrim.status].icon && (() => {
-                      const IconComponent = statusConfig[pilgrim.status].icon;
-                      return <IconComponent className="h-3 w-3" />;
-                    })()}
-                    {getStatusLabel(pilgrim.status)}
-                  </Badge>
-                </TableCell>
-                <TableCell>{formatDate(pilgrim.arrivalDate)}</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onView?.(pilgrim)}
-                      className="h-8 w-8"
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onEdit?.(pilgrim)}
-                      className="h-8 w-8"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    {pilgrim.status === 'expected' && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onMarkArrival?.(pilgrim)}
-                        className="h-8 w-8 text-green-600 hover:text-green-700"
-                      >
-                        <UserCheck className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
+            {pilgrims.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center text-gray-500 py-8">
+                  لا يوجد حجاج
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              pilgrims.map((pilgrim) => (
+                <TableRow 
+                  key={pilgrim.id}
+                  className="hover:bg-gray-50 cursor-pointer"
+                  onClick={() => onView?.(pilgrim)}
+                >
+                  <TableCell>
+                    <Badge 
+                      variant="outline"
+                      className="text-xs px-2 py-0.5 bg-gray-50 text-gray-700 border-gray-200"
+                    >
+                      {pilgrim.registrationNumber}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-2">
+                      <span>{pilgrim.fullName}</span>
+                      {pilgrim.hasSpecialNeeds && (
+                        <Accessibility className="h-4 w-4 text-purple-600" />
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center">{pilgrim.nationality}</TableCell>
+                  <TableCell className="text-center">{pilgrim.groupName || '-'}</TableCell>
+                  <TableCell className="text-center">{pilgrim.assignedHall || '-'}</TableCell>
+                  <TableCell className="text-center">
+                    <Badge 
+                      variant="outline" 
+                      className={cn("text-xs", statusConfig[pilgrim.status].color)}
+                    >
+                      {statusConfig[pilgrim.status].icon && (() => {
+                        const IconComponent = statusConfig[pilgrim.status].icon;
+                        return <IconComponent className="h-3 w-3" />;
+                      })()}
+                      {getStatusLabel(pilgrim.status)}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div className="flex justify-center" onClick={(e) => e.stopPropagation()}>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => onView?.(pilgrim)}
+                      >
+                        <Eye className={cn("h-4 w-4", isRTL ? "ml-1" : "mr-1")} />
+                        عرض
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
-        </Table>
+          </Table>
+        </div>
       </div>
 
-      <div className="lg:hidden space-y-4">
-        {pilgrims.map((pilgrim) => {
-          const isExpanded = expandedRows.has(pilgrim.id);
-          return (
-            <div
-              key={pilgrim.id}
-              className="bg-white border rounded-lg shadow-sm overflow-hidden"
-            >
-              <div
-                className="p-4 cursor-pointer"
-                onClick={() => toggleRow(pilgrim.id)}
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex-1">
-                    <h3 className="font-medium text-lg flex items-center gap-2">
-                      {pilgrim.fullName}
-                      {pilgrim.hasSpecialNeeds && (
-                        <AlertCircle className="h-4 w-4 text-orange-500" />
-                      )}
-                    </h3>
-                    <p className="text-sm text-gray-600">{pilgrim.registrationNumber}</p>
+      <div className="lg:hidden">
+        <div className="rounded-lg border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>
+                  <div className="flex items-center gap-1">
+                    <Hash className="h-3 w-3" />
+                    <span>رقم التسجيل</span>
                   </div>
-                  <Badge 
-                    variant="outline" 
-                    className={cn("gap-1", statusConfig[pilgrim.status].color)}
+                </TableHead>
+                <TableHead>
+                  <div className="flex items-center gap-1">
+                    <User className="h-3 w-3" />
+                    <span>الاسم</span>
+                  </div>
+                </TableHead>
+                <TableHead className="text-center">
+                  <div className="flex items-center justify-center gap-1">
+                    <Activity className="h-3 w-3" />
+                    <span>الحالة</span>
+                  </div>
+                </TableHead>
+                <TableHead className="text-center">
+                  <div className="flex items-center justify-center gap-1">
+                    <Eye className="h-3 w-3" />
+                    <span>عرض</span>
+                  </div>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {pilgrims.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center text-gray-500 py-8">
+                    لا يوجد حجاج
+                  </TableCell>
+                </TableRow>
+              ) : (
+                pilgrims.map((pilgrim) => (
+                  <TableRow 
+                    key={pilgrim.id}
+                    className="hover:bg-gray-50"
+                    onClick={() => onView?.(pilgrim)}
                   >
-                    {statusConfig[pilgrim.status].icon && (() => {
-                      const IconComponent = statusConfig[pilgrim.status].icon;
-                      return <IconComponent className="h-3 w-3" />;
-                    })()}
-                    {getStatusLabel(pilgrim.status)}
-                  </Badge>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="flex items-center gap-1 text-gray-600">
-                    <Users className="h-3 w-3" />
-                    <span>{pilgrim.groupName || '-'}</span>
-                  </div>
-                  {pilgrim.assignedBed && (
-                    <div className="flex items-center gap-1 text-gray-600">
-                      <MapPin className="h-3 w-3" />
-                      <span>{pilgrim.assignedBed}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {isExpanded && (
-                <div className="border-t bg-gray-50 p-4 space-y-3">
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div>
-                      <span className="text-gray-500">
-                        {locale === 'ar' ? 'الجنسية:' : 'Nationality:'}
-                      </span>
-                      <span className="ms-1 font-medium">{pilgrim.nationality}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">
-                        {locale === 'ar' ? 'العمر:' : 'Age:'}
-                      </span>
-                      <span className="ms-1 font-medium">{pilgrim.age}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">
-                        {locale === 'ar' ? 'الهاتف:' : 'Phone:'}
-                      </span>
-                      <span className="ms-1 font-medium">{pilgrim.phoneNumber}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">
-                        {locale === 'ar' ? 'تاريخ الوصول:' : 'Arrival:'}
-                      </span>
-                      <span className="ms-1 font-medium">{formatDate(pilgrim.arrivalDate)}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2 pt-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onView?.(pilgrim)}
-                      className="flex-1"
-                    >
-                      <Eye className="h-4 w-4 me-1" />
-                      {locale === 'ar' ? 'عرض' : 'View'}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onEdit?.(pilgrim)}
-                      className="flex-1"
-                    >
-                      <Edit className="h-4 w-4 me-1" />
-                      {locale === 'ar' ? 'تعديل' : 'Edit'}
-                    </Button>
-                    {pilgrim.status === 'expected' && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onMarkArrival?.(pilgrim)}
-                        className="flex-1 text-green-600 border-green-600 hover:bg-green-50"
+                    <TableCell className="text-xs">{pilgrim.registrationNumber}</TableCell>
+                    <TableCell className="text-xs">
+                      <div className="flex items-center gap-1">
+                        <span>{pilgrim.fullName}</span>
+                        {pilgrim.hasSpecialNeeds && (
+                          <Accessibility className="h-3 w-3 text-purple-600" />
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Badge 
+                        variant="outline" 
+                        className={cn("text-xs", statusConfig[pilgrim.status].color)}
                       >
-                        <UserCheck className="h-4 w-4 me-1" />
-                        {locale === 'ar' ? 'تسجيل وصول' : 'Mark Arrival'}
+                        {getStatusLabel(pilgrim.status)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => onView?.(pilgrim)}
+                      >
+                        <Eye className="h-3 w-3" />
                       </Button>
-                    )}
-                  </div>
-                </div>
+                    </TableCell>
+                  </TableRow>
+                ))
               )}
-            </div>
-          );
-        })}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     </div>
   );

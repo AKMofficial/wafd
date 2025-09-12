@@ -3,14 +3,13 @@
 import { useEffect, useState } from 'react';
 import { useTranslations, useLocale } from '@/lib/i18n';
 import { useHallStore } from '@/store/hall-store';
-import { HallCard } from '@/components/halls/hall-card';
-import { HallSettingsDialog } from '@/components/halls/hall-settings-dialog';
+import { HallsTable } from '@/components/halls/halls-table';
 import { CreateHallDialog } from '@/components/halls/create-hall-dialog';
+import { HallsFilters, HallFilters } from '@/components/halls/halls-filters';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
-import { Plus, Search, Building, Users, Bed, TrendingUp } from 'lucide-react';
+import { Pagination } from '@/components/ui/pagination';
+import { Plus, Building, Users, Bed, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Hall } from '@/types/hall';
 
@@ -19,49 +18,63 @@ export default function HallsPage() {
   const locale = useLocale();
   const isRTL = locale === 'ar';
   
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('all');
   const [mounted, setMounted] = useState(false);
-  const [selectedHallForSettings, setSelectedHallForSettings] = useState<Hall | null>(null);
-  const [showHallSettings, setShowHallSettings] = useState(false);
   const [showCreateHall, setShowCreateHall] = useState(false);
+  const [filters, setFilters] = useState<HallFilters>({});
+  const [paginatedData, setPaginatedData] = useState<any>(null);
   
   const {
     halls,
     isLoading,
     fetchHalls,
-    setFilters,
     getStatistics,
+    pagination,
+    setPagination,
   } = useHallStore();
   
   const stats = getStatistics();
   
+  const loadHalls = async () => {
+    const result = await fetchHalls();
+    setPaginatedData(result);
+  };
+  
+  const handlePageChange = (page: number) => {
+    setPagination({ page });
+  };
+  
   useEffect(() => {
     setMounted(true);
-    fetchHalls();
+    loadHalls();
   }, []);
   
   useEffect(() => {
     const debounceTimer = setTimeout(() => {
-      setFilters({ search: searchQuery });
-      fetchHalls();
+      loadHalls();
     }, 300);
     
     return () => clearTimeout(debounceTimer);
-  }, [searchQuery]);
+  }, [filters, pagination]);
   
-  const maleHalls = halls.filter(h => h.type === 'male');
-  const femaleHalls = halls.filter(h => h.type === 'female');
-  
-  const handleEditHall = (hall: Hall) => {
-    setSelectedHallForSettings(hall);
-    setShowHallSettings(true);
-  };
-  
-  const handleConfigureHall = (hall: Hall) => {
-    setSelectedHallForSettings(hall);
-    setShowHallSettings(true);
-  };
+  const filteredHalls = halls.filter(hall => {
+    if (filters.search && !hall.name.toLowerCase().includes(filters.search.toLowerCase()) && 
+        !hall.code.toLowerCase().includes(filters.search.toLowerCase())) {
+      return false;
+    }
+    if (filters.type && hall.type !== filters.type) {
+      return false;
+    }
+    if (filters.status) {
+      const occupancyRate = hall.capacity > 0 ? (hall.currentOccupancy / hall.capacity) * 100 : 0;
+      if (filters.status === 'full' && occupancyRate < 100) return false;
+      if (filters.status === 'available' && occupancyRate >= 100) return false;
+    }
+    if (filters.hasSpecialNeeds !== undefined) {
+      if (filters.hasSpecialNeeds && hall.specialNeedsOccupancy === 0) return false;
+      if (!filters.hasSpecialNeeds && hall.specialNeedsOccupancy > 0) return false;
+    }
+    return true;
+  });
   
   const handleAddNewHall = () => {
     setShowCreateHall(true);
@@ -106,213 +119,63 @@ export default function HallsPage() {
           </div>
         </div>
         
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
-          <div className="bg-white rounded-lg shadow-sm p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs sm:text-sm text-gray-500">إجمالي القاعات</p>
-                <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.totalHalls}</p>
-              </div>
-              <Building className="h-8 w-8 text-blue-500 opacity-20" />
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-lg shadow-sm p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs sm:text-sm text-gray-500">إجمالي الأسرّة</p>
-                <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.totalBeds}</p>
-              </div>
-              <Bed className="h-8 w-8 text-green-500 opacity-20" />
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-lg shadow-sm p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs sm:text-sm text-gray-500">الأسرّة المشغولة</p>
-                <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.totalOccupied}</p>
-              </div>
-              <Users className="h-8 w-8 text-orange-500 opacity-20" />
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-lg shadow-sm p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs sm:text-sm text-gray-500">نسبة الإشغال</p>
-                <p className="text-xl sm:text-2xl font-bold text-gray-900">
-                  {stats.occupancyRate.toFixed(1)}%
-                </p>
-              </div>
-              <TrendingUp className="h-8 w-8 text-purple-500 opacity-20" />
-            </div>
-          </div>
-        </div>
         
-        {/* Search */}
+        {/* Filters */}
         <div className="mb-6">
-          <div className="relative max-w-md">
-            <Search className={cn(
-              "absolute top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4",
-              isRTL ? "right-3" : "left-3"
-            )} />
-            <Input
-              type="text"
-              placeholder="البحث في القاعات..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className={cn("w-full", isRTL ? "pr-10" : "pl-10")}
-            />
-          </div>
+          <HallsFilters
+            filters={filters}
+            onFiltersChange={setFilters}
+            onReset={() => setFilters({})}
+          />
         </div>
         
-        {/* Halls Sections */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full max-w-md grid-cols-3 mb-6">
-            <TabsTrigger value="all">جميع القاعات</TabsTrigger>
-            <TabsTrigger value="male">قسم الرجال</TabsTrigger>
-            <TabsTrigger value="female">قسم النساء</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="all" className="space-y-6">
-            {/* Male Section */}
-            <div>
-              <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+        {/* Halls Table */}
+        <div className="w-full">
+          <div className="mb-4 flex items-center gap-4">
+            <h2 className="text-xl font-semibold">جميع القاعات</h2>
+            <div className="flex gap-3 text-sm">
+              <span className="flex items-center gap-1">
                 <span className="text-blue-600">●</span>
-                قسم الرجال
-                <span className="text-sm font-normal text-gray-500">
-                  ({stats.maleHalls.occupied}/{stats.maleHalls.beds} سرير)
-                </span>
-              </h2>
-              {isLoading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {[...Array(4)].map((_, i) => (
-                    <Skeleton key={i} className="h-48" />
-                  ))}
-                </div>
-              ) : maleHalls.length === 0 ? (
-                <div className="bg-gray-50 rounded-lg p-8 text-center">
-                  <p className="text-gray-500">لا توجد قاعات في قسم الرجال</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {maleHalls.map((hall) => (
-                    <HallCard 
-                      key={hall.id} 
-                      hall={hall}
-                      onEdit={handleEditHall}
-                      onConfigure={handleConfigureHall}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-            
-            {/* Female Section */}
-            <div>
-              <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                رجال: {stats.maleHalls.occupied}/{stats.maleHalls.beds}
+              </span>
+              <span className="flex items-center gap-1">
                 <span className="text-pink-600">●</span>
-                قسم النساء
-                <span className="text-sm font-normal text-gray-500">
-                  ({stats.femaleHalls.occupied}/{stats.femaleHalls.beds} سرير)
-                </span>
-              </h2>
-              {isLoading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {[...Array(4)].map((_, i) => (
-                    <Skeleton key={i} className="h-48" />
-                  ))}
-                </div>
-              ) : femaleHalls.length === 0 ? (
-                <div className="bg-gray-50 rounded-lg p-8 text-center">
-                  <p className="text-gray-500">لا توجد قاعات في قسم النساء</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {femaleHalls.map((hall) => (
-                    <HallCard 
-                      key={hall.id} 
-                      hall={hall}
-                      onEdit={handleEditHall}
-                      onConfigure={handleConfigureHall}
-                    />
-                  ))}
+                نساء: {stats.femaleHalls.occupied}/{stats.femaleHalls.beds}
+              </span>
+            </div>
+          </div>
+          {isLoading ? (
+            <div className="space-y-3">
+              {[...Array(6)].map((_, i) => (
+                <Skeleton key={i} className="h-16 w-full" />
+              ))}
+            </div>
+          ) : (
+            <>
+              <HallsTable halls={filteredHalls} />
+              {paginatedData && paginatedData.totalPages > 1 && (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
+                  <p className="text-sm text-gray-600 text-center sm:text-start">
+                    عرض {(pagination.page - 1) * pagination.limit + 1} إلى {Math.min(pagination.page * pagination.limit, paginatedData.total)} من {paginatedData.total}
+                  </p>
+                  
+                  <Pagination
+                    currentPage={pagination.page}
+                    totalPages={paginatedData.totalPages}
+                    onPageChange={handlePageChange}
+                    locale={locale}
+                  />
                 </div>
               )}
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="male">
-            {isLoading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {[...Array(4)].map((_, i) => (
-                  <Skeleton key={i} className="h-48" />
-                ))}
-              </div>
-            ) : maleHalls.length === 0 ? (
-              <div className="bg-gray-50 rounded-lg p-8 text-center">
-                <p className="text-gray-500">لا توجد قاعات في قسم الرجال</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {maleHalls.map((hall) => (
-                  <HallCard 
-                    key={hall.id} 
-                    hall={hall}
-                    onEdit={handleEditHall}
-                    onConfigure={handleConfigureHall}
-                  />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="female">
-            {isLoading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {[...Array(4)].map((_, i) => (
-                  <Skeleton key={i} className="h-48" />
-                ))}
-              </div>
-            ) : femaleHalls.length === 0 ? (
-              <div className="bg-gray-50 rounded-lg p-8 text-center">
-                <p className="text-gray-500">لا توجد قاعات في قسم النساء</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {femaleHalls.map((hall) => (
-                  <HallCard 
-                    key={hall.id} 
-                    hall={hall}
-                    onEdit={handleEditHall}
-                    onConfigure={handleConfigureHall}
-                  />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
-        
-        {/* Settings Dialog */}
-        <HallSettingsDialog
-          hall={selectedHallForSettings}
-          isOpen={showHallSettings}
-          onClose={() => {
-            setShowHallSettings(false);
-            setSelectedHallForSettings(null);
-            fetchHalls();
-          }}
-        />
+            </>
+          )}
+        </div>
         
         {/* Create Hall Dialog */}
         <CreateHallDialog
           isOpen={showCreateHall}
-          onClose={() => {
-            setShowCreateHall(false);
-            fetchHalls();
-          }}
+          onClose={() => setShowCreateHall(false)}
+          onSuccess={() => loadHalls()}
         />
       </div>
     </main>

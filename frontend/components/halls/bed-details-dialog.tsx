@@ -29,6 +29,7 @@ import {
   UserX
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatDateAsHijri } from '@/lib/hijri-date';
 
 interface BedDetailsDialogProps {
   bed: Bed | null;
@@ -114,19 +115,12 @@ export function BedDetailsDialog({
   const StatusIcon = statusConfig.icon;
   
   const formatDate = (date?: Date) => {
-    if (!date) return '-';
-    return new Intl.DateTimeFormat(locale === 'ar' ? 'ar-SA' : 'en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(new Date(date));
+    return formatDateAsHijri(date, locale, true);
   };
   
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md" onClose={onClose}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <StatusIcon className={cn("h-5 w-5", statusConfig.color.split(' ')[0])} />

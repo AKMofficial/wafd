@@ -1,4 +1,5 @@
 import { Pilgrim, PilgrimGroup } from '@/types/pilgrim';
+import { formatDateAsHijri } from '@/lib/hijri-date';
 
 export const mockPilgrims: Pilgrim[] = [
   {
@@ -14,8 +15,7 @@ export const mockPilgrims: Pilgrim[] = [
     gender: 'male',
     nationality: 'السعودية',
     phoneNumber: '+966501234567',
-    emergencyContact: 'محمد الحمد',
-    emergencyPhone: '+966502345678',
+
     hasSpecialNeeds: false,
     status: 'arrived',
     arrivalDate: new Date('2024-06-10'),
@@ -40,7 +40,7 @@ export const mockPilgrims: Pilgrim[] = [
     nationality: 'الكويت',
     phoneNumber: '+96590123456',
     hasSpecialNeeds: true,
-    specialNeedsType: 'wheelchair',
+    specialNeedsType: 'mobility',
     specialNeedsNotes: 'تحتاج كرسي متحرك',
     status: 'arrived',
     arrivalDate: new Date('2024-06-11'),
@@ -83,10 +83,9 @@ export const mockPilgrims: Pilgrim[] = [
     gender: 'female',
     nationality: 'البحرين',
     phoneNumber: '+97333123456',
-    emergencyContact: 'علي السالم',
-    emergencyPhone: '+97333234567',
+
     hasSpecialNeeds: true,
-    specialNeedsType: 'mobility',
+    specialNeedsType: 'elderly_cognitive',
     specialNeedsNotes: 'صعوبة في المشي لمسافات طويلة',
     status: 'arrived',
     arrivalDate: new Date('2024-06-09'),
@@ -253,7 +252,7 @@ export function generateMockPilgrims(count: number): Pilgrim[] {
       nationality: nationalities[Math.floor(Math.random() * nationalities.length)],
       phoneNumber: `+966${5}${Math.floor(Math.random() * 100000000)}`,
       hasSpecialNeeds,
-      specialNeedsType: hasSpecialNeeds ? ['wheelchair', 'mobility', 'visual'][Math.floor(Math.random() * 3)] as any : null,
+      specialNeedsType: hasSpecialNeeds ? ['mobility', 'vision_hearing', 'medical_care', 'elderly_cognitive', 'dietary_language'][Math.floor(Math.random() * 5)] as any : null,
       status,
       arrivalDate: status === 'arrived' || status === 'departed' ? new Date('2024-06-' + (8 + Math.floor(Math.random() * 10))) : undefined,
       departureDate: status === 'departed' ? new Date('2024-06-' + (18 + Math.floor(Math.random() * 10))) : undefined,

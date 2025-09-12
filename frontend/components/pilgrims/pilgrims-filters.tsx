@@ -6,6 +6,7 @@ import { PilgrimFilters, PilgrimStatus, Gender } from '@/types/pilgrim';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Badge } from '@/components/ui/badge';
 import { Search, Filter, X, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -104,7 +105,7 @@ export function PilgrimsFilters({
 
       {showAdvanced && (
         <div className="bg-gray-50 border rounded-lg p-4 space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
             <div>
               <label className="text-sm font-medium text-gray-700 mb-1 block">
                 {locale === 'ar' ? 'الحالة' : 'Status'}
@@ -188,34 +189,66 @@ export function PilgrimsFilters({
 
             <div>
               <label className="text-sm font-medium text-gray-700 mb-1 block">
+                {locale === 'ar' ? 'المجموعة' : 'Group'}
+              </label>
+              <SearchableSelect
+                value={filters.group || ''}
+                onValueChange={(value) => {
+                  if (value === '') {
+                    const { group, ...rest } = filters;
+                    onFiltersChange(rest);
+                  } else {
+                    onFiltersChange({ ...filters, group: value });
+                  }
+                }}
+                options={[
+                  { value: 'مجموعة الرحمة', label: 'مجموعة الرحمة' },
+                  { value: 'مجموعة البركة', label: 'مجموعة البركة' },
+                  { value: 'مجموعة النور', label: 'مجموعة النور' },
+                  { value: 'مجموعة الهداية', label: 'مجموعة الهداية' },
+                  { value: 'مجموعة السلام', label: 'مجموعة السلام' },
+                  { value: 'مجموعة الفجر', label: 'مجموعة الفجر' },
+                  { value: 'مجموعة الأمل', label: 'مجموعة الأمل' },
+                  { value: 'مجموعة الخير', label: 'مجموعة الخير' }
+                ]}
+                placeholder={locale === 'ar' ? 'اختر المجموعة' : 'Select Group'}
+                searchPlaceholder={locale === 'ar' ? 'البحث في المجموعات...' : 'Search groups...'}
+                noResultsText={locale === 'ar' ? 'لا توجد نتائج' : 'No results found'}
+                isRTL={isRTL}
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">
                 {locale === 'ar' ? 'القاعة' : 'Hall'}
               </label>
-              <Select
-                value={filters.hall || 'all'}
+              <SearchableSelect
+                value={filters.hall || ''}
                 onValueChange={(value) => {
-                  if (value === 'all') {
+                  if (value === '') {
                     const { hall, ...rest } = filters;
                     onFiltersChange(rest);
                   } else {
                     onFiltersChange({ ...filters, hall: value });
                   }
                 }}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">
-                    {locale === 'ar' ? 'الكل' : 'All'}
-                  </SelectItem>
-                  <SelectItem value="القاعة أ">القاعة أ</SelectItem>
-                  <SelectItem value="القاعة ب">القاعة ب</SelectItem>
-                  <SelectItem value="القاعة ج">القاعة ج</SelectItem>
-                  <SelectItem value="القاعة د">القاعة د</SelectItem>
-                  <SelectItem value="القاعة هـ">القاعة هـ</SelectItem>
-                  <SelectItem value="القاعة و">القاعة و</SelectItem>
-                </SelectContent>
-              </Select>
+                options={[
+                  { value: 'القاعة الأولى', label: 'القاعة الأولى' },
+                  { value: 'القاعة الثانية', label: 'القاعة الثانية' },
+                  { value: 'القاعة الثالثة', label: 'القاعة الثالثة' },
+                  { value: 'القاعة الرابعة', label: 'القاعة الرابعة' },
+                  { value: 'القاعة الخامسة', label: 'القاعة الخامسة' },
+                  { value: 'القاعة السادسة', label: 'القاعة السادسة' },
+                  { value: 'قاعة الرجال أ', label: 'قاعة الرجال أ' },
+                  { value: 'قاعة الرجال ب', label: 'قاعة الرجال ب' },
+                  { value: 'قاعة النساء أ', label: 'قاعة النساء أ' },
+                  { value: 'قاعة النساء ب', label: 'قاعة النساء ب' }
+                ]}
+                placeholder={locale === 'ar' ? 'اختر القاعة' : 'Select Hall'}
+                searchPlaceholder={locale === 'ar' ? 'البحث في القاعات...' : 'Search halls...'}
+                noResultsText={locale === 'ar' ? 'لا توجد نتائج' : 'No results found'}
+                isRTL={isRTL}
+              />
             </div>
           </div>
 
@@ -246,6 +279,8 @@ export function PilgrimsFilters({
                 label = `${locale === 'ar' ? 'الجنس' : 'Gender'}: ${genderLabels[value as string] || value}`;
               } else if (key === 'hasSpecialNeeds') {
                 label = value ? locale === 'ar' ? 'احتياجات خاصة' : 'Special needs' : '';
+              } else if (key === 'group') {
+                label = `${locale === 'ar' ? 'المجموعة' : 'Group'}: ${value}`;
               } else if (key === 'hall') {
                 label = `${locale === 'ar' ? 'القاعة' : 'Hall'}: ${value}`;
               }

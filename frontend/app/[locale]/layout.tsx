@@ -32,8 +32,8 @@ export default async function LocaleLayout({
   const isRtl = locale === 'ar';
 
   return (
-    <html lang={locale} dir={isRtl ? 'rtl' : 'ltr'} className={cairo.variable}>
-      <body className="font-sans">
+    <html lang={locale} dir={isRtl ? 'rtl' : 'ltr'} className={cairo.variable} suppressHydrationWarning>
+      <body className="font-sans" suppressHydrationWarning>
         <I18nProvider locale={locale}>
           <RootLayoutWrapper>
             {children}
