@@ -32,6 +32,10 @@ export const useToast = () => {
 export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [toasts, setToasts] = React.useState<Toast[]>([])
 
+  const removeToast = React.useCallback((id: string) => {
+    setToasts((prev) => prev.filter((toast) => toast.id !== id))
+  }, [])
+
   const addToast = React.useCallback((toast: Omit<Toast, 'id'>) => {
     const id = Date.now().toString()
     const newToast = { ...toast, id }
@@ -42,14 +46,16 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         removeToast(id)
       }, toast.duration || 5000)
     }
-  }, [])
+  }, [removeToast])
 
-  const removeToast = React.useCallback((id: string) => {
-    setToasts((prev) => prev.filter((toast) => toast.id !== id))
-  }, [])
+  const contextValue = React.useMemo(() => ({ toasts, addToast, removeToast }), [toasts, addToast, removeToast])
+
+  React.useEffect(() => {
+    setToastContext(contextValue)
+  }, [contextValue])
 
   return (
-    <ToastContext.Provider value={{ toasts, addToast, removeToast }}>
+    <ToastContext.Provider value={contextValue}>
       {children}
       <ToastContainer />
     </ToastContext.Provider>
@@ -155,21 +161,31 @@ const ToastItem: React.FC<ToastItemProps> = ({ toast, onClose }) => {
   )
 }
 
+let toastContext: ToastContextType | null = null
+
+export const setToastContext = (context: ToastContextType) => {
+  toastContext = context
+}
+
 export const toast = {
   success: (title: string, description?: string) => {
-    const { addToast } = useToast()
-    addToast({ title, description, variant: 'success' })
+    if (toastContext) {
+      toastContext.addToast({ title, description, variant: 'success' })
+    }
   },
   error: (title: string, description?: string) => {
-    const { addToast } = useToast()
-    addToast({ title, description, variant: 'error' })
+    if (toastContext) {
+      toastContext.addToast({ title, description, variant: 'error' })
+    }
   },
   warning: (title: string, description?: string) => {
-    const { addToast } = useToast()
-    addToast({ title, description, variant: 'warning' })
+    if (toastContext) {
+      toastContext.addToast({ title, description, variant: 'warning' })
+    }
   },
   info: (title: string, description?: string) => {
-    const { addToast } = useToast()
-    addToast({ title, description, variant: 'info' })
+    if (toastContext) {
+      toastContext.addToast({ title, description, variant: 'info' })
+    }
   },
 }
