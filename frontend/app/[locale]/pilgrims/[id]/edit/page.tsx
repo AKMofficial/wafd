@@ -29,14 +29,14 @@ export default function EditPilgrimPage() {
 
   const handleSubmit = async (data: UpdatePilgrimDto) => {
     if (!selectedPilgrim) return;
-    
+
     setIsSubmitting(true);
     try {
       await updatePilgrim(selectedPilgrim.id, data);
       router.push(`/${locale}/pilgrims/${selectedPilgrim.id}`);
     } catch (error) {
       console.error('Failed to update pilgrim:', error);
-      alert(locale === 'ar' ? 'فشل في تحديث بيانات الحاج' : 'Failed to update pilgrim');
+      alert(t('pilgrims.pages.errorUpdating'));
     }
     setIsSubmitting(false);
   };
@@ -79,11 +79,11 @@ export default function EditPilgrimPage() {
           <Card className="p-8 text-center">
             <AlertCircle className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h2 className="text-xl font-medium mb-2">
-              {locale === 'ar' ? 'لم يتم العثور على الحاج' : 'Pilgrim not found'}
+              {t('pilgrims.pages.notFound')}
             </h2>
             <Button onClick={() => router.push(`/${locale}/pilgrims`)}>
               {isRTL ? <ArrowRight className="h-4 w-4 me-2" /> : <ArrowLeft className="h-4 w-4 me-2" />}
-              {locale === 'ar' ? 'العودة للقائمة' : 'Back to list'}
+              {t('pilgrims.pages.backToList')}
             </Button>
           </Card>
         </div>
@@ -98,10 +98,10 @@ export default function EditPilgrimPage() {
           <div>
             <Button variant="ghost" onClick={handleCancel} className="mb-4">
               {isRTL ? <ArrowRight className="h-4 w-4 me-2" /> : <ArrowLeft className="h-4 w-4 me-2" />}
-              {locale === 'ar' ? 'رجوع' : 'Back'}
+              {t('pilgrims.pages.edit.back')}
             </Button>
             <h1 className="text-2xl font-bold">
-              {locale === 'ar' ? 'تعديل بيانات الحاج' : 'Edit Pilgrim'}
+              {t('pilgrims.pages.edit.title')}
             </h1>
             <p className="text-gray-600 mt-1">
               {selectedPilgrim.fullName} - {selectedPilgrim.registrationNumber}

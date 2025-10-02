@@ -74,10 +74,10 @@ export function PilgrimsTable({
 
   const getStatusLabel = (status: PilgrimStatus) => {
     const labels = {
-      expected: locale === 'ar' ? 'متوقع' : 'Expected',
-      arrived: locale === 'ar' ? 'وصل' : 'Arrived',
-      departed: locale === 'ar' ? 'غادر' : 'Departed',
-      no_show: locale === 'ar' ? 'لم يحضر' : 'No Show',
+      expected: t('pilgrims.status.expected'),
+      arrived: t('pilgrims.status.arrived'),
+      departed: t('pilgrims.status.departed'),
+      no_show: t('pilgrims.status.noShow'),
     };
     return labels[status];
   };
@@ -108,43 +108,43 @@ export function PilgrimsTable({
               <TableHead className="w-[140px]">
                 <div className="flex items-center gap-2">
                   <Hash className="h-4 w-4" />
-                  <span>رقم التسجيل</span>
+                  <span>{t('pilgrims.table.registrationNumber')}</span>
                 </div>
               </TableHead>
               <TableHead>
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4" />
-                  <span>الاسم الكامل</span>
+                  <span>{t('pilgrims.table.fullName')}</span>
                 </div>
               </TableHead>
               <TableHead className="text-center">
                 <div className="flex items-center justify-center gap-2">
                   <Flag className="h-4 w-4" />
-                  <span>الجنسية</span>
+                  <span>{t('pilgrims.table.nationality')}</span>
                 </div>
               </TableHead>
               <TableHead className="text-center">
                 <div className="flex items-center justify-center gap-2">
                   <Users className="h-4 w-4" />
-                  <span>المجموعة</span>
+                  <span>{t('pilgrims.table.group')}</span>
                 </div>
               </TableHead>
               <TableHead className="text-center">
                 <div className="flex items-center justify-center gap-2">
                   <Home className="h-4 w-4" />
-                  <span>القاعة</span>
+                  <span>{t('pilgrims.table.hall')}</span>
                 </div>
               </TableHead>
               <TableHead className="text-center">
                 <div className="flex items-center justify-center gap-2">
                   <Activity className="h-4 w-4" />
-                  <span>الحالة</span>
+                  <span>{t('pilgrims.table.status')}</span>
                 </div>
               </TableHead>
               <TableHead className="text-center">
                 <div className="flex items-center justify-center gap-2">
                   <Settings2 className="h-4 w-4" />
-                  <span>الإجراءات</span>
+                  <span>{t('pilgrims.table.actions')}</span>
                 </div>
               </TableHead>
             </TableRow>
@@ -153,7 +153,7 @@ export function PilgrimsTable({
             {pilgrims.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center text-gray-500 py-8">
-                  لا يوجد حجاج
+                  {t('pilgrims.table.noPilgrims')}
                 </TableCell>
               </TableRow>
             ) : (
@@ -202,7 +202,7 @@ export function PilgrimsTable({
                         onClick={() => onView?.(pilgrim)}
                       >
                         <Eye className={cn("h-4 w-4", isRTL ? "ml-1" : "mr-1")} />
-                        عرض
+                        {t('pilgrims.table.view')}
                       </Button>
                     </div>
                   </TableCell>
@@ -215,32 +215,32 @@ export function PilgrimsTable({
       </div>
 
       <div className="lg:hidden">
-        <div className="rounded-lg border">
-          <Table>
+        <div className="rounded-lg border overflow-x-auto">
+          <Table className="min-w-[400px]">
             <TableHeader>
               <TableRow>
-                <TableHead>
+                <TableHead className="text-xs px-2 py-2">
                   <div className="flex items-center gap-1">
-                    <Hash className="h-3 w-3" />
-                    <span>رقم التسجيل</span>
+                    <Hash className="h-3 w-3 flex-shrink-0" />
+                    <span className="whitespace-nowrap">{t('pilgrims.table.registrationNumber')}</span>
                   </div>
                 </TableHead>
-                <TableHead>
+                <TableHead className="text-xs px-2 py-2">
                   <div className="flex items-center gap-1">
-                    <User className="h-3 w-3" />
-                    <span>الاسم</span>
+                    <User className="h-3 w-3 flex-shrink-0" />
+                    <span className="whitespace-nowrap">{t('pilgrims.table.name')}</span>
                   </div>
                 </TableHead>
-                <TableHead className="text-center">
+                <TableHead className="text-center text-xs px-2 py-2">
                   <div className="flex items-center justify-center gap-1">
-                    <Activity className="h-3 w-3" />
-                    <span>الحالة</span>
+                    <Activity className="h-3 w-3 flex-shrink-0" />
+                    <span className="whitespace-nowrap">{t('pilgrims.table.status')}</span>
                   </div>
                 </TableHead>
-                <TableHead className="text-center">
+                <TableHead className="text-center text-xs px-2 py-2">
                   <div className="flex items-center justify-center gap-1">
-                    <Eye className="h-3 w-3" />
-                    <span>عرض</span>
+                    <Eye className="h-3 w-3 flex-shrink-0" />
+                    <span className="whitespace-nowrap">{t('pilgrims.table.view')}</span>
                   </div>
                 </TableHead>
               </TableRow>
@@ -248,38 +248,41 @@ export function PilgrimsTable({
             <TableBody>
               {pilgrims.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center text-gray-500 py-8">
-                    لا يوجد حجاج
+                  <TableCell colSpan={4} className="text-center text-gray-500 py-8 text-xs">
+                    {t('pilgrims.table.noPilgrims')}
                   </TableCell>
                 </TableRow>
               ) : (
                 pilgrims.map((pilgrim) => (
-                  <TableRow 
+                  <TableRow
                     key={pilgrim.id}
                     className="hover:bg-gray-50"
                     onClick={() => onView?.(pilgrim)}
                   >
-                    <TableCell className="text-xs">{pilgrim.registrationNumber}</TableCell>
-                    <TableCell className="text-xs">
+                    <TableCell className="text-xs px-2 py-2">
+                      <span className="whitespace-nowrap">{pilgrim.registrationNumber}</span>
+                    </TableCell>
+                    <TableCell className="text-xs px-2 py-2 min-w-[120px]">
                       <div className="flex items-center gap-1">
-                        <span>{pilgrim.fullName}</span>
+                        <span className="truncate max-w-[150px]">{pilgrim.fullName}</span>
                         {pilgrim.hasSpecialNeeds && (
-                          <Accessibility className="h-3 w-3 text-purple-600" />
+                          <Accessibility className="h-3 w-3 text-purple-600 flex-shrink-0" />
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="text-center">
-                      <Badge 
-                        variant="outline" 
-                        className={cn("text-xs", statusConfig[pilgrim.status].color)}
+                    <TableCell className="text-center px-2 py-2">
+                      <Badge
+                        variant="outline"
+                        className={cn("text-[10px] px-1.5 py-0.5 whitespace-nowrap", statusConfig[pilgrim.status].color)}
                       >
                         {getStatusLabel(pilgrim.status)}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
-                      <Button 
-                        variant="outline" 
+                    <TableCell className="text-center px-2 py-2" onClick={(e) => e.stopPropagation()}>
+                      <Button
+                        variant="outline"
                         size="sm"
+                        className="h-7 w-7 p-0"
                         onClick={() => onView?.(pilgrim)}
                       >
                         <Eye className="h-3 w-3" />

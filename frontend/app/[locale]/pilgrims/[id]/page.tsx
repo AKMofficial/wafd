@@ -94,11 +94,11 @@ export default function PilgrimDetailPage() {
       if (success) {
         router.push(`/${locale}/pilgrims`);
       } else {
-        alert(locale === 'ar' ? 'فشل في حذف الحاج' : 'Failed to delete pilgrim');
+        alert(t('pilgrims.detail.errorDeleting'));
       }
     } catch (error) {
       console.error('Failed to delete pilgrim:', error);
-      alert(locale === 'ar' ? 'فشل في حذف الحاج' : 'Failed to delete pilgrim');
+      alert(t('pilgrims.detail.errorDeleting'));
     }
     setIsDeleting(false);
     setShowDeleteDialog(false);
@@ -109,13 +109,11 @@ export default function PilgrimDetailPage() {
   };
 
   const getStatusLabel = (status: PilgrimStatus) => {
-    const labels = {
-      expected: locale === 'ar' ? 'متوقع' : 'Expected',
-      arrived: locale === 'ar' ? 'وصل' : 'Arrived',
-      departed: locale === 'ar' ? 'غادر' : 'Departed',
-      no_show: locale === 'ar' ? 'لم يحضر' : 'No Show',
-    };
-    return labels[status];
+    return t(`pilgrims.status.${status === 'no_show' ? 'noShow' : status}` as any);
+  };
+
+  const getDisabilityLabel = (type: string) => {
+    return t(`pilgrims.form.disabilityTypes.${type}` as any) || type;
   };
 
   if (isLoading) {
@@ -146,11 +144,11 @@ export default function PilgrimDetailPage() {
           <Card className="p-8 text-center">
             <AlertCircle className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h2 className="text-xl font-medium mb-2">
-              {locale === 'ar' ? 'لم يتم العثور على الحاج' : 'Pilgrim not found'}
+              {t('pilgrims.pages.notFound')}
             </h2>
             <Button onClick={handleBack}>
               {isRTL ? <ArrowRight className="h-4 w-4 me-2" /> : <ArrowLeft className="h-4 w-4 me-2" />}
-              {locale === 'ar' ? 'العودة للقائمة' : 'Back to list'}
+              {t('pilgrims.pages.backToList')}
             </Button>
           </Card>
         </div>
@@ -164,7 +162,7 @@ export default function PilgrimDetailPage() {
         <div className="flex items-center justify-between">
           <Button variant="ghost" onClick={handleBack}>
             {isRTL ? <ArrowRight className="h-4 w-4 me-2" /> : <ArrowLeft className="h-4 w-4 me-2" />}
-            {locale === 'ar' ? 'رجوع' : 'Back'}
+            {t('pilgrims.detail.back')}
           </Button>
           
         </div>
@@ -202,7 +200,7 @@ export default function PilgrimDetailPage() {
                 {selectedPilgrim.hasSpecialNeeds && (
                   <Badge variant="outline" className="gap-1 text-purple-600 border-purple-200">
                     <Accessibility className="h-3 w-3" />
-                    {locale === 'ar' ? 'احتياجات خاصة' : 'Special Needs'}
+                    {t('pilgrims.detail.specialNeeds')}
                   </Badge>
                 )}
               </div>
@@ -213,68 +211,56 @@ export default function PilgrimDetailPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold mb-3">
-                  {locale === 'ar' ? 'المعلومات الأساسية' : 'Basic Information'}
+                  {t('pilgrims.detail.basicInfo')}
                 </h3>
-                
+
                 <div className="space-y-3">
                   <div className="flex justify-between items-center py-2 border-b">
                     <span className="text-gray-600">
-                      {locale === 'ar' ? 'رقم الهوية' : 'National ID'}
+                      {t('pilgrims.detail.nationalId')}
                     </span>
                     <span className="font-medium font-mono">{selectedPilgrim.nationalId}</span>
                   </div>
-                  
+
                   {selectedPilgrim.passportNumber && (
                     <div className="flex justify-between items-center py-2 border-b">
                       <span className="text-gray-600">
-                        {locale === 'ar' ? 'رقم الجواز' : 'Passport Number'}
+                        {t('pilgrims.detail.passportNumber')}
                       </span>
                       <span className="font-medium font-mono">{selectedPilgrim.passportNumber}</span>
                     </div>
                   )}
-                  
+
                   <div className="flex justify-between items-center py-2 border-b">
                     <span className="text-gray-600">
-                      {locale === 'ar' ? 'الجنسية' : 'Nationality'}
+                      {t('pilgrims.detail.nationality')}
                     </span>
                     <span className="font-medium">{selectedPilgrim.nationality}</span>
                   </div>
-                  
+
                   <div className="flex justify-between items-center py-2 border-b">
                     <span className="text-gray-600">
-                      {locale === 'ar' ? 'رقم الهاتف' : 'Phone Number'}
+                      {t('pilgrims.detail.phoneNumber')}
                     </span>
                     <a href={`tel:${selectedPilgrim.phoneNumber}`} className="font-medium text-primary hover:underline">
                       {selectedPilgrim.phoneNumber}
                     </a>
                   </div>
-                  
+
                   <div className="flex justify-between items-center py-2 border-b">
                     <span className="text-gray-600">
-                      {locale === 'ar' ? 'المجموعة' : 'Group'}
+                      {t('pilgrims.detail.group')}
                     </span>
                     <span className="font-medium">{selectedPilgrim.groupName || '-'}</span>
                   </div>
-                  
+
                   {selectedPilgrim.hasSpecialNeeds && selectedPilgrim.specialNeedsType && (
                     <div className="flex justify-between items-center py-2 border-b">
                       <span className="text-gray-600">
-                        {locale === 'ar' ? 'نوع الإعاقة' : 'Disability Type'}
+                        {t('pilgrims.detail.disabilityType')}
                       </span>
                       <span className="font-medium">
-                        {selectedPilgrim.specialNeedsType === 'mobility' 
-                          ? (locale === 'ar' ? 'مساعدة في الحركة (كرسي متحرك، مشي)' : 'Mobility assistance (wheelchair, walking)')
-                          : selectedPilgrim.specialNeedsType === 'vision_hearing'
-                          ? (locale === 'ar' ? 'مشاكل في البصر أو السمع' : 'Vision or hearing issues')
-                          : selectedPilgrim.specialNeedsType === 'medical_care'
-                          ? (locale === 'ar' ? 'رعاية طبية خاصة' : 'Special medical care')
-                          : selectedPilgrim.specialNeedsType === 'elderly_cognitive'
-                          ? (locale === 'ar' ? 'رعاية كبار السن أو إعاقة ذهنية' : 'Elderly care or cognitive disability')
-                          : selectedPilgrim.specialNeedsType === 'dietary_language'
-                          ? (locale === 'ar' ? 'احتياجات غذائية أو لغوية' : 'Dietary or language assistance')
-                          : selectedPilgrim.specialNeedsType === 'other'
-                          ? (locale === 'ar' ? 'أخرى' : 'Other')
-                          : selectedPilgrim.specialNeedsType}
+                        {getDisabilityLabel(selectedPilgrim.specialNeedsType)}
                       </span>
                     </div>
                   )}
@@ -283,39 +269,37 @@ export default function PilgrimDetailPage() {
 
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold mb-3">
-                  {locale === 'ar' ? 'المعلومات الشخصية' : 'Personal Information'}
+                  {t('pilgrims.detail.personalInfo')}
                 </h3>
-                
+
                 <div className="space-y-3">
                   <div className="flex justify-between items-center py-2 border-b">
                     <span className="text-gray-600">
-                      {locale === 'ar' ? 'الاسم الأول' : 'First Name'}
+                      {t('pilgrims.detail.firstName')}
                     </span>
                     <span className="font-medium">{selectedPilgrim.firstName}</span>
                   </div>
-                  
+
                   <div className="flex justify-between items-center py-2 border-b">
                     <span className="text-gray-600">
-                      {locale === 'ar' ? 'الاسم الأخير' : 'Last Name'}
+                      {t('pilgrims.detail.lastName')}
                     </span>
                     <span className="font-medium">{selectedPilgrim.lastName}</span>
                   </div>
-                  
+
                   <div className="flex justify-between items-center py-2 border-b">
                     <span className="text-gray-600">
-                      {locale === 'ar' ? 'العمر' : 'Age'}
+                      {t('pilgrims.detail.age')}
                     </span>
-                    <span className="font-medium">{selectedPilgrim.age} {locale === 'ar' ? 'سنة' : 'years'}</span>
+                    <span className="font-medium">{selectedPilgrim.age} {t('pilgrims.detail.years')}</span>
                   </div>
-                  
+
                   <div className="flex justify-between items-center py-2 border-b">
                     <span className="text-gray-600">
-                      {locale === 'ar' ? 'الجنس' : 'Gender'}
+                      {t('pilgrims.detail.gender')}
                     </span>
                     <span className="font-medium">
-                      {selectedPilgrim.gender === 'male' 
-                        ? (locale === 'ar' ? 'ذكر' : 'Male')
-                        : (locale === 'ar' ? 'أنثى' : 'Female')}
+                      {t(`pilgrims.detail.${selectedPilgrim.gender}`)}
                     </span>
                   </div>
                 </div>
@@ -324,9 +308,9 @@ export default function PilgrimDetailPage() {
 
             <div className="space-y-4">
               <h3 className="text-lg font-semibold mb-3">
-                {locale === 'ar' ? 'معلومات الإقامة' : 'Accommodation'}
+                {t('pilgrims.detail.accommodationInfo')}
               </h3>
-              
+
               <div className="space-y-3">
                 {selectedPilgrim.assignedHall && selectedPilgrim.assignedBed ? (
                   <Card className="p-4 bg-gray-50 border-gray-200">
@@ -337,7 +321,7 @@ export default function PilgrimDetailPage() {
                         </div>
                         <div>
                           <p className="text-sm text-gray-600">
-                            {locale === 'ar' ? 'القاعة' : 'Hall'}
+                            {t('pilgrims.detail.hall')}
                           </p>
                           <p className="font-medium">{selectedPilgrim.assignedHall}</p>
                         </div>
@@ -348,21 +332,21 @@ export default function PilgrimDetailPage() {
                         </div>
                         <div>
                           <p className="text-sm text-gray-600">
-                            {locale === 'ar' ? 'رقم السرير' : 'Bed Number'}
+                            {t('pilgrims.detail.bedNumber')}
                           </p>
                           <p className="font-medium">{selectedPilgrim.assignedBed}</p>
                         </div>
                       </div>
                     </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       className="w-full mt-3"
                       onClick={() => {
                         router.push(`/${locale}/halls`);
                       }}
                     >
-                      {locale === 'ar' ? 'عرض تفاصيل القاعة' : 'View Hall Details'}
+                      {t('pilgrims.detail.viewHallDetails')}
                     </Button>
                   </Card>
                 ) : (
@@ -371,31 +355,29 @@ export default function PilgrimDetailPage() {
                       <AlertCircle className="h-5 w-5 text-yellow-600" />
                       <div>
                         <p className="font-medium text-yellow-800">
-                          {locale === 'ar' ? 'لم يتم تخصيص سرير' : 'No bed assigned'}
+                          {t('pilgrims.detail.noBedAssigned')}
                         </p>
                         <p className="text-sm text-yellow-700 mt-1">
-                          {locale === 'ar' 
-                            ? 'يجب تخصيص سرير لهذا الحاج عند الوصول' 
-                            : 'A bed should be assigned when the pilgrim arrives'}
+                          {t('pilgrims.detail.bedAssignmentNote')}
                         </p>
                       </div>
                     </div>
                   </Card>
                 )}
-                
+
                 {selectedPilgrim.arrivalDate && (
                   <div className="flex justify-between items-center py-2 border-b">
                     <span className="text-gray-600">
-                      {locale === 'ar' ? 'تاريخ الوصول' : 'Arrival Date'}
+                      {t('pilgrims.detail.arrivalDate')}
                     </span>
                     <span className="font-medium">{formatDate(selectedPilgrim.arrivalDate)}</span>
                   </div>
                 )}
-                
+
                 {selectedPilgrim.departureDate && (
                   <div className="flex justify-between items-center py-2 border-b">
                     <span className="text-gray-600">
-                      {locale === 'ar' ? 'تاريخ المغادرة' : 'Departure Date'}
+                      {t('pilgrims.detail.departureDate')}
                     </span>
                     <span className="font-medium">{formatDate(selectedPilgrim.departureDate)}</span>
                   </div>
@@ -406,13 +388,13 @@ export default function PilgrimDetailPage() {
             {selectedPilgrim.notes && (
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold mb-3">
-                  {locale === 'ar' ? 'معلومات إضافية' : 'Additional Information'}
+                  {t('pilgrims.detail.additionalInfo')}
                 </h3>
                 <Card className="p-4 bg-gray-50">
                   <div className="space-y-2">
                     <div className="flex justify-between items-start py-2">
                       <span className="text-gray-600 font-medium">
-                        {locale === 'ar' ? 'ملاحظات' : 'Notes'}
+                        {t('pilgrims.detail.notes')}
                       </span>
                     </div>
                     <p className="text-gray-700">{selectedPilgrim.notes}</p>
@@ -425,33 +407,33 @@ export default function PilgrimDetailPage() {
           <div className="border-t p-6">
             <div className="flex flex-col sm:flex-row gap-3">
               {selectedPilgrim.status === 'expected' && (
-                <Button 
+                <Button
                   onClick={handleMarkArrival}
                   disabled={isMarkingArrival}
                   className="flex-1 sm:flex-none"
                 >
                   <UserCheck className="h-4 w-4 me-2" />
-                  {locale === 'ar' ? 'تسجيل وصول' : 'Mark Arrival'}
+                  {t('pilgrims.detail.markArrival')}
                 </Button>
               )}
-              
-              <Button 
-                variant="outline" 
+
+              <Button
+                variant="outline"
                 onClick={handleEdit}
                 className="flex-1 sm:flex-none"
               >
                 <Edit className="h-4 w-4 me-2" />
-                {locale === 'ar' ? 'تعديل' : 'Edit'}
+                {t('pilgrims.detail.edit')}
               </Button>
-              
-              <Button 
-                variant="outline" 
+
+              <Button
+                variant="outline"
                 className="flex-1 sm:flex-none text-red-600 hover:text-red-700"
                 onClick={() => setShowDeleteDialog(true)}
                 disabled={isDeleting}
               >
                 <Trash className="h-4 w-4 me-2" />
-                {locale === 'ar' ? 'حذف' : 'Delete'}
+                {t('pilgrims.detail.delete')}
               </Button>
             </div>
           </div>
@@ -462,24 +444,22 @@ export default function PilgrimDetailPage() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {locale === 'ar' ? 'تأكيد الحذف' : 'Confirm Delete'}
+              {t('pilgrims.detail.confirmDelete')}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {locale === 'ar' 
-                ? `هل أنت متأكد من حذف بيانات الحاج ${selectedPilgrim?.fullName}؟ لا يمكن التراجع عن هذا الإجراء.`
-                : `Are you sure you want to delete ${selectedPilgrim?.fullName}? This action cannot be undone.`}
+              {t('pilgrims.detail.deleteWarning').replace('{name}', selectedPilgrim?.fullName || '')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isDeleting}>
-              {locale === 'ar' ? 'إلغاء' : 'Cancel'}
+              {t('common.cancel')}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={isDeleting}
               className="bg-red-600 hover:bg-red-700"
             >
-              {locale === 'ar' ? 'حذف' : 'Delete'}
+              {t('common.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

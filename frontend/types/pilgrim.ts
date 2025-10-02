@@ -147,22 +147,23 @@ export interface UpdatePilgrimDto extends Partial<CreatePilgrimDto> {
 }
 
 export interface ExcelImportColumn {
-  header: string;
+  headerKey: string; // Translation key for the header
   field: keyof CreatePilgrimDto;
   required: boolean;
   type: 'string' | 'number' | 'date' | 'gender' | 'boolean' | 'specialneeds';
   transform?: (value: any) => any;
 }
 
+// Excel column definitions with translation keys
 export const EXCEL_IMPORT_COLUMNS: ExcelImportColumn[] = [
-  { header: 'رقم الهوية', field: 'nationalId', required: true, type: 'string' },
-  { header: 'رقم الجواز', field: 'passportNumber', required: false, type: 'string' },
-  { header: 'الاسم الأول', field: 'firstName', required: true, type: 'string' },
-  { header: 'الاسم الأخير', field: 'lastName', required: true, type: 'string' },
-  { header: 'العمر', field: 'age', required: true, type: 'number' },
-  { header: 'الجنس', field: 'gender', required: true, type: 'gender' },
-  { header: 'الجنسية', field: 'nationality', required: true, type: 'string' },
-  { header: 'رقم الهاتف', field: 'phoneNumber', required: true, type: 'string' },
-  { header: 'نوع الإعاقة', field: 'specialNeedsType', required: false, type: 'specialneeds' },
-  { header: 'ملاحظات', field: 'notes', required: false, type: 'string' },
+  { headerKey: 'pilgrims.excel.nationalId', field: 'nationalId', required: true, type: 'string' },
+  { headerKey: 'pilgrims.excel.passportNumber', field: 'passportNumber', required: false, type: 'string' },
+  { headerKey: 'pilgrims.excel.firstName', field: 'firstName', required: true, type: 'string' },
+  { headerKey: 'pilgrims.excel.lastName', field: 'lastName', required: true, type: 'string' },
+  { headerKey: 'pilgrims.excel.age', field: 'age', required: true, type: 'number' },
+  { headerKey: 'pilgrims.excel.gender', field: 'gender', required: true, type: 'gender' },
+  { headerKey: 'pilgrims.excel.nationality', field: 'nationality', required: true, type: 'string' },
+  { headerKey: 'pilgrims.excel.phoneNumber', field: 'phoneNumber', required: true, type: 'string' },
+  { headerKey: 'pilgrims.excel.specialNeedsType', field: 'specialNeedsType', required: false, type: 'specialneeds' },
+  { headerKey: 'pilgrims.excel.notes', field: 'notes', required: false, type: 'string' },
 ];

@@ -14,24 +14,24 @@ export default function ReportsPage() {
             {t('nav.reports')}
           </h1>
           <p className="text-gray-600">
-            {t('app.description')}
+            {t('reports.subtitle')}
           </p>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer">
-            <h3 className="text-lg font-semibold mb-2">تقرير الإشغال</h3>
-            <p className="text-gray-600 text-sm">عرض حالة إشغال القاعات والأسرّة</p>
+            <h3 className="text-lg font-semibold mb-2">{t('reports.occupancyReport.title')}</h3>
+            <p className="text-gray-600 text-sm">{t('reports.occupancyReport.description')}</p>
           </div>
-          
+
           <div className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer">
-            <h3 className="text-lg font-semibold mb-2">تقرير الشواغر</h3>
-            <p className="text-gray-600 text-sm">عرض الأسرّة الشاغرة المتاحة</p>
+            <h3 className="text-lg font-semibold mb-2">{t('reports.vacancyReport.title')}</h3>
+            <p className="text-gray-600 text-sm">{t('reports.vacancyReport.description')}</p>
           </div>
-          
+
           <div className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer">
-            <h3 className="text-lg font-semibold mb-2">تقرير الحضور</h3>
-            <p className="text-gray-600 text-sm">متابعة حضور وغياب الحجاج</p>
+            <h3 className="text-lg font-semibold mb-2">{t('reports.attendanceReport.title')}</h3>
+            <p className="text-gray-600 text-sm">{t('reports.attendanceReport.description')}</p>
           </div>
         </div>
       </div>

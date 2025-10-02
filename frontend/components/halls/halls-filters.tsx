@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useLocale } from '@/lib/i18n';
+import { useTranslations, useLocale } from '@/lib/i18n';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -27,6 +27,7 @@ export function HallsFilters({
   onFiltersChange,
   onReset,
 }: HallsFiltersProps) {
+  const t = useTranslations();
   const locale = useLocale();
   const isRTL = locale === 'ar';
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -75,7 +76,7 @@ export function HallsFilters({
           )} />
           <Input
             type="text"
-            placeholder="البحث بالاسم أو الرمز..."
+            placeholder={t('halls.filters.searchPlaceholder')}
             value={filters.search || ''}
             onChange={(e) => handleSearchChange(e.target.value)}
             className={cn("pl-10", isRTL && "pl-3 pr-10")}
@@ -88,7 +89,7 @@ export function HallsFilters({
           className="sm:w-auto"
         >
           <Filter className="h-4 w-4 me-2" />
-          تصفية متقدمة
+          {t('halls.filters.advancedFilters')}
           {activeFiltersCount > 0 && (
             <Badge variant="secondary" className="ms-2">
               {activeFiltersCount}
@@ -103,7 +104,7 @@ export function HallsFilters({
             className="sm:w-auto"
           >
             <RefreshCw className="h-4 w-4 me-2" />
-            إعادة تعيين
+            {t('halls.filters.reset')}
           </Button>
         )}
       </div>
@@ -113,7 +114,7 @@ export function HallsFilters({
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
               <label className="text-sm font-medium text-gray-700 mb-1 block">
-                الجنس
+                {t('halls.filters.typeLabel')}
               </label>
               <Select
                 value={filters.type || 'all'}
@@ -123,16 +124,16 @@ export function HallsFilters({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">الكل</SelectItem>
-                  <SelectItem value="male">رجال</SelectItem>
-                  <SelectItem value="female">نساء</SelectItem>
+                  <SelectItem value="all">{t('halls.filters.allOption')}</SelectItem>
+                  <SelectItem value="male">{t('halls.filters.male')}</SelectItem>
+                  <SelectItem value="female">{t('halls.filters.female')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div>
               <label className="text-sm font-medium text-gray-700 mb-1 block">
-                الحالة
+                {t('halls.filters.statusLabel')}
               </label>
               <Select
                 value={filters.status || 'all'}
@@ -142,16 +143,16 @@ export function HallsFilters({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">الكل</SelectItem>
-                  <SelectItem value="full">ممتلئة</SelectItem>
-                  <SelectItem value="available">غير ممتلئة</SelectItem>
+                  <SelectItem value="all">{t('halls.filters.allOption')}</SelectItem>
+                  <SelectItem value="full">{t('halls.filters.full')}</SelectItem>
+                  <SelectItem value="available">{t('halls.filters.notFull')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div>
               <label className="text-sm font-medium text-gray-700 mb-1 block">
-                احتياجات خاصة
+                {t('halls.filters.specialNeedsLabel')}
               </label>
               <Select
                 value={filters.hasSpecialNeeds?.toString() || 'all'}
@@ -161,9 +162,9 @@ export function HallsFilters({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">الكل</SelectItem>
-                  <SelectItem value="true">يوجد</SelectItem>
-                  <SelectItem value="false">لا يوجد</SelectItem>
+                  <SelectItem value="all">{t('halls.filters.allOption')}</SelectItem>
+                  <SelectItem value="true">{t('halls.filters.hasSpecialNeeds')}</SelectItem>
+                  <SelectItem value="false">{t('halls.filters.noSpecialNeeds')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -171,30 +172,24 @@ export function HallsFilters({
 
           <div className="flex items-center gap-2 pt-2">
             <span className="text-sm text-gray-600">
-              الفلاتر النشطة:
+              {t('halls.filters.activeFiltersLabel')}
             </span>
             {Object.entries(filters).map(([key, value]) => {
               if (!value || (Array.isArray(value) && value.length === 0)) return null;
-              
+
               let label = '';
               if (key === 'search') {
-                label = `بحث: ${value}`;
+                label = `${t('halls.filters.searchFilter')}: ${value}`;
               } else if (key === 'type') {
-                const typeLabels: Record<string, string> = {
-                  male: 'رجال',
-                  female: 'نساء',
-                };
-                label = `الجنس: ${typeLabels[value as string] || value}`;
+                const typeLabel = value === 'male' ? t('halls.filters.male') : t('halls.filters.female');
+                label = `${t('halls.filters.genderFilter')}: ${typeLabel}`;
               } else if (key === 'status') {
-                const statusLabels: Record<string, string> = {
-                  available: 'غير ممتلئة',
-                  full: 'ممتلئة',
-                };
-                label = `الحالة: ${statusLabels[value as string] || value}`;
+                const statusLabel = value === 'full' ? t('halls.filters.full') : t('halls.filters.notFull');
+                label = `${t('halls.filters.statusFilter')}: ${statusLabel}`;
               } else if (key === 'hasSpecialNeeds') {
-                label = value ? 'يوجد احتياجات خاصة' : 'لا يوجد احتياجات خاصة';
+                label = value ? t('halls.filters.hasSpecialNeedsFilter') : t('halls.filters.noSpecialNeedsFilter');
               }
-              
+
               if (!label) return null;
               
               return (

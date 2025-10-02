@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useLocale } from '@/lib/i18n';
+import { useLocale, useTranslations } from '@/lib/i18n';
 import { Bed } from '@/types/hall';
 import { Pilgrim } from '@/types/pilgrim';
 import { usePilgrimStore } from '@/store/pilgrim-store';
@@ -50,6 +50,7 @@ export function BedDetailsDialog({
 }: BedDetailsDialogProps) {
   const router = useRouter();
   const locale = useLocale();
+  const t = useTranslations();
   const isRTL = locale === 'ar';
   const [pilgrim, setPilgrim] = useState<Pilgrim | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -76,37 +77,29 @@ export function BedDetailsDialog({
         return {
           icon: BedIcon,
           color: 'text-green-600 bg-green-100',
-          title: locale === 'ar' ? 'سرير شاغر' : 'Vacant Bed',
-          description: locale === 'ar' 
-            ? 'هذا السرير متاح للتخصيص' 
-            : 'This bed is available for assignment',
+          title: t('halls.bedDetailsDialog.vacantBed'),
+          description: t('halls.bedDetailsDialog.availableForAssignment'),
         };
       case 'occupied':
         return {
           icon: User,
           color: 'text-red-600 bg-red-100',
-          title: locale === 'ar' ? 'سرير مشغول' : 'Occupied Bed',
-          description: locale === 'ar' 
-            ? 'هذا السرير مخصص لحاج' 
-            : 'This bed is assigned to a pilgrim',
+          title: t('halls.bedDetailsDialog.occupiedBed'),
+          description: t('halls.bedDetailsDialog.assignedToPilgrim'),
         };
       case 'reserved':
         return {
           icon: Lock,
           color: 'text-yellow-600 bg-yellow-100',
-          title: locale === 'ar' ? 'سرير محجوز' : 'Reserved Bed',
-          description: locale === 'ar' 
-            ? 'هذا السرير محجوز وغير متاح حالياً' 
-            : 'This bed is reserved and not available',
+          title: t('halls.bedDetailsDialog.reservedBed'),
+          description: t('halls.bedDetailsDialog.reservedNotAvailable'),
         };
       case 'maintenance':
         return {
           icon: Wrench,
           color: 'text-gray-600 bg-gray-100',
-          title: locale === 'ar' ? 'سرير تحت الصيانة' : 'Bed Under Maintenance',
-          description: locale === 'ar' 
-            ? 'هذا السرير تحت الصيانة وغير متاح' 
-            : 'This bed is under maintenance and not available',
+          title: t('halls.bedDetailsDialog.maintenanceBed'),
+          description: t('halls.bedDetailsDialog.underMaintenance'),
         };
     }
   };
@@ -124,7 +117,7 @@ export function BedDetailsDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <StatusIcon className={cn("h-5 w-5", statusConfig.color.split(' ')[0])} />
-            {locale === 'ar' ? 'تفاصيل السرير' : 'Bed Details'} - {bed.number}
+            {t('halls.bedDetailsDialog.bedNumber')} - {bed.number}
           </DialogTitle>
           <DialogDescription>
             {statusConfig.description}
@@ -135,24 +128,24 @@ export function BedDetailsDialog({
           {/* Bed Information */}
           <Card className="p-4 space-y-3">
             <h3 className="font-semibold text-sm">
-              {locale === 'ar' ? 'معلومات السرير' : 'Bed Information'}
+              {t('halls.bedDetailsDialog.bedNumber')}
             </h3>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-600">
-                  {locale === 'ar' ? 'رقم السرير' : 'Bed Number'}
+                  {t('halls.bedDetailsDialog.bedNumber')}
                 </span>
                 <span className="font-medium">{bed.number}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">
-                  {locale === 'ar' ? 'رمز القاعة' : 'Hall Code'}
+                  {t('halls.createDialog.hallCode')}
                 </span>
                 <span className="font-medium">{bed.hallCode}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">
-                  {locale === 'ar' ? 'الحالة' : 'Status'}
+                  {t('halls.bedStatus')}
                 </span>
                 <Badge className={cn("gap-1", statusConfig.color)}>
                   {statusConfig.title}
@@ -161,10 +154,10 @@ export function BedDetailsDialog({
               {bed.isSpecialNeeds && (
                 <div className="flex justify-between">
                   <span className="text-gray-600">
-                    {locale === 'ar' ? 'احتياجات خاصة' : 'Special Needs'}
+                    {t('halls.specialNeeds')}
                   </span>
                   <Badge variant="outline" className="text-purple-600 border-purple-200">
-                    {locale === 'ar' ? 'نعم' : 'Yes'}
+                    {t('pilgrims.filters.yes')}
                   </Badge>
                 </div>
               )}
@@ -175,41 +168,41 @@ export function BedDetailsDialog({
           {bed.status === 'occupied' && pilgrim && !isLoading && (
             <Card className="p-4 space-y-3">
               <h3 className="font-semibold text-sm">
-                {locale === 'ar' ? 'معلومات الحاج' : 'Pilgrim Information'}
+                {t('halls.bedDetailsDialog.pilgrimInfo')}
               </h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">
-                    {locale === 'ar' ? 'الاسم' : 'Name'}
+                    {t('halls.bedDetailsDialog.name')}
                   </span>
                   <span className="font-medium">{pilgrim.fullName}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">
-                    {locale === 'ar' ? 'رقم التسجيل' : 'Registration No.'}
+                    {t('halls.bedDetailsDialog.registrationNumber')}
                   </span>
                   <span className="font-medium">{pilgrim.registrationNumber}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">
-                    {locale === 'ar' ? 'الجنسية' : 'Nationality'}
+                    {t('pilgrims.detail.nationality')}
                   </span>
                   <span className="font-medium">{pilgrim.nationality}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">
-                    {locale === 'ar' ? 'رقم الهاتف' : 'Phone'}
+                    {t('halls.bedDetailsDialog.phone')}
                   </span>
                   <span className="font-medium" dir="ltr">{pilgrim.phoneNumber}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">
-                    {locale === 'ar' ? 'تاريخ الوصول' : 'Arrival Date'}
+                    {t('halls.bedDetailsDialog.arrivalDate')}
                   </span>
                   <span className="text-xs">{formatDate(pilgrim.arrivalDate)}</span>
                 </div>
               </div>
-              
+
               <Button
                 variant="outline"
                 size="sm"
@@ -219,7 +212,7 @@ export function BedDetailsDialog({
                   onClose();
                 }}
               >
-                {locale === 'ar' ? 'عرض تفاصيل الحاج' : 'View Pilgrim Details'}
+                {t('halls.bedDetailsDialog.viewPilgrimDetails')}
               </Button>
             </Card>
           )}
@@ -229,7 +222,7 @@ export function BedDetailsDialog({
             <Card className="p-4 space-y-2 bg-gray-50">
               <h3 className="font-semibold text-sm flex items-center gap-2">
                 <Wrench className="h-4 w-4" />
-                {locale === 'ar' ? 'ملاحظات الصيانة' : 'Maintenance Notes'}
+                {t('halls.bedDetailsDialog.maintenanceNotes')}
               </h3>
               <p className="text-sm text-gray-600">{bed.maintenanceNotes}</p>
             </Card>
@@ -246,29 +239,26 @@ export function BedDetailsDialog({
                 }}
               >
                 <User className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
-                {locale === 'ar' ? 'تخصيص لحاج' : 'Assign to Pilgrim'}
+                {t('halls.bedDetailsDialog.assignPilgrim')}
               </Button>
             )}
-            
+
             {bed.status === 'occupied' && (
               <Button
                 variant="destructive"
                 className="flex-1"
                 onClick={() => {
-                  if (confirm(locale === 'ar' 
-                    ? 'هل أنت متأكد من إخلاء هذا السرير؟' 
-                    : 'Are you sure you want to vacate this bed?'
-                  )) {
+                  if (confirm(t('halls.bedDetailsDialog.confirmVacate'))) {
                     onVacateBed?.(bed.id);
                     onClose();
                   }
                 }}
               >
                 <UserX className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
-                {locale === 'ar' ? 'إخلاء السرير' : 'Vacate Bed'}
+                {t('halls.bedDetailsDialog.vacateBed')}
               </Button>
             )}
-            
+
             {(bed.status === 'vacant' || bed.status === 'reserved') && (
               <Button
                 variant="outline"
@@ -279,10 +269,10 @@ export function BedDetailsDialog({
                 }}
               >
                 <Wrench className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
-                {locale === 'ar' ? 'وضع تحت الصيانة' : 'Set to Maintenance'}
+                {t('halls.bedDetailsDialog.markForMaintenance')}
               </Button>
             )}
-            
+
             {bed.status === 'maintenance' && (
               <Button
                 variant="outline"
@@ -293,12 +283,12 @@ export function BedDetailsDialog({
                 }}
               >
                 <BedIcon className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
-                {locale === 'ar' ? 'إنهاء الصيانة' : 'End Maintenance'}
+                {t('halls.bedDetailsDialog.markAsVacant')}
               </Button>
             )}
-            
+
             <Button variant="outline" onClick={onClose}>
-              {locale === 'ar' ? 'إغلاق' : 'Close'}
+              {t('halls.bedDetailsDialog.close')}
             </Button>
           </div>
         </div>

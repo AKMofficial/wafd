@@ -1,10 +1,19 @@
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+
 export default function NotFound() {
-  return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <h2 className="text-2xl font-bold">404 - Page Not Found</h2>
-        <p className="mt-2">Could not find requested resource</p>
-      </div>
-    </div>
-  );
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      router.push('/ar');
+    } else {
+      router.push('/ar/login');
+    }
+  }, [router]);
+
+  return null;
 }

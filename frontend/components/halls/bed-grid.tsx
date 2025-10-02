@@ -19,6 +19,7 @@ import {
   Lock,
   Accessibility,
 } from 'lucide-react';
+import { useTranslations } from '@/lib/i18n';
 
 interface BedGridProps {
   beds: Bed[];
@@ -27,40 +28,42 @@ interface BedGridProps {
   selectedBedId?: string;
 }
 
-const statusConfig = {
+const getStatusConfig = (t: any) => ({
   vacant: {
-    label: 'شاغر',
+    label: t('halls.bedStatus.vacant'),
     icon: BedIcon,
     color: 'bg-green-100 hover:bg-green-200 text-green-800 border-green-300',
     iconColor: 'text-green-600',
   },
   occupied: {
-    label: 'مشغول',
+    label: t('halls.bedStatus.occupied'),
     icon: User,
     color: 'bg-red-100 hover:bg-red-200 text-red-800 border-red-300',
     iconColor: 'text-red-600',
   },
   reserved: {
-    label: 'محجوز',
+    label: t('halls.bedStatus.reserved'),
     icon: Lock,
     color: 'bg-yellow-100 hover:bg-yellow-200 text-yellow-800 border-yellow-300',
     iconColor: 'text-yellow-600',
   },
   maintenance: {
-    label: 'صيانة',
+    label: t('halls.bedStatus.maintenance'),
     icon: Wrench,
     color: 'bg-gray-100 hover:bg-gray-200 text-gray-800 border-gray-300',
     iconColor: 'text-gray-600',
   },
-};
+});
 
 export function BedGrid({ beds, hallType, onBedClick, selectedBedId }: BedGridProps) {
+  const t = useTranslations();
+  const statusConfig = getStatusConfig(t);
   const [hoveredBed, setHoveredBed] = useState<string | null>(null);
-  
+
   // Group beds by rows (10 beds per row)
   const bedsPerRow = 10;
   const rows: Bed[][] = [];
-  
+
   for (let i = 0; i < beds.length; i += bedsPerRow) {
     rows.push(beds.slice(i, i + bedsPerRow));
   }
@@ -68,8 +71,8 @@ export function BedGrid({ beds, hallType, onBedClick, selectedBedId }: BedGridPr
   return (
     <div className="bg-white rounded-lg shadow-sm p-6">
       <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-4">خريطة الأسرّة</h3>
-        
+        <h3 className="text-lg font-semibold mb-4">{t('halls.bedMap')}</h3>
+
         {/* Legend */}
         <div className="flex flex-wrap gap-4 mb-6">
           {Object.entries(statusConfig).map(([status, config]) => {
@@ -90,7 +93,7 @@ export function BedGrid({ beds, hallType, onBedClick, selectedBedId }: BedGridPr
             <div className="w-8 h-8 rounded-md border-2 border-purple-300 bg-purple-100 flex items-center justify-center">
               <Accessibility className="h-4 w-4 text-purple-600" />
             </div>
-            <span className="text-sm text-gray-600">احتياجات خاصة</span>
+            <span className="text-sm text-gray-600">{t('halls.specialNeeds')}</span>
           </div>
         </div>
       </div>
@@ -146,11 +149,11 @@ export function BedGrid({ beds, hallType, onBedClick, selectedBedId }: BedGridPr
                         </TooltipTrigger>
                         <TooltipContent>
                           <div className="text-sm">
-                            <p className="font-medium mb-1">سرير {bed.number}</p>
-                            <p>الحالة: {config.label}</p>
+                            <p className="font-medium mb-1">{t('halls.bedGrid.bed')} {bed.number}</p>
+                            <p>{t('halls.bedGrid.status')}: {config.label}</p>
                             {bed.pilgrimId && (
                               <p className="text-xs text-gray-500 mt-1">
-                                معرف الحاج: {bed.pilgrimId}
+                                {t('halls.bedGrid.pilgrimId')}: {bed.pilgrimId}
                               </p>
                             )}
                             {bed.maintenanceNotes && (

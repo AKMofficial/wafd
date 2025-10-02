@@ -164,7 +164,7 @@ export const usePilgrimStore = create<PilgrimState>()(
             hasPrevious: pagination.page > 1
           };
         } catch (error) {
-          set({ error: 'فشل في تحميل البيانات', isLoading: false });
+          set({ error: 'errors.failedToLoadData', isLoading: false });
           throw error;
         }
       },
@@ -177,7 +177,7 @@ export const usePilgrimStore = create<PilgrimState>()(
           set({ selectedPilgrim: pilgrim, isLoading: false });
           return pilgrim;
         } catch (error) {
-          set({ error: 'فشل في تحميل بيانات الحاج', isLoading: false });
+          set({ error: 'errors.failedToLoadPilgrim', isLoading: false });
           return null;
         }
       },
@@ -209,7 +209,7 @@ export const usePilgrimStore = create<PilgrimState>()(
           set({ isLoading: false });
           return newPilgrim;
         } catch (error) {
-          set({ error: 'فشل في إضافة الحاج', isLoading: false });
+          set({ error: 'errors.failedToAddPilgrim', isLoading: false });
           throw error;
         }
       },
@@ -218,9 +218,9 @@ export const usePilgrimStore = create<PilgrimState>()(
         set({ isLoading: true, error: null });
         try {
           await new Promise(resolve => setTimeout(resolve, 500));
-          
+
           const index = allPilgrims.findIndex(p => p.id === id);
-          if (index === -1) throw new Error('لم يتم العثور على الحاج');
+          if (index === -1) throw new Error('errors.pilgrimNotFound');
           
           // Find group name if groupId is being updated
           const groupName = data.groupId !== undefined
@@ -243,7 +243,7 @@ export const usePilgrimStore = create<PilgrimState>()(
           set({ isLoading: false });
           return updated;
         } catch (error) {
-          set({ error: 'فشل في تحديث بيانات الحاج', isLoading: false });
+          set({ error: 'errors.failedToUpdatePilgrim', isLoading: false });
           throw error;
         }
       },
@@ -254,13 +254,13 @@ export const usePilgrimStore = create<PilgrimState>()(
           await new Promise(resolve => setTimeout(resolve, 500));
           
           const index = allPilgrims.findIndex(p => p.id === id);
-          if (index === -1) throw new Error('لم يتم العثور على الحاج');
-          
+          if (index === -1) throw new Error('errors.pilgrimNotFound');
+
           allPilgrims.splice(index, 1);
           set({ isLoading: false });
           return true;
         } catch (error) {
-          set({ error: 'فشل في حذف الحاج', isLoading: false });
+          set({ error: 'errors.failedToDeletePilgrim', isLoading: false });
           return false;
         }
       },
@@ -286,7 +286,7 @@ export const usePilgrimStore = create<PilgrimState>()(
           };
           return allPilgrims[index];
         }
-        throw new Error('لم يتم العثور على الحاج');
+        throw new Error('errors.pilgrimNotFound');
       },
       
       importFromExcel: async (file) => {
@@ -323,38 +323,38 @@ export const usePilgrimStore = create<PilgrimState>()(
             
             // Validate required fields
             if (!nationalId) {
-              errors.push({ row: rowIndex, field: 'nationalId', value: nationalId, message: 'رقم الهوية مطلوب' });
+              errors.push({ row: rowIndex, field: 'nationalId', value: nationalId, message: 'errors.validation.nationalIdRequired' });
               hasError = true;
             }
             if (!firstName) {
-              errors.push({ row: rowIndex, field: 'firstName', value: firstName, message: 'الاسم الأول مطلوب' });
+              errors.push({ row: rowIndex, field: 'firstName', value: firstName, message: 'errors.validation.firstNameRequired' });
               hasError = true;
             }
             if (!lastName) {
-              errors.push({ row: rowIndex, field: 'lastName', value: lastName, message: 'الاسم الأخير مطلوب' });
+              errors.push({ row: rowIndex, field: 'lastName', value: lastName, message: 'errors.validation.lastNameRequired' });
               hasError = true;
             }
             if (!age || age < 1 || age > 120) {
-              errors.push({ row: rowIndex, field: 'age', value: age, message: 'عمر غير صالح' });
+              errors.push({ row: rowIndex, field: 'age', value: age, message: 'errors.validation.invalidAge' });
               hasError = true;
             }
             if (!nationality) {
-              errors.push({ row: rowIndex, field: 'nationality', value: nationality, message: 'الجنسية مطلوبة' });
+              errors.push({ row: rowIndex, field: 'nationality', value: nationality, message: 'errors.validation.nationalityRequired' });
               hasError = true;
             }
             if (!phoneNumber) {
-              errors.push({ row: rowIndex, field: 'phoneNumber', value: phoneNumber, message: 'رقم الهاتف مطلوب' });
+              errors.push({ row: rowIndex, field: 'phoneNumber', value: phoneNumber, message: 'errors.validation.phoneNumberRequired' });
               hasError = true;
             }
             
             // Process gender
             let gender: 'male' | 'female' | undefined;
-            if (genderText === 'ذكر' || genderText.toLowerCase() === 'male') {
+            if (genderText.toLowerCase() === 'male') {
               gender = 'male';
-            } else if (genderText === 'أنثى' || genderText.toLowerCase() === 'female') {
+            } else if (genderText.toLowerCase() === 'female') {
               gender = 'female';
             } else {
-              errors.push({ row: rowIndex, field: 'gender', value: genderText, message: 'الجنس يجب أن يكون ذكر أو أنثى' });
+              errors.push({ row: rowIndex, field: 'gender', value: genderText, message: 'errors.validation.invalidGender' });
               hasError = true;
             }
             
@@ -364,26 +364,20 @@ export const usePilgrimStore = create<PilgrimState>()(
             if (specialNeedsTypeText) {
               hasSpecialNeeds = true;
               const specialNeedsMap: Record<string, any> = {
-                'مساعدة في الحركة': 'mobility',
                 'mobility': 'mobility',
-                'كرسي متحرك': 'mobility',
-                'مشاكل في البصر أو السمع': 'vision_hearing',
+                'wheelchair': 'mobility',
                 'vision_hearing': 'vision_hearing',
-                'بصر': 'vision_hearing',
-                'سمع': 'vision_hearing',
-                'رعاية طبية خاصة': 'medical_care',
+                'vision': 'vision_hearing',
+                'hearing': 'vision_hearing',
                 'medical_care': 'medical_care',
-                'طبية': 'medical_care',
-                'رعاية كبار السن': 'elderly_cognitive',
+                'medical': 'medical_care',
                 'elderly_cognitive': 'elderly_cognitive',
-                'كبار السن': 'elderly_cognitive',
-                'احتياجات غذائية': 'dietary_language',
+                'elderly': 'elderly_cognitive',
                 'dietary_language': 'dietary_language',
-                'غذائية': 'dietary_language',
-                'أخرى': 'other',
+                'dietary': 'dietary_language',
                 'other': 'other'
               };
-              
+
               specialNeedsType = specialNeedsMap[specialNeedsTypeText.toLowerCase()] || 'other';
             }
             
@@ -428,7 +422,7 @@ export const usePilgrimStore = create<PilgrimState>()(
           return result;
           
         } catch (error) {
-          set({ error: 'فشل في استيراد الملف', isLoading: false });
+          set({ error: 'errors.failedToImportFile', isLoading: false });
           throw error;
         }
       },

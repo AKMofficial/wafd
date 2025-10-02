@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -19,25 +19,20 @@ import { formatDateAsHijri } from '@/lib/hijri-date';
 import { getNationalityOptions } from '@/lib/nationalities';
 import { mockGroups } from '@/lib/mock-data';
 
-const pilgrimSchema = z.object({
-  nationalId: z.string().min(10, 'رقم الهوية يجب أن يكون 10 أرقام على الأقل'),
-  passportNumber: z.string().optional(),
-  firstName: z.string().min(2, 'الاسم الأول مطلوب'),
-  lastName: z.string().min(2, 'الاسم الأخير مطلوب'),
-  age: z.string().min(1, 'العمر مطلوب').refine((val) => {
-    const num = parseInt(val);
-    return !isNaN(num) && num >= 1;
-  }, 'يجب أن يكون العمر رقم صحيح'),
-  gender: z.enum(['male', 'female']),
-  nationality: z.string().min(1, 'الجنسية مطلوبة'),
-  phoneNumber: z.string().min(10, 'رقم الهاتف مطلوب'),
-  specialNeedsType: z.string().optional(),
-  specialNeedsNotes: z.string().optional(),
-  groupId: z.string().optional(),
-  notes: z.string().optional(),
-});
-
-type PilgrimFormData = z.infer<typeof pilgrimSchema>;
+type PilgrimFormData = {
+  nationalId: string;
+  passportNumber?: string;
+  firstName: string;
+  lastName: string;
+  age: string;
+  gender: 'male' | 'female';
+  nationality: string;
+  phoneNumber: string;
+  specialNeedsType?: string;
+  specialNeedsNotes?: string;
+  groupId?: string;
+  notes?: string;
+};
 
 interface PilgrimFormProps {
   pilgrim?: Pilgrim;
@@ -51,6 +46,25 @@ export function PilgrimForm({ pilgrim, onSubmit, onCancel, isLoading = false }: 
   const locale = useLocale();
   const isRTL = locale === 'ar';
   const isEdit = !!pilgrim;
+
+  // Create schema with translated messages
+  const pilgrimSchema = useMemo(() => z.object({
+    nationalId: z.string().min(10, t('pilgrims.validation.nationalIdMin')),
+    passportNumber: z.string().optional(),
+    firstName: z.string().min(2, t('pilgrims.validation.firstNameRequired')),
+    lastName: z.string().min(2, t('pilgrims.validation.lastNameRequired')),
+    age: z.string().min(1, t('pilgrims.validation.ageRequired')).refine((val) => {
+      const num = parseInt(val);
+      return !isNaN(num) && num >= 1;
+    }, t('pilgrims.validation.ageMustBeNumber')),
+    gender: z.enum(['male', 'female']),
+    nationality: z.string().min(1, t('pilgrims.validation.nationalityRequired')),
+    phoneNumber: z.string().min(10, t('pilgrims.validation.phoneRequired')),
+    specialNeedsType: z.string().optional(),
+    specialNeedsNotes: z.string().optional(),
+    groupId: z.string().optional(),
+    notes: z.string().optional(),
+  }), [t]);
 
   const {
     register,
@@ -109,13 +123,13 @@ export function PilgrimForm({ pilgrim, onSubmit, onCancel, isLoading = false }: 
     <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
       <Card className="p-6">
         <h3 className="text-lg font-semibold mb-4">
-          {locale === 'ar' ? 'المعلومات الأساسية' : 'Basic Information'}
+          {t('pilgrims.form.basicInfo')}
         </h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="nationalId">
-              {locale === 'ar' ? 'رقم الهوية' : 'National ID'} *
+              {t('pilgrims.form.nationalId')} *
             </Label>
             <Input
               id="nationalId"
@@ -129,7 +143,7 @@ export function PilgrimForm({ pilgrim, onSubmit, onCancel, isLoading = false }: 
 
           <div className="space-y-2">
             <Label htmlFor="passportNumber">
-              {locale === 'ar' ? 'رقم الجواز' : 'Passport Number'}
+              {t('pilgrims.form.passportNumber')}
             </Label>
             <Input
               id="passportNumber"
@@ -139,15 +153,15 @@ export function PilgrimForm({ pilgrim, onSubmit, onCancel, isLoading = false }: 
 
           <div className="space-y-2">
             <Label htmlFor="nationality">
-              {locale === 'ar' ? 'الجنسية' : 'Nationality'} *
+              {t('pilgrims.form.nationality')} *
             </Label>
             <SearchableSelect
               value={watch('nationality') || ''}
               onValueChange={(value) => setValue('nationality', value)}
               options={nationalityOptions}
-              placeholder={locale === 'ar' ? 'اختر الجنسية' : 'Select Nationality'}
-              searchPlaceholder={locale === 'ar' ? 'البحث في الجنسيات...' : 'Search nationalities...'}
-              noResultsText={locale === 'ar' ? 'لا توجد نتائج' : 'No results found'}
+              placeholder={t('pilgrims.form.selectNationality')}
+              searchPlaceholder={t('pilgrims.form.searchNationalities')}
+              noResultsText={t('pilgrims.form.noResultsFound')}
               clearable={false}
               isRTL={isRTL}
               className={cn(errors.nationality && 'border-red-500')}
@@ -159,7 +173,7 @@ export function PilgrimForm({ pilgrim, onSubmit, onCancel, isLoading = false }: 
 
           <div className="space-y-2">
             <Label htmlFor="phoneNumber">
-              {locale === 'ar' ? 'رقم الهاتف' : 'Phone Number'} *
+              {t('pilgrims.form.phoneNumber')} *
             </Label>
             <Input
               id="phoneNumber"
@@ -174,15 +188,15 @@ export function PilgrimForm({ pilgrim, onSubmit, onCancel, isLoading = false }: 
 
           <div className="space-y-2">
             <Label htmlFor="groupId">
-              {locale === 'ar' ? 'المجموعة' : 'Group'}
+              {t('pilgrims.form.group')}
             </Label>
             <SearchableSelect
               value={watch('groupId') || ''}
               onValueChange={(value) => setValue('groupId', value)}
               options={groupOptions}
-              placeholder={locale === 'ar' ? 'اختر المجموعة' : 'Select Group'}
-              searchPlaceholder={locale === 'ar' ? 'البحث في المجموعات...' : 'Search groups...'}
-              noResultsText={locale === 'ar' ? 'لا توجد نتائج' : 'No results found'}
+              placeholder={t('pilgrims.form.selectGroup')}
+              searchPlaceholder={t('pilgrims.form.searchGroups')}
+              noResultsText={t('pilgrims.form.noResultsFound')}
               clearable={true}
               isRTL={isRTL}
             />
@@ -190,44 +204,42 @@ export function PilgrimForm({ pilgrim, onSubmit, onCancel, isLoading = false }: 
 
           <div className="space-y-2">
             <Label htmlFor="specialNeedsType">
-              {locale === 'ar' ? 'نوع الإعاقة' : 'Disability Type'}
+              {t('pilgrims.form.disabilityType')}
             </Label>
             <Select
               value={watch('specialNeedsType') || ''}
               onValueChange={(value) => setValue('specialNeedsType', value)}
             >
               <SelectTrigger>
-                <SelectValue placeholder={locale === 'ar' ? 'اختر نوع الإعاقة' : 'Select disability type'} />
+                <SelectValue placeholder={t('pilgrims.form.selectDisabilityType')} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="__placeholder__" disabled>
-                  {locale === 'ar' ? 'اختر نوع الإعاقة' : 'Select disability type'}
+                  {t('pilgrims.form.selectDisabilityType')}
                 </SelectItem>
                 <SelectItem value="mobility">
-                  {locale === 'ar' ? 'مساعدة في الحركة (كرسي متحرك، مشي)' : 'Mobility assistance (wheelchair, walking)'}
+                  {t('pilgrims.form.disabilityTypes.mobility')}
                 </SelectItem>
                 <SelectItem value="vision_hearing">
-                  {locale === 'ar' ? 'مشاكل في البصر أو السمع' : 'Vision or hearing issues'}
+                  {t('pilgrims.form.disabilityTypes.vision_hearing')}
                 </SelectItem>
                 <SelectItem value="medical_care">
-                  {locale === 'ar' ? 'رعاية طبية خاصة' : 'Special medical care'}
+                  {t('pilgrims.form.disabilityTypes.medical_care')}
                 </SelectItem>
                 <SelectItem value="elderly_cognitive">
-                  {locale === 'ar' ? 'رعاية كبار السن أو إعاقة ذهنية' : 'Elderly care or cognitive disability'}
+                  {t('pilgrims.form.disabilityTypes.elderly_cognitive')}
                 </SelectItem>
                 <SelectItem value="dietary_language">
-                  {locale === 'ar' ? 'احتياجات غذائية أو لغوية' : 'Dietary or language assistance'}
+                  {t('pilgrims.form.disabilityTypes.dietary_language')}
                 </SelectItem>
                 <SelectItem value="other">
-                  {locale === 'ar' ? 'أخرى' : 'Other'}
+                  {t('pilgrims.form.disabilityTypes.other')}
                 </SelectItem>
               </SelectContent>
             </Select>
             {watch('specialNeedsType') === 'other' && (
               <p className="text-sm text-blue-600 bg-blue-50 p-2 rounded border border-blue-200">
-                {locale === 'ar' 
-                  ? 'يرجى كتابة تفاصيل الإعاقة في حقل الملاحظات أدناه' 
-                  : 'Please write the disability details in the Notes field below'}
+                {t('pilgrims.form.disabilityOtherNote')}
               </p>
             )}
           </div>
@@ -236,13 +248,13 @@ export function PilgrimForm({ pilgrim, onSubmit, onCancel, isLoading = false }: 
 
       <Card className="p-6">
         <h3 className="text-lg font-semibold mb-4">
-          {locale === 'ar' ? 'المعلومات الشخصية' : 'Personal Information'}
+          {t('pilgrims.form.personalInfo')}
         </h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="firstName">
-              {locale === 'ar' ? 'الاسم الأول' : 'First Name'} *
+              {t('pilgrims.form.firstName')} *
             </Label>
             <Input
               id="firstName"
@@ -256,7 +268,7 @@ export function PilgrimForm({ pilgrim, onSubmit, onCancel, isLoading = false }: 
 
           <div className="space-y-2">
             <Label htmlFor="lastName">
-              {locale === 'ar' ? 'الاسم الأخير' : 'Last Name'} *
+              {t('pilgrims.form.lastName')} *
             </Label>
             <Input
               id="lastName"
@@ -270,14 +282,14 @@ export function PilgrimForm({ pilgrim, onSubmit, onCancel, isLoading = false }: 
 
           <div className="space-y-2">
             <Label htmlFor="age">
-              {locale === 'ar' ? 'العمر' : 'Age'} *
+              {t('pilgrims.form.age')} *
             </Label>
             <Input
               id="age"
               type="number"
               min="1"
               {...register('age')}
-              placeholder={locale === 'ar' ? 'أدخل العمر' : 'Enter age'}
+              placeholder={t('pilgrims.form.enterAge')}
               className={cn(errors.age && 'border-red-500')}
             />
             {errors.age && (
@@ -287,7 +299,7 @@ export function PilgrimForm({ pilgrim, onSubmit, onCancel, isLoading = false }: 
 
           <div className="space-y-2">
             <Label htmlFor="gender">
-              {locale === 'ar' ? 'الجنس' : 'Gender'} *
+              {t('pilgrims.form.gender')} *
             </Label>
             <Select
               value={watch('gender')}
@@ -298,10 +310,10 @@ export function PilgrimForm({ pilgrim, onSubmit, onCancel, isLoading = false }: 
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="male">
-                  {locale === 'ar' ? 'ذكر' : 'Male'}
+                  {t('pilgrims.form.male')}
                 </SelectItem>
                 <SelectItem value="female">
-                  {locale === 'ar' ? 'أنثى' : 'Female'}
+                  {t('pilgrims.form.female')}
                 </SelectItem>
               </SelectContent>
             </Select>
@@ -311,20 +323,20 @@ export function PilgrimForm({ pilgrim, onSubmit, onCancel, isLoading = false }: 
 
       <Card className="p-6">
         <h3 className="text-lg font-semibold mb-4">
-          {locale === 'ar' ? 'معلومات إضافية' : 'Additional Information'}
+          {t('pilgrims.form.additionalInfo')}
         </h3>
-        
+
         <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="notes">
-              {locale === 'ar' ? 'ملاحظات' : 'Notes'}
+              {t('pilgrims.form.notes')}
             </Label>
             <textarea
               id="notes"
               {...register('notes')}
               rows={3}
               className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder={locale === 'ar' ? 'أي ملاحظات إضافية...' : 'Any additional notes...'}
+              placeholder={t('pilgrims.form.additionalNotes')}
             />
           </div>
         </div>
@@ -337,13 +349,11 @@ export function PilgrimForm({ pilgrim, onSubmit, onCancel, isLoading = false }: 
           onClick={onCancel}
           disabled={isLoading}
         >
-          {locale === 'ar' ? 'إلغاء' : 'Cancel'}
+          {t('common.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading && <Loader2 className="h-4 w-4 animate-spin me-2" />}
-          {isEdit 
-            ? (locale === 'ar' ? 'حفظ التغييرات' : 'Save Changes')
-            : (locale === 'ar' ? 'إضافة حاج' : 'Add Pilgrim')}
+          {isEdit ? t('common.saveChanges') : t('pilgrims.form.addPilgrim')}
         </Button>
       </div>
     </form>

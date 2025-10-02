@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -14,9 +15,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { 
-  Plus, 
-  Edit, 
+import {
+  Plus,
+  Edit,
   Trash2,
   Search,
   AlertCircle,
@@ -37,6 +38,7 @@ interface Account {
 }
 
 export function AccountsManagement() {
+  const t = useTranslations();
   const [accounts, setAccounts] = useState<Account[]>([
     {
       id: '1',
@@ -152,9 +154,9 @@ export function AccountsManagement() {
 
   const getRoleLabel = (role: string) => {
     const labels = {
-      admin: 'مدير النظام',
-      supervisor: 'مشرف',
-      operator: 'موظف',
+      admin: t('settings.accounts.roles.admin'),
+      supervisor: t('settings.accounts.roles.supervisor'),
+      operator: t('settings.accounts.roles.operator'),
     };
     return labels[role as keyof typeof labels] || role;
   };
@@ -164,11 +166,11 @@ export function AccountsManagement() {
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold flex items-center gap-2">
           <UserCircle className="h-5 w-5" />
-          <span>إدارة الحسابات</span>
+          <span>{t('settings.accounts.title')}</span>
         </h3>
         <Button onClick={() => setShowAddDialog(true)}>
           <Plus className="h-4 w-4 ml-2" />
-          إضافة حساب
+          {t('settings.accounts.addAccount')}
         </Button>
       </div>
 
@@ -176,39 +178,40 @@ export function AccountsManagement() {
         <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
         <Input
           type="text"
-          placeholder="البحث باسم المستخدم أو الاسم الكامل..."
+          placeholder={t('settings.accounts.searchPlaceholder')}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="pr-10"
         />
       </div>
 
-      <div className="rounded-lg border">
+      {/* Desktop View */}
+      <div className="hidden md:block rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead className="w-[160px]">
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4" />
-                  <span>اسم المستخدم</span>
+                  <span>{t('settings.accounts.username')}</span>
                 </div>
               </TableHead>
               <TableHead>
                 <div className="flex items-center gap-2">
                   <UserCircle className="h-4 w-4" />
-                  <span>الاسم الكامل</span>
+                  <span>{t('settings.accounts.fullName')}</span>
                 </div>
               </TableHead>
               <TableHead className="text-center">
                 <div className="flex items-center justify-center gap-2">
                   <Mail className="h-4 w-4" />
-                  <span>البريد الإلكتروني</span>
+                  <span>{t('settings.accounts.email')}</span>
                 </div>
               </TableHead>
               <TableHead className="text-center">
                 <div className="flex items-center justify-center gap-2">
                   <Settings2 className="h-4 w-4" />
-                  <span>الإجراءات</span>
+                  <span>{t('common.actions')}</span>
                 </div>
               </TableHead>
             </TableRow>
@@ -217,7 +220,7 @@ export function AccountsManagement() {
             {filteredAccounts.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="text-center text-gray-500 py-8">
-                  لا توجد حسابات
+                  {t('settings.accounts.noAccounts')}
                 </TableCell>
               </TableRow>
             ) : (
@@ -238,9 +241,69 @@ export function AccountsManagement() {
                         onClick={() => openEditDialog(account)}
                       >
                         <Edit className="h-4 w-4 ml-1" />
-                        تعديل
+                        {t('common.edit')}
                       </Button>
                     </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Mobile View */}
+      <div className="md:hidden rounded-lg border overflow-x-auto">
+        <Table className="min-w-[400px]">
+          <TableHeader>
+            <TableRow>
+              <TableHead className="text-xs px-2 py-2">
+                <div className="flex items-center gap-1">
+                  <User className="h-3 w-3 flex-shrink-0" />
+                  <span className="whitespace-nowrap">{t('settings.accounts.username')}</span>
+                </div>
+              </TableHead>
+              <TableHead className="text-xs px-2 py-2">
+                <div className="flex items-center gap-1">
+                  <UserCircle className="h-3 w-3 flex-shrink-0" />
+                  <span className="whitespace-nowrap">{t('settings.accounts.fullName')}</span>
+                </div>
+              </TableHead>
+              <TableHead className="text-center text-xs px-2 py-2">
+                <div className="flex items-center justify-center gap-1">
+                  <Settings2 className="h-3 w-3 flex-shrink-0" />
+                  <span className="whitespace-nowrap">{t('common.edit')}</span>
+                </div>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredAccounts.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={3} className="text-center text-gray-500 py-8 text-xs">
+                  {t('settings.accounts.noAccounts')}
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredAccounts.map((account) => (
+                <TableRow key={account.id} className="hover:bg-gray-50">
+                  <TableCell className="text-xs px-2 py-2">
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0.5 bg-gray-50 text-gray-700 border-gray-200 whitespace-nowrap">
+                      {account.username}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-xs px-2 py-2 min-w-[120px]">
+                    <span className="truncate max-w-[150px] block">{account.fullName}</span>
+                  </TableCell>
+                  <TableCell className="text-center px-2 py-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 w-7 p-0"
+                      onClick={() => openEditDialog(account)}
+                    >
+                      <Edit className="h-3 w-3" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))
@@ -261,41 +324,41 @@ export function AccountsManagement() {
           resetForm();
         }}>
           <DialogHeader>
-            <DialogTitle>إضافة حساب جديد</DialogTitle>
+            <DialogTitle>{t('settings.accounts.addNewAccount')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-4">
             <div>
-              <label className="block text-sm font-medium mb-1">اسم المستخدم</label>
+              <label className="block text-sm font-medium mb-1">{t('settings.accounts.username')}</label>
               <Input
                 value={formData.username}
                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                placeholder="أدخل اسم المستخدم"
+                placeholder={t('settings.accounts.enterUsername')}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">الاسم الكامل</label>
+              <label className="block text-sm font-medium mb-1">{t('settings.accounts.fullName')}</label>
               <Input
                 value={formData.fullName}
                 onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                placeholder="أدخل الاسم الكامل"
+                placeholder={t('settings.accounts.enterFullName')}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">البريد الإلكتروني</label>
+              <label className="block text-sm font-medium mb-1">{t('settings.accounts.email')}</label>
               <Input
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="أدخل البريد الإلكتروني"
+                placeholder={t('settings.accounts.enterEmail')}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">كلمة المرور</label>
+              <label className="block text-sm font-medium mb-1">{t('settings.accounts.password')}</label>
               <Input
                 type="password"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                placeholder="أدخل كلمة المرور"
+                placeholder={t('settings.accounts.enterPassword')}
               />
             </div>
             <div className="flex justify-end gap-2 pt-4">
@@ -303,10 +366,10 @@ export function AccountsManagement() {
                 setShowAddDialog(false);
                 resetForm();
               }}>
-                إلغاء
+                {t('common.cancel')}
               </Button>
               <Button onClick={handleAdd}>
-                إضافة
+                {t('common.add')}
               </Button>
             </div>
           </div>
@@ -327,41 +390,41 @@ export function AccountsManagement() {
           resetForm();
         }}>
           <DialogHeader>
-            <DialogTitle>تعديل الحساب</DialogTitle>
+            <DialogTitle>{t('settings.accounts.editAccount')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-4">
             <div>
-              <label className="block text-sm font-medium mb-1">اسم المستخدم</label>
+              <label className="block text-sm font-medium mb-1">{t('settings.accounts.username')}</label>
               <Input
                 value={formData.username}
                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                placeholder="أدخل اسم المستخدم"
+                placeholder={t('settings.accounts.enterUsername')}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">الاسم الكامل</label>
+              <label className="block text-sm font-medium mb-1">{t('settings.accounts.fullName')}</label>
               <Input
                 value={formData.fullName}
                 onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                placeholder="أدخل الاسم الكامل"
+                placeholder={t('settings.accounts.enterFullName')}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">البريد الإلكتروني</label>
+              <label className="block text-sm font-medium mb-1">{t('settings.accounts.email')}</label>
               <Input
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="أدخل البريد الإلكتروني"
+                placeholder={t('settings.accounts.enterEmail')}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">كلمة المرور (اتركها فارغة إذا لم ترد تغييرها)</label>
+              <label className="block text-sm font-medium mb-1">{t('settings.accounts.password')} ({t('settings.accounts.passwordHint')})</label>
               <Input
                 type="password"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                placeholder="أدخل كلمة المرور الجديدة"
+                placeholder={t('settings.accounts.enterNewPassword')}
               />
             </div>
             <DialogFooter className="flex justify-between pt-4">
@@ -371,7 +434,7 @@ export function AccountsManagement() {
                 className="text-red-600 hover:text-red-700 hover:bg-red-50"
               >
                 <Trash2 className="h-4 w-4 ml-1" />
-                حذف الحساب
+                {t('settings.accounts.deleteAccount')}
               </Button>
               <div className="flex gap-2">
                 <Button variant="outline" onClick={() => {
@@ -379,10 +442,10 @@ export function AccountsManagement() {
                   setSelectedAccount(null);
                   resetForm();
                 }}>
-                  إلغاء
+                  {t('common.cancel')}
                 </Button>
                 <Button onClick={handleEdit}>
-                  حفظ التغييرات
+                  {t('common.saveChanges')}
                 </Button>
               </div>
             </DialogFooter>
@@ -396,35 +459,35 @@ export function AccountsManagement() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-red-600">
               <AlertCircle className="h-5 w-5" />
-              تأكيد حذف الحساب
+              {t('settings.accounts.confirmDelete')}
             </DialogTitle>
             <DialogDescription>
-              هل أنت متأكد من رغبتك في حذف حساب "{selectedAccount?.fullName}"؟ هذا الإجراء لا يمكن التراجع عنه.
+              {t('settings.accounts.deleteWarning').replace('{name}', selectedAccount?.fullName || '')}
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 my-4">
             <div className="flex items-center gap-2 text-yellow-800">
               <AlertCircle className="h-4 w-4 flex-shrink-0" />
               <p className="text-sm">
-                سيتم حذف جميع بيانات الحساب بشكل نهائي.
+                {t('settings.accounts.deleteNote')}
               </p>
             </div>
           </div>
-          
+
           <DialogFooter>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setShowDeleteConfirm(false)}
             >
-              إلغاء
+              {t('common.cancel')}
             </Button>
-            <Button 
-              variant="destructive" 
+            <Button
+              variant="destructive"
               onClick={handleDelete}
             >
               <Trash2 className="h-4 w-4 ml-1" />
-              حذف نهائياً
+              {t('settings.accounts.deletePermanently')}
             </Button>
           </DialogFooter>
         </DialogContent>

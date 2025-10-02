@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslations, useLocale } from '@/lib/i18n';
 import { PilgrimFilters, PilgrimStatus, Gender } from '@/types/pilgrim';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,8 @@ import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Badge } from '@/components/ui/badge';
 import { Search, Filter, X, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { mockGroups } from '@/lib/mock-data';
+import { useHallStore } from '@/store/hall-store';
 
 interface PilgrimsFiltersProps {
   filters: PilgrimFilters;
@@ -26,6 +28,12 @@ export function PilgrimsFilters({
   const locale = useLocale();
   const isRTL = locale === 'ar';
   const [showAdvanced, setShowAdvanced] = useState(false);
+
+  const { halls, fetchHalls } = useHallStore();
+
+  useEffect(() => {
+    fetchHalls();
+  }, [fetchHalls]);
 
   const handleSearchChange = (value: string) => {
     onFiltersChange({ ...filters, search: value });
@@ -70,20 +78,20 @@ export function PilgrimsFilters({
           )} />
           <Input
             type="text"
-            placeholder={locale === 'ar' ? 'البحث بالاسم أو رقم التسجيل أو الهاتف...' : 'Search by name, registration, or phone...'}
+            placeholder={t('pilgrims.filters.searchPlaceholder')}
             value={filters.search || ''}
             onChange={(e) => handleSearchChange(e.target.value)}
             className={cn("pl-10", isRTL && "pl-3 pr-10")}
           />
         </div>
-        
+
         <Button
           variant="outline"
           onClick={() => setShowAdvanced(!showAdvanced)}
           className="sm:w-auto"
         >
           <Filter className="h-4 w-4 me-2" />
-          {locale === 'ar' ? 'تصفية متقدمة' : 'Advanced Filters'}
+          {t('pilgrims.filters.advancedFilters')}
           {activeFiltersCount > 0 && (
             <Badge variant="secondary" className="ms-2">
               {activeFiltersCount}
@@ -98,7 +106,7 @@ export function PilgrimsFilters({
             className="sm:w-auto"
           >
             <RefreshCw className="h-4 w-4 me-2" />
-            {locale === 'ar' ? 'إعادة تعيين' : 'Reset'}
+            {t('pilgrims.filters.reset')}
           </Button>
         )}
       </div>
@@ -108,7 +116,7 @@ export function PilgrimsFilters({
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
             <div>
               <label className="text-sm font-medium text-gray-700 mb-1 block">
-                {locale === 'ar' ? 'الحالة' : 'Status'}
+                {t('pilgrims.filters.status')}
               </label>
               <Select
                 value={filters.status?.[0] || 'all'}
@@ -119,19 +127,19 @@ export function PilgrimsFilters({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">
-                    {locale === 'ar' ? 'الكل' : 'All'}
+                    {t('pilgrims.filters.all')}
                   </SelectItem>
                   <SelectItem value="expected">
-                    {locale === 'ar' ? 'متوقع' : 'Expected'}
+                    {t('pilgrims.status.expected')}
                   </SelectItem>
                   <SelectItem value="arrived">
-                    {locale === 'ar' ? 'وصل' : 'Arrived'}
+                    {t('pilgrims.status.arrived')}
                   </SelectItem>
                   <SelectItem value="departed">
-                    {locale === 'ar' ? 'غادر' : 'Departed'}
+                    {t('pilgrims.status.departed')}
                   </SelectItem>
                   <SelectItem value="no_show">
-                    {locale === 'ar' ? 'لم يحضر' : 'No Show'}
+                    {t('pilgrims.status.noShow')}
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -139,7 +147,7 @@ export function PilgrimsFilters({
 
             <div>
               <label className="text-sm font-medium text-gray-700 mb-1 block">
-                {locale === 'ar' ? 'الجنس' : 'Gender'}
+                {t('pilgrims.filters.gender')}
               </label>
               <Select
                 value={filters.gender || 'all'}
@@ -150,13 +158,13 @@ export function PilgrimsFilters({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">
-                    {locale === 'ar' ? 'الكل' : 'All'}
+                    {t('pilgrims.filters.all')}
                   </SelectItem>
                   <SelectItem value="male">
-                    {locale === 'ar' ? 'ذكر' : 'Male'}
+                    {t('pilgrims.form.male')}
                   </SelectItem>
                   <SelectItem value="female">
-                    {locale === 'ar' ? 'أنثى' : 'Female'}
+                    {t('pilgrims.form.female')}
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -164,7 +172,7 @@ export function PilgrimsFilters({
 
             <div>
               <label className="text-sm font-medium text-gray-700 mb-1 block">
-                {locale === 'ar' ? 'احتياجات خاصة' : 'Special Needs'}
+                {t('pilgrims.filters.specialNeeds')}
               </label>
               <Select
                 value={filters.hasSpecialNeeds?.toString() || 'all'}
@@ -175,13 +183,13 @@ export function PilgrimsFilters({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">
-                    {locale === 'ar' ? 'الكل' : 'All'}
+                    {t('pilgrims.filters.all')}
                   </SelectItem>
                   <SelectItem value="true">
-                    {locale === 'ar' ? 'نعم' : 'Yes'}
+                    {t('pilgrims.filters.yes')}
                   </SelectItem>
                   <SelectItem value="false">
-                    {locale === 'ar' ? 'لا' : 'No'}
+                    {t('pilgrims.filters.no')}
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -189,7 +197,7 @@ export function PilgrimsFilters({
 
             <div>
               <label className="text-sm font-medium text-gray-700 mb-1 block">
-                {locale === 'ar' ? 'المجموعة' : 'Group'}
+                {t('pilgrims.filters.group')}
               </label>
               <SearchableSelect
                 value={filters.group || ''}
@@ -201,26 +209,20 @@ export function PilgrimsFilters({
                     onFiltersChange({ ...filters, group: value });
                   }
                 }}
-                options={[
-                  { value: 'مجموعة الرحمة', label: 'مجموعة الرحمة' },
-                  { value: 'مجموعة البركة', label: 'مجموعة البركة' },
-                  { value: 'مجموعة النور', label: 'مجموعة النور' },
-                  { value: 'مجموعة الهداية', label: 'مجموعة الهداية' },
-                  { value: 'مجموعة السلام', label: 'مجموعة السلام' },
-                  { value: 'مجموعة الفجر', label: 'مجموعة الفجر' },
-                  { value: 'مجموعة الأمل', label: 'مجموعة الأمل' },
-                  { value: 'مجموعة الخير', label: 'مجموعة الخير' }
-                ]}
-                placeholder={locale === 'ar' ? 'اختر المجموعة' : 'Select Group'}
-                searchPlaceholder={locale === 'ar' ? 'البحث في المجموعات...' : 'Search groups...'}
-                noResultsText={locale === 'ar' ? 'لا توجد نتائج' : 'No results found'}
+                options={mockGroups.map(group => ({
+                  value: group.id,
+                  label: group.name
+                }))}
+                placeholder={t('pilgrims.filters.selectGroup')}
+                searchPlaceholder={t('pilgrims.filters.searchGroups')}
+                noResultsText={t('pilgrims.filters.noResults')}
                 isRTL={isRTL}
               />
             </div>
 
             <div>
               <label className="text-sm font-medium text-gray-700 mb-1 block">
-                {locale === 'ar' ? 'القاعة' : 'Hall'}
+                {t('pilgrims.filters.hall')}
               </label>
               <SearchableSelect
                 value={filters.hall || ''}
@@ -232,21 +234,13 @@ export function PilgrimsFilters({
                     onFiltersChange({ ...filters, hall: value });
                   }
                 }}
-                options={[
-                  { value: 'القاعة الأولى', label: 'القاعة الأولى' },
-                  { value: 'القاعة الثانية', label: 'القاعة الثانية' },
-                  { value: 'القاعة الثالثة', label: 'القاعة الثالثة' },
-                  { value: 'القاعة الرابعة', label: 'القاعة الرابعة' },
-                  { value: 'القاعة الخامسة', label: 'القاعة الخامسة' },
-                  { value: 'القاعة السادسة', label: 'القاعة السادسة' },
-                  { value: 'قاعة الرجال أ', label: 'قاعة الرجال أ' },
-                  { value: 'قاعة الرجال ب', label: 'قاعة الرجال ب' },
-                  { value: 'قاعة النساء أ', label: 'قاعة النساء أ' },
-                  { value: 'قاعة النساء ب', label: 'قاعة النساء ب' }
-                ]}
-                placeholder={locale === 'ar' ? 'اختر القاعة' : 'Select Hall'}
-                searchPlaceholder={locale === 'ar' ? 'البحث في القاعات...' : 'Search halls...'}
-                noResultsText={locale === 'ar' ? 'لا توجد نتائج' : 'No results found'}
+                options={halls.map(hall => ({
+                  value: hall.id,
+                  label: hall.name
+                }))}
+                placeholder={t('pilgrims.filters.selectHall')}
+                searchPlaceholder={t('pilgrims.filters.searchHalls')}
+                noResultsText={t('pilgrims.filters.noResults')}
                 isRTL={isRTL}
               />
             </div>
@@ -254,39 +248,29 @@ export function PilgrimsFilters({
 
           <div className="flex items-center gap-2 pt-2">
             <span className="text-sm text-gray-600">
-              {locale === 'ar' ? 'الفلاتر النشطة:' : 'Active filters:'}
+              {t('pilgrims.filters.activeFilters')}
             </span>
             {Object.entries(filters).map(([key, value]) => {
               if (!value || (Array.isArray(value) && value.length === 0)) return null;
-              
+
               let label = '';
               if (key === 'search') {
-                label = `${locale === 'ar' ? 'بحث' : 'Search'}: ${value}`;
+                label = `${t('pilgrims.filters.search')}: ${value}`;
               } else if (key === 'status') {
-                const statusLabels: Record<string, string> = {
-                  expected: locale === 'ar' ? 'متوقع' : 'Expected',
-                  arrived: locale === 'ar' ? 'وصل' : 'Arrived',
-                  departed: locale === 'ar' ? 'غادر' : 'Departed',
-                  no_show: locale === 'ar' ? 'لم يحضر' : 'No Show',
-                };
                 const statusValue = Array.isArray(value) ? value[0] : value;
-                label = `${locale === 'ar' ? 'الحالة' : 'Status'}: ${statusLabels[statusValue] || statusValue}`;
+                label = `${t('pilgrims.filters.status')}: ${t(`pilgrims.status.${statusValue}` as any) || statusValue}`;
               } else if (key === 'gender') {
-                const genderLabels: Record<string, string> = {
-                  male: locale === 'ar' ? 'ذكر' : 'Male',
-                  female: locale === 'ar' ? 'أنثى' : 'Female',
-                };
-                label = `${locale === 'ar' ? 'الجنس' : 'Gender'}: ${genderLabels[value as string] || value}`;
+                label = `${t('pilgrims.filters.gender')}: ${t(`pilgrims.form.${value}` as any) || value}`;
               } else if (key === 'hasSpecialNeeds') {
-                label = value ? locale === 'ar' ? 'احتياجات خاصة' : 'Special needs' : '';
+                label = value ? t('pilgrims.filters.specialNeeds') : '';
               } else if (key === 'group') {
-                label = `${locale === 'ar' ? 'المجموعة' : 'Group'}: ${value}`;
+                label = `${t('pilgrims.filters.group')}: ${value}`;
               } else if (key === 'hall') {
-                label = `${locale === 'ar' ? 'القاعة' : 'Hall'}: ${value}`;
+                label = `${t('pilgrims.filters.hall')}: ${value}`;
               }
-              
+
               if (!label) return null;
-              
+
               return (
                 <Badge
                   key={key}

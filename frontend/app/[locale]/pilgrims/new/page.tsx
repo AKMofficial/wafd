@@ -16,19 +16,17 @@ export default function NewPilgrimPage() {
   const locale = useLocale();
   const isRTL = locale === 'ar';
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const { createPilgrim } = usePilgrimStore();
 
   const handleSubmit = async (data: CreatePilgrimDto | UpdatePilgrimDto) => {
-    // For new pilgrims, we only deal with CreatePilgrimDto
-    // But the form component expects to handle both types
     setIsSubmitting(true);
     try {
       const newPilgrim = await createPilgrim(data as CreatePilgrimDto);
       router.push(`/${locale}/pilgrims/${newPilgrim.id}`);
     } catch (error) {
       console.error('Failed to create pilgrim:', error);
-      alert(locale === 'ar' ? 'فشل في إضافة الحاج' : 'Failed to add pilgrim');
+      alert(t('pilgrims.pages.errorAdding'));
     }
     setIsSubmitting(false);
   };
@@ -44,15 +42,13 @@ export default function NewPilgrimPage() {
           <div>
             <Button variant="ghost" onClick={handleCancel} className="mb-4">
               {isRTL ? <ArrowRight className="h-4 w-4 me-2" /> : <ArrowLeft className="h-4 w-4 me-2" />}
-              {locale === 'ar' ? 'رجوع' : 'Back'}
+              {t('pilgrims.pages.new.back')}
             </Button>
             <h1 className="text-2xl font-bold">
-              {locale === 'ar' ? 'إضافة حاج جديد' : 'Add New Pilgrim'}
+              {t('pilgrims.pages.new.title')}
             </h1>
             <p className="text-gray-600 mt-1">
-              {locale === 'ar' 
-                ? 'قم بإدخال بيانات الحاج الجديد'
-                : 'Enter the new pilgrim information'}
+              {t('pilgrims.pages.new.subtitle')}
             </p>
           </div>
         </div>

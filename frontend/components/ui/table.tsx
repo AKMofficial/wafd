@@ -125,7 +125,7 @@ function DataTable<T extends Record<string, any>>({
   className,
   mobileView = 'card',
   onRowClick,
-  emptyMessage = "لا توجد بيانات",
+  emptyMessage = "No data available",
   loading = false,
 }: DataTableProps<T>) {
   const [isMobile, setIsMobile] = React.useState(false)

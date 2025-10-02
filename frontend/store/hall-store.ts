@@ -164,7 +164,7 @@ export const useHallStore = create<HallState>()(
             hasPrevious: pagination.page > 1
           };
         } catch (error) {
-          set({ error: 'فشل في تحميل القاعات', isLoading: false });
+          set({ error: 'errors.failedToLoadHalls', isLoading: false });
           throw error;
         }
       },
@@ -177,7 +177,7 @@ export const useHallStore = create<HallState>()(
           set({ selectedHall: hall, isLoading: false });
           return hall;
         } catch (error) {
-          set({ error: 'فشل في تحميل بيانات القاعة', isLoading: false });
+          set({ error: 'errors.failedToLoadHallDetails', isLoading: false });
           return null;
         }
       },
@@ -218,7 +218,7 @@ export const useHallStore = create<HallState>()(
           set({ isLoading: false });
           return newHall;
         } catch (error) {
-          set({ error: 'فشل في إنشاء القاعة', isLoading: false });
+          set({ error: 'errors.failedToCreateHall', isLoading: false });
           throw error;
         }
       },
@@ -229,7 +229,7 @@ export const useHallStore = create<HallState>()(
           await new Promise(resolve => setTimeout(resolve, 500));
 
           const index = allHalls.findIndex(h => h.id === id);
-          if (index === -1) throw new Error('لم يتم العثور على القاعة');
+          if (index === -1) throw new Error('errors.hallNotFound');
 
           const updated = {
             ...allHalls[index],
@@ -241,7 +241,7 @@ export const useHallStore = create<HallState>()(
           set({ isLoading: false });
           return updated;
         } catch (error) {
-          set({ error: 'فشل في تحديث القاعة', isLoading: false });
+          set({ error: 'errors.failedToUpdateHall', isLoading: false });
           throw error;
         }
       },
@@ -252,17 +252,17 @@ export const useHallStore = create<HallState>()(
           await new Promise(resolve => setTimeout(resolve, 500));
 
           const index = allHalls.findIndex(h => h.id === id);
-          if (index === -1) throw new Error('لم يتم العثور على القاعة');
+          if (index === -1) throw new Error('errors.hallNotFound');
 
           if (allHalls[index].currentOccupancy > 0) {
-            throw new Error('لا يمكن حذف قاعة بها نزلاء');
+            throw new Error('errors.cannotDeleteOccupiedHall');
           }
 
           allHalls.splice(index, 1);
           set({ isLoading: false });
           return true;
         } catch (error) {
-          set({ error: error instanceof Error ? error.message : 'فشل في حذف القاعة', isLoading: false });
+          set({ error: error instanceof Error ? error.message : 'errors.failedToDeleteHall', isLoading: false });
           return false;
         }
       },
@@ -273,13 +273,13 @@ export const useHallStore = create<HallState>()(
           await new Promise(resolve => setTimeout(resolve, 300));
 
           const hall = allHalls.find(h => h.beds.some(b => b.id === data.bedId));
-          if (!hall) throw new Error('لم يتم العثور على السرير');
+          if (!hall) throw new Error('errors.bedNotFound');
 
           const bedIndex = hall.beds.findIndex(b => b.id === data.bedId);
-          if (bedIndex === -1) throw new Error('لم يتم العثور على السرير');
+          if (bedIndex === -1) throw new Error('errors.bedNotFound');
 
           if (hall.beds[bedIndex].status !== 'vacant') {
-            throw new Error('السرير غير متاح');
+            throw new Error('errors.bedNotAvailable');
           }
 
           hall.beds[bedIndex] = {
@@ -299,7 +299,7 @@ export const useHallStore = create<HallState>()(
           set({ isLoading: false });
           return hall.beds[bedIndex];
         } catch (error) {
-          set({ error: error instanceof Error ? error.message : 'فشل في تخصيص السرير', isLoading: false });
+          set({ error: error instanceof Error ? error.message : 'errors.failedToAssignBed', isLoading: false });
           throw error;
         }
       },
@@ -310,14 +310,14 @@ export const useHallStore = create<HallState>()(
           await new Promise(resolve => setTimeout(resolve, 300));
 
           const hall = allHalls.find(h => h.beds.some(b => b.id === bedId));
-          if (!hall) throw new Error('لم يتم العثور على السرير');
+          if (!hall) throw new Error('errors.bedNotFound');
 
           const bedIndex = hall.beds.findIndex(b => b.id === bedId);
-          if (bedIndex === -1) throw new Error('لم يتم العثور على السرير');
+          if (bedIndex === -1) throw new Error('errors.bedNotFound');
 
           const bed = hall.beds[bedIndex];
           if (bed.status !== 'occupied') {
-            throw new Error('السرير غير مشغول');
+            throw new Error('errors.bedNotOccupied');
           }
 
           hall.beds[bedIndex] = {
@@ -336,7 +336,7 @@ export const useHallStore = create<HallState>()(
           set({ isLoading: false });
           return hall.beds[bedIndex];
         } catch (error) {
-          set({ error: error instanceof Error ? error.message : 'فشل في إخلاء السرير', isLoading: false });
+          set({ error: error instanceof Error ? error.message : 'errors.failedToVacateBed', isLoading: false });
           throw error;
         }
       },
@@ -356,7 +356,7 @@ export const useHallStore = create<HallState>()(
           set({ isLoading: false });
           return { fromBed, toBed };
         } catch (error) {
-          set({ error: 'فشل في نقل السرير', isLoading: false });
+          set({ error: 'errors.failedToTransferBed', isLoading: false });
           throw error;
         }
       },
@@ -367,10 +367,10 @@ export const useHallStore = create<HallState>()(
           await new Promise(resolve => setTimeout(resolve, 300));
 
           const hall = allHalls.find(h => h.beds.some(b => b.id === bedId));
-          if (!hall) throw new Error('لم يتم العثور على السرير');
+          if (!hall) throw new Error('errors.bedNotFound');
 
           const bedIndex = hall.beds.findIndex(b => b.id === bedId);
-          if (bedIndex === -1) throw new Error('لم يتم العثور على السرير');
+          if (bedIndex === -1) throw new Error('errors.bedNotFound');
 
           hall.beds[bedIndex] = {
             ...hall.beds[bedIndex],
@@ -381,7 +381,7 @@ export const useHallStore = create<HallState>()(
           set({ isLoading: false });
           return hall.beds[bedIndex];
         } catch (error) {
-          set({ error: 'فشل في تحديث حالة السرير', isLoading: false });
+          set({ error: 'errors.failedToUpdateBedStatus', isLoading: false });
           throw error;
         }
       },

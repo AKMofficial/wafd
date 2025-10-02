@@ -82,7 +82,8 @@ const Sidebar = () => {
         onClick={() => setIsMobileOpen(!isMobileOpen)}
         className={cn(
           "lg:hidden fixed top-4 z-50 p-2 bg-background rounded-lg shadow-md hover:shadow-lg transition-all",
-          isRtl ? 'right-4' : 'left-4'
+          isRtl ? 'right-4' : 'left-4',
+          isMobileOpen && "opacity-0 pointer-events-none"
         )}
         aria-label="Toggle menu"
       >
@@ -104,15 +105,15 @@ const Sidebar = () => {
             <div className="flex items-center space-x-3 rtl:space-x-reverse">
               <div className="w-10 h-10 rounded-lg bg-primary-500 flex items-center justify-center">
                 <span className="text-white font-bold text-lg">
-                  {locale === 'ar' ? 'م' : 'M'}
+                  {t('app.logoLetter')}
                 </span>
               </div>
               <div>
                 <h2 className="text-lg font-bold text-foreground">
-                  {locale === 'ar' ? 'مأوى' : 'Ma\'wa'}
+                  {t('app.name')}
                 </h2>
                 <p className="text-xs text-muted-foreground">
-                  {locale === 'ar' ? 'نظام الإسكان' : 'Housing System'}
+                  {t('app.subtitle')}
                 </p>
               </div>
             </div>
@@ -177,24 +178,27 @@ const Sidebar = () => {
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
               className={cn(
-                "w-full flex items-center px-3 py-2.5 rounded-lg transition-all duration-200",
+                "w-full flex items-center rounded-lg transition-all duration-200",
                 "bg-muted hover:bg-muted/80 text-foreground",
-                isCollapsed ? 'justify-center' : 'justify-between'
+                isCollapsed ? 'justify-center p-2' : 'justify-between px-3 py-2.5'
               )}
             >
               <div className={cn(
                 "flex items-center",
                 isCollapsed ? '' : 'gap-2'
               )}>
-                <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
+                <div className={cn(
+                  "rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0",
+                  isCollapsed ? "w-7 h-7" : "w-8 h-8"
+                )}>
                   <User size={16} className="text-primary-600" />
                 </div>
                 {!isCollapsed && (
                   <div className="text-right rtl:text-left">
                     <p className="text-sm font-medium">
-                      {locale === 'ar' ? 'المسؤول' : 'Admin'}
+                      {t('settings.accounts.roles.admin')}
                     </p>
-                    <p className="text-xs text-muted-foreground">admin@mawa.sa</p>
+                    <p className="text-xs text-muted-foreground">admin@wafd.sa</p>
                   </div>
                 )}
               </div>
@@ -211,14 +215,14 @@ const Sidebar = () => {
                 "absolute bottom-full mb-2 w-full bg-card rounded-lg shadow-lg border border-border py-1 z-50 animate-in slide-in-from-bottom-2",
                 isCollapsed && (isRtl ? "right-0 w-48" : "left-0 w-48")
               )}>
-                <button 
+                <button
                   onClick={() => {
                     setShowUserMenu(false);
                   }}
                   className="w-full text-right rtl:text-left px-4 py-2 text-sm hover:bg-muted transition-colors flex items-center gap-2 text-error-600"
                 >
                   <LogOut size={16} />
-                  <span>{locale === 'ar' ? 'تسجيل الخروج' : 'Logout'}</span>
+                  <span>{t('common.logout')}</span>
                 </button>
               </div>
             )}
@@ -239,7 +243,7 @@ const Sidebar = () => {
             )} />
             {!isCollapsed && (
               <span className="font-medium">
-                {locale === 'ar' ? 'English' : 'العربية'}
+                {t('common.switchLanguage')}
               </span>
             )}
           </button>

@@ -1,10 +1,11 @@
 'use client';
 
-import { useLocale } from '@/lib/i18n';
+import { useTranslations, useLocale } from '@/lib/i18n';
 import { useRouter, usePathname } from 'next/navigation';
 import { Globe } from 'lucide-react';
 
 const LanguageSwitcher = () => {
+  const t = useTranslations();
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
@@ -22,7 +23,7 @@ const LanguageSwitcher = () => {
     >
       <Globe className="w-4 h-4" />
       <span className="font-medium">
-        {locale === 'ar' ? 'EN' : 'عربي'}
+        {t('common.switchLanguage')}
       </span>
     </button>
   );

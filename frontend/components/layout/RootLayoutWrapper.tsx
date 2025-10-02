@@ -1,6 +1,7 @@
 'use client';
 
 import { ReactNode } from 'react';
+import { usePathname } from 'next/navigation';
 import Sidebar from './Sidebar';
 import { useLocale } from '@/lib/i18n';
 import { SidebarProvider, useSidebar } from '@/lib/sidebar-context';
@@ -12,6 +13,16 @@ interface RootLayoutWrapperProps {
 }
 
 const RootLayoutContent = ({ children }: RootLayoutWrapperProps) => {
+  const pathname = usePathname();
+
+  // Check if on login page
+  const isLoginPage = pathname?.includes('/login');
+
+  // If on login page, render without sidebar
+  if (isLoginPage) {
+    return <>{children}</>;
+  }
+
   const locale = useLocale();
   const isRtl = locale === 'ar';
   const { isCollapsed } = useSidebar();
@@ -21,8 +32,8 @@ const RootLayoutContent = ({ children }: RootLayoutWrapperProps) => {
       <Sidebar />
       <div className={cn(
         "min-h-screen transition-all duration-300",
-        isRtl 
-          ? (isCollapsed ? 'lg:mr-16' : 'lg:mr-64') 
+        isRtl
+          ? (isCollapsed ? 'lg:mr-16' : 'lg:mr-64')
           : (isCollapsed ? 'lg:ml-16' : 'lg:ml-64')
       )}>
         <main className="p-4 md:p-6 lg:p-8">

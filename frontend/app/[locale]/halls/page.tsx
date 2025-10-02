@@ -109,12 +109,12 @@ export default function HallsPage() {
                 {t('nav.halls')}
               </h1>
               <p className="text-sm sm:text-base text-gray-600">
-                إدارة القاعات وتوزيع الأسرّة
+                {t('halls.subtitle')}
               </p>
             </div>
             <Button className="w-full sm:w-auto" onClick={handleAddNewHall}>
               <Plus className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
-              إضافة قاعة جديدة
+              {t('halls.addNew')}
             </Button>
           </div>
         </div>
@@ -132,15 +132,15 @@ export default function HallsPage() {
         {/* Halls Table */}
         <div className="w-full">
           <div className="mb-4 flex items-center gap-4">
-            <h2 className="text-xl font-semibold">جميع القاعات</h2>
+            <h2 className="text-xl font-semibold">{t('halls.allHalls')}</h2>
             <div className="flex gap-3 text-sm">
               <span className="flex items-center gap-1">
                 <span className="text-blue-600">●</span>
-                رجال: {stats.maleHalls.occupied}/{stats.maleHalls.beds}
+                {t('halls.maleHalls')}: {stats.maleHalls.occupied}/{stats.maleHalls.beds}
               </span>
               <span className="flex items-center gap-1">
                 <span className="text-pink-600">●</span>
-                نساء: {stats.femaleHalls.occupied}/{stats.femaleHalls.beds}
+                {t('halls.femaleHalls')}: {stats.femaleHalls.occupied}/{stats.femaleHalls.beds}
               </span>
             </div>
           </div>
@@ -156,9 +156,9 @@ export default function HallsPage() {
               {paginatedData && paginatedData.totalPages > 1 && (
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
                   <p className="text-sm text-gray-600 text-center sm:text-start">
-                    عرض {(pagination.page - 1) * pagination.limit + 1} إلى {Math.min(pagination.page * pagination.limit, paginatedData.total)} من {paginatedData.total}
+                    {t('pilgrims.showing')} {(pagination.page - 1) * pagination.limit + 1} {t('pilgrims.to')} {Math.min(pagination.page * pagination.limit, paginatedData.total)} {t('pilgrims.of')} {paginatedData.total}
                   </p>
-                  
+
                   <Pagination
                     currentPage={pagination.page}
                     totalPages={paginatedData.totalPages}

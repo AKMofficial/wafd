@@ -86,25 +86,25 @@ export default function PilgrimsPage() {
 
   const statsCards = [
     {
-      title: locale === 'ar' ? 'إجمالي الحجاج' : 'Total Pilgrims',
+      title: t('dashboard.stats.totalPilgrims'),
       value: stats.total,
       icon: Users,
       color: 'text-blue-600 bg-blue-100'
     },
     {
-      title: locale === 'ar' ? 'وصلوا' : 'Arrived',
+      title: t('dashboard.stats.arrived'),
       value: stats.arrived,
       icon: UserCheck,
       color: 'text-green-600 bg-green-100'
     },
     {
-      title: locale === 'ar' ? 'متوقع وصولهم' : 'Expected',
+      title: t('dashboard.stats.expected'),
       value: stats.expected,
       icon: Clock,
       color: 'text-yellow-600 bg-yellow-100'
     },
     {
-      title: locale === 'ar' ? 'احتياجات خاصة' : 'Special Needs',
+      title: t('dashboard.stats.specialNeeds'),
       value: stats.specialNeeds,
       icon: Accessibility,
       color: 'text-purple-600 bg-purple-100'
@@ -122,24 +122,24 @@ export default function PilgrimsPage() {
                 {t('nav.pilgrims')}
               </h1>
               <p className="text-sm sm:text-base text-gray-600">
-                إدارة بيانات الحجاج وتتبع حالتهم
+                {t('pilgrims.subtitle')}
               </p>
             </div>
             <div className="flex gap-2 w-full sm:w-auto">
-              <Button 
+              <Button
                 className="flex-1 sm:flex-none"
                 onClick={() => router.push(`/${locale}/pilgrims/new`)}
               >
                 <Plus className="h-4 w-4 me-2" />
-                إضافة حاج
+                {t('pilgrims.addPilgrim')}
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="flex-1 sm:flex-none"
                 onClick={() => setShowImportDialog(true)}
               >
                 <Upload className="h-4 w-4 me-2" />
-                استيراد
+                {t('pilgrims.import')}
               </Button>
             </div>
           </div>
@@ -157,23 +157,23 @@ export default function PilgrimsPage() {
         {/* Table */}
         <div className="w-full">
           <div className="mb-4 flex items-center gap-4">
-            <h2 className="text-xl font-semibold">جميع الحجاج</h2>
+            <h2 className="text-xl font-semibold">{t('pilgrims.allPilgrims')}</h2>
             <div className="flex gap-3 text-sm">
               <span className="flex items-center gap-1">
                 <span className="text-blue-600">●</span>
-                إجمالي: {stats.total}
+                {t('common.total')}: {stats.total}
               </span>
               <span className="flex items-center gap-1">
                 <span className="text-green-600">●</span>
-                وصلوا: {stats.arrived}
+                {t('dashboard.stats.arrived')}: {stats.arrived}
               </span>
               <span className="flex items-center gap-1">
                 <span className="text-yellow-600">●</span>
-                متوقع: {stats.expected}
+                {t('dashboard.stats.expected')}: {stats.expected}
               </span>
               <span className="flex items-center gap-1">
                 <span className="text-purple-600">●</span>
-                احتياجات خاصة: {stats.specialNeeds}
+                {t('dashboard.stats.specialNeeds')}: {stats.specialNeeds}
               </span>
             </div>
           </div>
@@ -195,9 +195,9 @@ export default function PilgrimsPage() {
           {paginatedData && paginatedData.totalPages > 1 && (
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
               <p className="text-sm text-gray-600 text-center sm:text-start">
-                عرض {(pagination.page - 1) * pagination.limit + 1} إلى {Math.min(pagination.page * pagination.limit, paginatedData.total)} من {paginatedData.total}
+                {t('pilgrims.showing')} {(pagination.page - 1) * pagination.limit + 1} {t('pilgrims.to')} {Math.min(pagination.page * pagination.limit, paginatedData.total)} {t('pilgrims.of')} {paginatedData.total}
               </p>
-              
+
               <Pagination
                 currentPage={pagination.page}
                 totalPages={paginatedData.totalPages}

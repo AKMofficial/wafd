@@ -71,7 +71,7 @@ export function ExcelImportDialog({
       const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
       
       if (jsonData.length === 0) {
-        throw new Error(locale === 'ar' ? 'الملف فارغ' : 'File is empty');
+        throw new Error(t('pilgrims.excelImport.fileEmpty'));
       }
 
       const headers = jsonData[0] as string[];
@@ -85,11 +85,12 @@ export function ExcelImportDialog({
         let hasError = false;
 
         EXCEL_IMPORT_COLUMNS.forEach((column) => {
-          const headerIndex = headers.findIndex(h => h === column.header);
+          const translatedHeader = t(column.headerKey);
+          const headerIndex = headers.findIndex(h => h === translatedHeader);
           if (column.required && (headerIndex === -1 || !(row as any[])[headerIndex])) {
             errors.push({
               row: rowNumber,
-              message: `${column.header} ${locale === 'ar' ? 'مطلوب' : 'is required'}`
+              message: `${translatedHeader} ${t('pilgrims.excelImport.required')}`
             });
             hasError = true;
           }
@@ -111,7 +112,7 @@ export function ExcelImportDialog({
       setStep('preview');
     } catch (error) {
       console.error('Error processing file:', error);
-      alert(locale === 'ar' ? 'خطأ في قراءة الملف' : 'Error reading file');
+      alert(t('pilgrims.excelImport.errorReadingFile'));
     }
     setIsProcessing(false);
   };
@@ -127,7 +128,7 @@ export function ExcelImportDialog({
       onImportComplete?.(result);
     } catch (error) {
       console.error('Import error:', error);
-      alert(locale === 'ar' ? 'فشل الاستيراد' : 'Import failed');
+      alert(t('pilgrims.excelImport.importFailedError'));
     }
     setIsProcessing(false);
   };
@@ -142,7 +143,7 @@ export function ExcelImportDialog({
 
   const downloadTemplate = () => {
     const ws = XLSX.utils.aoa_to_sheet([
-      EXCEL_IMPORT_COLUMNS.map(col => col.header),
+      EXCEL_IMPORT_COLUMNS.map(col => t(col.headerKey)),
       [
         'HAJ2024001',
         '1234567890',
@@ -170,12 +171,10 @@ export function ExcelImportDialog({
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col" onClose={handleClose}>
         <DialogHeader>
           <DialogTitle>
-            {locale === 'ar' ? 'استيراد بيانات الحجاج من Excel' : 'Import Pilgrims from Excel'}
+            {t('pilgrims.excelImport.title')}
           </DialogTitle>
           <DialogDescription>
-            {locale === 'ar' 
-              ? 'قم برفع ملف Excel يحتوي على بيانات الحجاج'
-              : 'Upload an Excel file containing pilgrim data'}
+            {t('pilgrims.excelImport.description')}
           </DialogDescription>
         </DialogHeader>
 
@@ -192,30 +191,28 @@ export function ExcelImportDialog({
                     className="hidden"
                   />
                   
-                  <div 
+                  <div
                     className="text-center cursor-pointer"
                     onClick={() => fileInputRef.current?.click()}
                   >
                     <FileSpreadsheet className="h-16 w-16 mx-auto text-gray-400 mb-4" />
                     <h3 className="text-lg font-medium mb-2">
-                      {locale === 'ar' ? 'اختر ملف Excel' : 'Choose Excel File'}
+                      {t('pilgrims.excelImport.chooseFile')}
                     </h3>
                     <p className="text-sm text-gray-600 mb-4">
-                      {locale === 'ar' 
-                        ? 'اضغط للاختيار أو اسحب الملف هنا'
-                        : 'Click to browse or drag and drop'}
+                      {t('pilgrims.excelImport.clickToBrowse')}
                     </p>
                     <Button variant="outline">
                       <Upload className="h-4 w-4 me-2" />
-                      {locale === 'ar' ? 'اختر ملف' : 'Select File'}
+                      {t('pilgrims.excelImport.selectFile')}
                     </Button>
                   </div>
-                  
+
                   {isProcessing && (
                     <div className="mt-4 text-center">
                       <Skeleton className="h-4 w-48 mx-auto" />
                       <p className="text-sm text-gray-600 mt-2">
-                        {locale === 'ar' ? 'جاري معالجة الملف...' : 'Processing file...'}
+                        {t('pilgrims.excelImport.processingFile')}
                       </p>
                     </div>
                   )}
@@ -225,17 +222,15 @@ export function ExcelImportDialog({
               <div className="flex items-center justify-between">
                 <div>
                   <h4 className="font-medium mb-1">
-                    {locale === 'ar' ? 'تحتاج قالب؟' : 'Need a template?'}
+                    {t('pilgrims.excelImport.needTemplate')}
                   </h4>
                   <p className="text-sm text-gray-600">
-                    {locale === 'ar' 
-                      ? 'حمل قالب Excel مع الأعمدة المطلوبة'
-                      : 'Download an Excel template with required columns'}
+                    {t('pilgrims.excelImport.templateDescription')}
                   </p>
                 </div>
                 <Button variant="outline" onClick={downloadTemplate}>
                   <Download className="h-4 w-4 me-2" />
-                  {locale === 'ar' ? 'تحميل القالب' : 'Download Template'}
+                  {t('pilgrims.excelImport.downloadTemplate')}
                 </Button>
               </div>
             </div>
@@ -247,7 +242,7 @@ export function ExcelImportDialog({
                 <Card className="p-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">
-                      {locale === 'ar' ? 'إجمالي الصفوف' : 'Total Rows'}
+                      {t('pilgrims.excelImport.totalRows')}
                     </span>
                     <Badge variant="outline">{previewData.totalRows}</Badge>
                   </div>
@@ -255,7 +250,7 @@ export function ExcelImportDialog({
                 <Card className="p-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">
-                      {locale === 'ar' ? 'صفوف صالحة' : 'Valid Rows'}
+                      {t('pilgrims.excelImport.validRows')}
                     </span>
                     <Badge className="bg-green-100 text-green-800">
                       {previewData.validRows}
@@ -265,7 +260,7 @@ export function ExcelImportDialog({
                 <Card className="p-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">
-                      {locale === 'ar' ? 'أخطاء' : 'Errors'}
+                      {t('pilgrims.excelImport.errors')}
                     </span>
                     <Badge className="bg-red-100 text-red-800">
                       {previewData.errors.length}
@@ -276,7 +271,7 @@ export function ExcelImportDialog({
 
               <div>
                 <h4 className="font-medium mb-2">
-                  {locale === 'ar' ? 'معاينة البيانات' : 'Data Preview'}
+                  {t('pilgrims.excelImport.dataPreview')}
                 </h4>
                 <div className="border rounded-lg overflow-auto max-h-64">
                   <Table>
@@ -307,14 +302,14 @@ export function ExcelImportDialog({
               {previewData.errors.length > 0 && (
                 <div>
                   <h4 className="font-medium mb-2 text-red-600">
-                    {locale === 'ar' ? 'الأخطاء' : 'Errors'}
+                    {t('pilgrims.excelImport.errors')}
                   </h4>
                   <div className="space-y-2 max-h-32 overflow-auto">
                     {previewData.errors.map((error, index) => (
                       <div key={index} className="flex items-center gap-2 text-sm">
                         <XCircle className="h-4 w-4 text-red-500 flex-shrink-0" />
                         <span>
-                          {locale === 'ar' ? `صف ${error.row}:` : `Row ${error.row}:`}
+                          {t('pilgrims.excelImport.row')} {error.row}:
                         </span>
                         <span className="text-gray-600">{error.message}</span>
                       </div>
@@ -332,14 +327,14 @@ export function ExcelImportDialog({
                   <>
                     <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
                     <h3 className="text-lg font-medium mb-2">
-                      {locale === 'ar' ? 'تم الاستيراد بنجاح!' : 'Import Successful!'}
+                      {t('pilgrims.excelImport.importSuccessful')}
                     </h3>
                   </>
                 ) : (
                   <>
                     <XCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
                     <h3 className="text-lg font-medium mb-2">
-                      {locale === 'ar' ? 'فشل الاستيراد' : 'Import Failed'}
+                      {t('pilgrims.excelImport.importFailed')}
                     </h3>
                   </>
                 )}
@@ -352,7 +347,7 @@ export function ExcelImportDialog({
                       {importResult.importedCount}
                     </p>
                     <p className="text-sm text-gray-600">
-                      {locale === 'ar' ? 'تم استيرادها' : 'Imported'}
+                      {t('pilgrims.excelImport.imported')}
                     </p>
                   </div>
                 </Card>
@@ -362,7 +357,7 @@ export function ExcelImportDialog({
                       {importResult.failedCount}
                     </p>
                     <p className="text-sm text-gray-600">
-                      {locale === 'ar' ? 'فشلت' : 'Failed'}
+                      {t('pilgrims.excelImport.failed')}
                     </p>
                   </div>
                 </Card>
@@ -371,7 +366,7 @@ export function ExcelImportDialog({
               {importResult.duplicates.length > 0 && (
                 <div>
                   <h4 className="font-medium mb-2 text-yellow-600">
-                    {locale === 'ar' ? 'تكرارات' : 'Duplicates'}
+                    {t('pilgrims.excelImport.duplicates')}
                   </h4>
                   <div className="flex flex-wrap gap-2">
                     {importResult.duplicates.map((dup, index) => (
@@ -388,16 +383,16 @@ export function ExcelImportDialog({
 
         <div className="border-t p-4 flex justify-between items-center">
           <Button variant="outline" onClick={handleClose}>
-            {locale === 'ar' ? 'إغلاق' : 'Close'}
+            {t('pilgrims.excelImport.close')}
           </Button>
-          
+
           {step === 'preview' && (
             <div className="flex gap-2">
               <Button
                 variant="outline"
                 onClick={() => setStep('upload')}
               >
-                {locale === 'ar' ? 'رجوع' : 'Back'}
+                {t('pilgrims.excelImport.back')}
               </Button>
               <Button
                 onClick={handleImport}
@@ -406,14 +401,12 @@ export function ExcelImportDialog({
                 {isProcessing ? (
                   <>
                     <Skeleton className="h-4 w-4 me-2" />
-                    {locale === 'ar' ? 'جاري الاستيراد...' : 'Importing...'}
+                    {t('pilgrims.excelImport.importing')}
                   </>
                 ) : (
                   <>
                     <Upload className="h-4 w-4 me-2" />
-                    {locale === 'ar' 
-                      ? `استيراد ${previewData?.validRows || 0} صف`
-                      : `Import ${previewData?.validRows || 0} rows`}
+                    {t('pilgrims.excelImport.importRows').replace('{count}', String(previewData?.validRows || 0))}
                   </>
                 )}
               </Button>

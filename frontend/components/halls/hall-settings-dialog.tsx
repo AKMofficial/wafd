@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useLocale } from '@/lib/i18n';
+import { useLocale, useTranslations } from '@/lib/i18n';
 import { Hall, UpdateHallDto } from '@/types/hall';
 import { useHallStore } from '@/store/hall-store';
 import {
@@ -37,6 +37,7 @@ interface HallSettingsDialogProps {
 
 export function HallSettingsDialog({ hall, isOpen, onClose, onSuccess }: HallSettingsDialogProps) {
   const locale = useLocale();
+  const t = useTranslations();
   const isRTL = locale === 'ar';
   const { updateHall, deleteHall } = useHallStore();
   
@@ -71,7 +72,7 @@ export function HallSettingsDialog({ hall, isOpen, onClose, onSuccess }: HallSet
       onClose();
     } catch (error) {
       console.error('Failed to update hall:', error);
-      alert(locale === 'ar' ? 'فشل في تحديث القاعة' : 'Failed to update hall');
+      alert(t('halls.settingsDialog.failedToUpdate'));
     }
     
     setIsLoading(false);
@@ -88,11 +89,11 @@ export function HallSettingsDialog({ hall, isOpen, onClose, onSuccess }: HallSet
         // Navigate back to halls page after deletion
         window.location.href = `/${locale}/halls`;
       } else {
-        alert(locale === 'ar' ? 'فشل في حذف القاعة' : 'Failed to delete hall');
+        alert(t('halls.settingsDialog.failedToUpdate'));
       }
     } catch (error) {
       console.error('Failed to delete hall:', error);
-      alert(locale === 'ar' ? 'فشل في حذف القاعة' : 'Failed to delete hall');
+      alert(t('halls.settingsDialog.failedToUpdate'));
     }
     
     setIsLoading(false);
@@ -120,12 +121,10 @@ export function HallSettingsDialog({ hall, isOpen, onClose, onSuccess }: HallSet
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
-            {locale === 'ar' ? 'إعدادات القاعة' : 'Hall Settings'}
+            {t('halls.settingsDialog.title')}
           </DialogTitle>
           <DialogDescription>
-            {locale === 'ar' 
-              ? 'تعديل إعدادات القاعة ومعلوماتها' 
-              : 'Edit hall settings and information'}
+            {t('halls.settingsDialog.description')}
           </DialogDescription>
         </DialogHeader>
         
@@ -133,35 +132,35 @@ export function HallSettingsDialog({ hall, isOpen, onClose, onSuccess }: HallSet
           {/* Hall Information */}
           <Card className="p-4 space-y-3 bg-gray-50">
             <h3 className="font-semibold text-sm">
-              {locale === 'ar' ? 'معلومات القاعة' : 'Hall Information'}
+              {t('halls.settingsDialog.hallInfo')}
             </h3>
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
                 <span className="text-gray-600">
-                  {locale === 'ar' ? 'رمز القاعة' : 'Hall Code'}
+                  {t('halls.createDialog.hallCode')}
                 </span>
                 <p className="font-medium">{hall.code}</p>
               </div>
               <div>
                 <span className="text-gray-600">
-                  {locale === 'ar' ? 'النوع' : 'Type'}
+                  {t('halls.createDialog.hallType')}
                 </span>
                 <p className="font-medium">
-                  {hall.type === 'male' 
-                    ? (locale === 'ar' ? 'قاعة رجال' : 'Male Hall')
-                    : (locale === 'ar' ? 'قاعة نساء' : 'Female Hall')
+                  {hall.type === 'male'
+                    ? t('halls.hallType.male')
+                    : t('halls.hallType.female')
                   }
                 </p>
               </div>
               <div>
                 <span className="text-gray-600">
-                  {locale === 'ar' ? 'الإشغال الحالي' : 'Current Occupancy'}
+                  {t('halls.occupancy')}
                 </span>
                 <p className="font-medium">{hall.currentOccupancy}/{hall.capacity}</p>
               </div>
               <div>
                 <span className="text-gray-600">
-                  {locale === 'ar' ? 'الأسرّة المتاحة' : 'Available Beds'}
+                  {t('halls.availableBeds')}
                 </span>
                 <p className="font-medium">{hall.availableBeds}</p>
               </div>
@@ -172,7 +171,7 @@ export function HallSettingsDialog({ hall, isOpen, onClose, onSuccess }: HallSet
           <div className="space-y-4">
             <div>
               <Label htmlFor="name">
-                {locale === 'ar' ? 'اسم القاعة' : 'Hall Name'}
+                {t('halls.createDialog.hallName')}
               </Label>
               <Input
                 id="name"
@@ -185,7 +184,7 @@ export function HallSettingsDialog({ hall, isOpen, onClose, onSuccess }: HallSet
             
             <div>
               <Label htmlFor="capacity">
-                {locale === 'ar' ? 'السعة الإجمالية' : 'Total Capacity'}
+                {t('halls.capacity')}
               </Label>
               <Input
                 id="capacity"
@@ -201,9 +200,7 @@ export function HallSettingsDialog({ hall, isOpen, onClose, onSuccess }: HallSet
                 <div className="flex items-center gap-2 mt-2 text-sm text-yellow-600">
                   <AlertCircle className="h-4 w-4" />
                   <span>
-                    {locale === 'ar' 
-                      ? 'لا يمكن تغيير السعة عندما تكون هناك أسرّة مشغولة' 
-                      : 'Cannot change capacity when beds are occupied'}
+                    {t('halls.messages.deleteError')}
                   </span>
                 </div>
               )}
@@ -214,7 +211,7 @@ export function HallSettingsDialog({ hall, isOpen, onClose, onSuccess }: HallSet
           {hall.numberingConfig && (
             <Card className="p-4 space-y-3">
               <h3 className="font-semibold text-sm">
-                {locale === 'ar' ? 'نظام ترقيم الأسرّة' : 'Bed Numbering System'}
+                {t('halls.settingsDialog.bedNumbering')}
               </h3>
               <div className="flex flex-wrap gap-2">
                 {getBedNumberingPreview(hall.code, hall.type, hall.numberingConfig).map((num, i) => (
@@ -240,27 +237,25 @@ export function HallSettingsDialog({ hall, isOpen, onClose, onSuccess }: HallSet
                       className="text-red-600 hover:text-red-700 hover:bg-red-50"
                     >
                       <Trash2 className="h-4 w-4 ml-1" />
-                      {locale === 'ar' ? 'حذف القاعة' : 'Delete Hall'}
+                      {t('common.delete')} {t('halls.hallDetails')}
                     </Button>
                   </span>
                 </TooltipTrigger>
                 {!canDelete && (
                   <TooltipContent>
-                    <p>{locale === 'ar' 
-                      ? 'لا يمكن حذف القاعة عندما تكون هناك أسرّة مشغولة' 
-                      : 'Cannot delete hall when beds are occupied'}</p>
+                    <p>{t('halls.messages.deleteError')}</p>
                   </TooltipContent>
                 )}
               </Tooltip>
             </TooltipProvider>
             <div className="flex gap-2">
               <Button type="button" variant="outline" onClick={onClose}>
-                {locale === 'ar' ? 'إلغاء' : 'Cancel'}
+                {t('common.cancel')}
               </Button>
               <Button type="submit" disabled={isLoading}>
-                {isLoading 
-                  ? (locale === 'ar' ? 'جاري الحفظ...' : 'Saving...') 
-                  : (locale === 'ar' ? 'حفظ التغييرات' : 'Save Changes')
+                {isLoading
+                  ? t('halls.settingsDialog.updating')
+                  : t('common.saveChanges')
                 }
               </Button>
             </div>
@@ -275,45 +270,38 @@ export function HallSettingsDialog({ hall, isOpen, onClose, onSuccess }: HallSet
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-red-600">
             <AlertCircle className="h-5 w-5" />
-            {locale === 'ar' ? 'تأكيد حذف القاعة' : 'Confirm Hall Deletion'}
+            {t('halls.settingsDialog.confirmDelete')}
           </DialogTitle>
           <DialogDescription>
-            {locale === 'ar' 
-              ? `هل أنت متأكد من رغبتك في حذف قاعة "${hall?.name}"؟ هذا الإجراء لا يمكن التراجع عنه.`
-              : `Are you sure you want to delete hall "${hall?.name}"? This action cannot be undone.`}
+            {t('halls.settingsDialog.deleteWarning').replace('{name}', hall?.name || '')}
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 my-4">
           <div className="flex items-center gap-2 text-yellow-800">
             <AlertCircle className="h-4 w-4 flex-shrink-0" />
             <p className="text-sm">
-              {locale === 'ar'
-                ? 'سيتم حذف جميع بيانات القاعة بما في ذلك معلومات الأسرّة. تأكد من عدم وجود حجوزات نشطة.'
-                : 'All hall data including bed information will be deleted. Make sure there are no active reservations.'}
+              {t('halls.settingsDialog.deleteNote')}
             </p>
           </div>
         </div>
         
         <DialogFooter>
-          <Button 
-            type="button" 
-            variant="outline" 
+          <Button
+            type="button"
+            variant="outline"
             onClick={() => setShowDeleteConfirm(false)}
             disabled={isLoading}
           >
-            {locale === 'ar' ? 'إلغاء' : 'Cancel'}
+            {t('common.cancel')}
           </Button>
-          <Button 
-            type="button" 
-            variant="destructive" 
+          <Button
+            type="button"
+            variant="destructive"
             onClick={handleDelete}
             disabled={isLoading}
           >
-            {isLoading 
-              ? (locale === 'ar' ? 'جاري الحذف...' : 'Deleting...') 
-              : (locale === 'ar' ? 'حذف القاعة' : 'Delete Hall')
-            }
+            {isLoading ? t('halls.settingsDialog.deleting') : t('halls.settingsDialog.deleteHall')}
           </Button>
         </DialogFooter>
       </DialogContent>

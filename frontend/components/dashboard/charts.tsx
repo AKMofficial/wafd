@@ -1,23 +1,24 @@
 'use client';
 
 import { Card } from '@/components/ui/card';
-import { 
-  BarChart, 
-  Bar, 
-  PieChart, 
-  Pie, 
-  Cell, 
-  AreaChart, 
+import { useTranslations } from '@/lib/i18n';
+import {
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  AreaChart,
   Area,
   LineChart,
   Line,
   RadialBarChart,
   RadialBar,
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
   ResponsiveContainer,
   LabelList
 } from 'recharts';
@@ -84,14 +85,16 @@ const CustomPieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, n
 };
 
 export function Charts({ pilgrimStats, hallStats, locale }: ChartsProps) {
+  const t = useTranslations();
+
   const arrivalTrends = [
-    { day: locale === 'ar' ? 'السبت' : 'Sat', arrivals: 45, expected: 50, difference: -5 },
-    { day: locale === 'ar' ? 'الأحد' : 'Sun', arrivals: 52, expected: 48, difference: 4 },
-    { day: locale === 'ar' ? 'الإثنين' : 'Mon', arrivals: 38, expected: 42, difference: -4 },
-    { day: locale === 'ar' ? 'الثلاثاء' : 'Tue', arrivals: 60, expected: 55, difference: 5 },
-    { day: locale === 'ar' ? 'الأربعاء' : 'Wed', arrivals: 48, expected: 52, difference: -4 },
-    { day: locale === 'ar' ? 'الخميس' : 'Thu', arrivals: 55, expected: 58, difference: -3 },
-    { day: locale === 'ar' ? 'الجمعة' : 'Fri', arrivals: 42, expected: 45, difference: -3 },
+    { day: t('dashboard.charts.days.sat'), arrivals: 45, expected: 50, difference: -5 },
+    { day: t('dashboard.charts.days.sun'), arrivals: 52, expected: 48, difference: 4 },
+    { day: t('dashboard.charts.days.mon'), arrivals: 38, expected: 42, difference: -4 },
+    { day: t('dashboard.charts.days.tue'), arrivals: 60, expected: 55, difference: 5 },
+    { day: t('dashboard.charts.days.wed'), arrivals: 48, expected: 52, difference: -4 },
+    { day: t('dashboard.charts.days.thu'), arrivals: 55, expected: 58, difference: -3 },
+    { day: t('dashboard.charts.days.fri'), arrivals: 42, expected: 45, difference: -3 },
   ];
 
   const nationalityData = Object.entries(pilgrimStats.byNationality || {})
@@ -112,21 +115,21 @@ export function Charts({ pilgrimStats, hallStats, locale }: ChartsProps) {
   ];
 
   const hallsOccupancyData = [
-    { name: locale === 'ar' ? 'القاعة أ' : 'Hall A', pilgrims: 48, capacity: 50, occupancy: 96 },
-    { name: locale === 'ar' ? 'القاعة ب' : 'Hall B', pilgrims: 45, capacity: 50, occupancy: 90 },
-    { name: locale === 'ar' ? 'القاعة ج' : 'Hall C', pilgrims: 42, capacity: 50, occupancy: 84 },
-    { name: locale === 'ar' ? 'القاعة د' : 'Hall D', pilgrims: 38, capacity: 50, occupancy: 76 },
-    { name: locale === 'ar' ? 'القاعة هـ' : 'Hall E', pilgrims: 35, capacity: 50, occupancy: 70 },
-    { name: locale === 'ar' ? 'القاعة و' : 'Hall F', pilgrims: 32, capacity: 50, occupancy: 64 },
+    { name: t('dashboard.charts.halls.hallA'), pilgrims: 48, capacity: 50, occupancy: 96 },
+    { name: t('dashboard.charts.halls.hallB'), pilgrims: 45, capacity: 50, occupancy: 90 },
+    { name: t('dashboard.charts.halls.hallC'), pilgrims: 42, capacity: 50, occupancy: 84 },
+    { name: t('dashboard.charts.halls.hallD'), pilgrims: 38, capacity: 50, occupancy: 76 },
+    { name: t('dashboard.charts.halls.hallE'), pilgrims: 35, capacity: 50, occupancy: 70 },
+    { name: t('dashboard.charts.halls.hallF'), pilgrims: 32, capacity: 50, occupancy: 64 },
   ].sort((a, b) => b.occupancy - a.occupancy);
 
   const genderDistribution = [
-    { name: locale === 'ar' ? 'رجال' : 'Male', value: pilgrimStats.maleCount, fill: '#3B82F6' },
-    { name: locale === 'ar' ? 'نساء' : 'Female', value: pilgrimStats.femaleCount, fill: '#EC4899' }
+    { name: t('dashboard.charts.male'), value: pilgrimStats.maleCount, fill: '#3B82F6' },
+    { name: t('dashboard.charts.female'), value: pilgrimStats.femaleCount, fill: '#EC4899' }
   ];
 
   const occupancyOverview = [
-    { name: locale === 'ar' ? 'الإشغال' : 'Occupancy', value: hallStats.occupancyRate, fill: '#10B981' }
+    { name: t('dashboard.charts.occupancy'), value: hallStats.occupancyRate, fill: '#10B981' }
   ];
 
   const COLORS = {
@@ -138,300 +141,20 @@ export function Charts({ pilgrimStats, hallStats, locale }: ChartsProps) {
   return (
     <div className="space-y-6">
       {/* Main Charts Grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        {/* Arrival Trends - Wider */}
-        <ChartCard 
-          title={locale === 'ar' ? 'معدل الوصول' : 'Arrival Trends'}
-          subtitle={locale === 'ar' ? 'آخر 7 أيام' : 'Last 7 days'}
-          className="xl:col-span-2"
-        >
-          <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={arrivalTrends} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id="arrivedGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10B981" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#10B981" stopOpacity={0.1}/>
-                </linearGradient>
-                <linearGradient id="expectedGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#F59E0B" stopOpacity={0.1}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-              <XAxis 
-                dataKey="day" 
-                tick={{ fontSize: 12, fill: '#6B7280' }}
-                axisLine={{ stroke: '#E5E7EB' }}
-              />
-              <YAxis 
-                tick={{ fontSize: 12, fill: '#6B7280' }}
-                axisLine={{ stroke: '#E5E7EB' }}
-                tickFormatter={(value) => `${value}`}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend 
-                wrapperStyle={{ paddingTop: '20px' }}
-                iconType="rect"
-              />
-              <Area 
-                type="monotone" 
-                dataKey="arrivals" 
-                stroke="#10B981" 
-                strokeWidth={2}
-                fill="url(#arrivedGradient)"
-                name={locale === 'ar' ? 'وصلوا' : 'Arrived'}
-              />
-              <Area 
-                type="monotone" 
-                dataKey="expected" 
-                stroke="#F59E0B" 
-                strokeWidth={2}
-                fill="url(#expectedGradient)"
-                name={locale === 'ar' ? 'متوقع' : 'Expected'}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </ChartCard>
-
-        {/* Gender Distribution - Radial */}
-        <ChartCard 
-          title={locale === 'ar' ? 'توزيع الجنس' : 'Gender Distribution'}
-          subtitle={locale === 'ar' ? 'رجال و نساء' : 'Male & Female'}
-        >
-          <ResponsiveContainer width="100%" height={300}>
-            <RadialBarChart 
-              cx="50%" 
-              cy="50%" 
-              innerRadius="30%" 
-              outerRadius="90%" 
-              data={genderDistribution}
-              startAngle={90}
-              endAngle={-270}
-            >
-              <RadialBar
-                dataKey="value"
-                cornerRadius={10}
-                fill="#8B5CF6"
-                label={{ position: 'insideStart', fill: '#fff', fontSize: 14 }}
-              />
-              <Legend 
-                iconSize={10}
-                layout="horizontal"
-                verticalAlign="bottom"
-                align="center"
-                wrapperStyle={{ paddingTop: '20px' }}
-              />
-              <Tooltip content={<CustomTooltip />} />
-            </RadialBarChart>
-          </ResponsiveContainer>
-        </ChartCard>
-      </div>
-
-      {/* Second Row - 3 columns */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Nationality Distribution - Improved */}
-        <ChartCard 
-          title={locale === 'ar' ? 'توزيع الجنسيات' : 'Nationality Distribution'}
-          subtitle={locale === 'ar' ? 'أعلى 5 جنسيات' : 'Top 5 nationalities'}
-        >
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart 
-              data={nationalityData}
-              layout="horizontal"
-              margin={{ top: 5, right: 30, left: 60, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-              <XAxis 
-                type="number"
-                tick={{ fontSize: 12, fill: '#6B7280' }}
-                axisLine={{ stroke: '#E5E7EB' }}
-              />
-              <YAxis 
-                type="category"
-                dataKey="name"
-                tick={{ fontSize: 12, fill: '#6B7280' }}
-                axisLine={{ stroke: '#E5E7EB' }}
-                width={50}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar 
-                dataKey="value" 
-                radius={[0, 4, 4, 0]}
-                name={locale === 'ar' ? 'عدد الحجاج' : 'Pilgrims'}
-              >
-                {nationalityData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS.primary[index % COLORS.primary.length]} />
-                ))}
-                <LabelList 
-                  dataKey="percentage" 
-                  position="right" 
-                  formatter={(value) => `${value}%`}
-                  style={{ fontSize: '11px', fill: '#6B7280' }}
-                />
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartCard>
-
-        {/* Age Distribution - Stacked */}
-        <ChartCard 
-          title={locale === 'ar' ? 'توزيع الأعمار' : 'Age Distribution'}
-          subtitle={locale === 'ar' ? 'حسب الجنس' : 'By gender'}
-        >
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart 
-              data={ageGroupData}
-              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-              <XAxis 
-                dataKey="age"
-                tick={{ fontSize: 12, fill: '#6B7280' }}
-                axisLine={{ stroke: '#E5E7EB' }}
-              />
-              <YAxis 
-                tick={{ fontSize: 12, fill: '#6B7280' }}
-                axisLine={{ stroke: '#E5E7EB' }}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend 
-                wrapperStyle={{ paddingTop: '10px' }}
-                iconType="rect"
-              />
-              <Bar 
-                dataKey="male" 
-                stackId="a" 
-                fill="#3B82F6" 
-                name={locale === 'ar' ? 'رجال' : 'Male'}
-                radius={[0, 0, 0, 0]}
-              />
-              <Bar 
-                dataKey="female" 
-                stackId="a" 
-                fill="#EC4899" 
-                name={locale === 'ar' ? 'نساء' : 'Female'}
-                radius={[4, 4, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartCard>
-
-        {/* Halls Occupancy - Horizontal bars */}
-        <ChartCard 
-          title={locale === 'ar' ? 'إشغال القاعات' : 'Halls Occupancy'}
-          subtitle={locale === 'ar' ? 'نسبة الإشغال' : 'Occupancy rate'}
-        >
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart 
-              data={hallsOccupancyData}
-              layout="horizontal"
-              margin={{ top: 5, right: 30, left: 50, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-              <XAxis 
-                type="number"
-                domain={[0, 100]}
-                tick={{ fontSize: 12, fill: '#6B7280' }}
-                axisLine={{ stroke: '#E5E7EB' }}
-                tickFormatter={(value) => `${value}%`}
-              />
-              <YAxis 
-                type="category"
-                dataKey="name"
-                tick={{ fontSize: 12, fill: '#6B7280' }}
-                axisLine={{ stroke: '#E5E7EB' }}
-                width={45}
-              />
-              <Tooltip 
-                content={<CustomTooltip />}
-                formatter={(value: any) => `${value}%`}
-              />
-              <Bar 
-                dataKey="occupancy" 
-                radius={[0, 4, 4, 0]}
-                name={locale === 'ar' ? 'نسبة الإشغال' : 'Occupancy'}
-              >
-                {hallsOccupancyData.map((entry, index) => (
-                  <Cell 
-                    key={`cell-${index}`} 
-                    fill={entry.occupancy > 90 ? '#EF4444' : entry.occupancy > 75 ? '#F59E0B' : '#10B981'} 
-                  />
-                ))}
-                <LabelList 
-                  dataKey="pilgrims" 
-                  position="right" 
-                  formatter={(value) => `${value}/${hallsOccupancyData[0].capacity}`}
-                  style={{ fontSize: '11px', fill: '#6B7280' }}
-                />
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartCard>
-      </div>
-
-      {/* Third Row - Performance Metrics */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Daily Arrivals Comparison */}
-        <ChartCard 
-          title={locale === 'ar' ? 'مقارنة الوصول اليومي' : 'Daily Arrivals Comparison'}
-          subtitle={locale === 'ar' ? 'الفعلي مقابل المتوقع' : 'Actual vs Expected'}
-        >
-          <ResponsiveContainer width="100%" height={250}>
-            <LineChart 
-              data={arrivalTrends}
-              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-              <XAxis 
-                dataKey="day"
-                tick={{ fontSize: 12, fill: '#6B7280' }}
-                axisLine={{ stroke: '#E5E7EB' }}
-              />
-              <YAxis 
-                tick={{ fontSize: 12, fill: '#6B7280' }}
-                axisLine={{ stroke: '#E5E7EB' }}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend 
-                wrapperStyle={{ paddingTop: '10px' }}
-                iconType="line"
-              />
-              <Line 
-                type="monotone" 
-                dataKey="arrivals" 
-                stroke="#10B981" 
-                strokeWidth={3}
-                dot={{ fill: '#10B981', strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 6 }}
-                name={locale === 'ar' ? 'وصلوا' : 'Arrived'}
-              />
-              <Line 
-                type="monotone" 
-                dataKey="expected" 
-                stroke="#F59E0B" 
-                strokeWidth={3}
-                strokeDasharray="5 5"
-                dot={{ fill: '#F59E0B', strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 6 }}
-                name={locale === 'ar' ? 'متوقع' : 'Expected'}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </ChartCard>
-
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Occupancy Rate Overview */}
-        <ChartCard 
-          title={locale === 'ar' ? 'معدل الإشغال الإجمالي' : 'Overall Occupancy Rate'}
-          subtitle={`${hallStats.totalOccupied}/${hallStats.totalBeds} ${locale === 'ar' ? 'سرير مشغول' : 'beds occupied'}`}
+        <ChartCard
+          title={t('dashboard.charts.overallOccupancyRate')}
+          subtitle={`${hallStats.totalOccupied}/${hallStats.totalBeds} ${t('dashboard.charts.bedsOccupied')}`}
         >
           <div className="flex items-center justify-center h-[250px]">
             <div className="relative">
               <ResponsiveContainer width={200} height={200}>
-                <RadialBarChart 
-                  cx="50%" 
-                  cy="50%" 
-                  innerRadius="60%" 
-                  outerRadius="90%" 
+                <RadialBarChart
+                  cx="50%"
+                  cy="50%"
+                  innerRadius="60%"
+                  outerRadius="90%"
                   data={occupancyOverview}
                   startAngle={90}
                   endAngle={-270}
@@ -449,10 +172,48 @@ export function Charts({ pilgrimStats, hallStats, locale }: ChartsProps) {
                   {hallStats.occupancyRate.toFixed(0)}%
                 </span>
                 <span className="text-sm text-gray-500">
-                  {locale === 'ar' ? 'نسبة الإشغال' : 'Occupancy'}
+                  {t('dashboard.charts.occupancy')}
                 </span>
               </div>
             </div>
+          </div>
+        </ChartCard>
+
+        {/* Halls Occupancy - Modern List View */}
+        <ChartCard
+          title={t('dashboard.charts.hallsOccupancy')}
+          subtitle={t('dashboard.charts.occupancyByHall')}
+        >
+          <div className="space-y-3">
+            {hallsOccupancyData.map((hall, index) => (
+              <div key={index} className="space-y-1.5">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium text-gray-700">{hall.name}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500">
+                      {hall.pilgrims}/{hall.capacity}
+                    </span>
+                    <span className={`font-semibold ${
+                      hall.occupancy > 90 ? 'text-red-600' :
+                      hall.occupancy > 75 ? 'text-amber-600' :
+                      'text-green-600'
+                    }`}>
+                      {hall.occupancy}%
+                    </span>
+                  </div>
+                </div>
+                <div className="relative h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div
+                    className={`absolute inset-y-0 left-0 rounded-full transition-all duration-500 ${
+                      hall.occupancy > 90 ? 'bg-gradient-to-r from-red-500 to-red-600' :
+                      hall.occupancy > 75 ? 'bg-gradient-to-r from-amber-500 to-amber-600' :
+                      'bg-gradient-to-r from-green-500 to-green-600'
+                    }`}
+                    style={{ width: `${hall.occupancy}%` }}
+                  />
+                </div>
+              </div>
+            ))}
           </div>
         </ChartCard>
       </div>

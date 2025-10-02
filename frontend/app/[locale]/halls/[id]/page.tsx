@@ -92,13 +92,13 @@ export default function HallDetailPage() {
       <main className="p-4 sm:p-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center py-12">
-            <p className="text-gray-500">لم يتم العثور على القاعة</p>
-            <Button 
-              variant="outline" 
+            <p className="text-gray-500">{t('halls.messages.notFound')}</p>
+            <Button
+              variant="outline"
               className="mt-4"
               onClick={() => router.push(`/${locale}/halls`)}
             >
-              العودة إلى القاعات
+              {t('common.back')}
             </Button>
           </div>
         </div>
@@ -113,11 +113,11 @@ export default function HallDetailPage() {
   });
   
   const statusOptions = [
-    { value: 'all', label: 'جميع الحالات' },
-    { value: 'vacant', label: 'شاغر' },
-    { value: 'occupied', label: 'مشغول' },
-    { value: 'reserved', label: 'محجوز' },
-    { value: 'maintenance', label: 'صيانة' },
+    { value: 'all', label: t('halls.filters.all') },
+    { value: 'vacant', label: t('halls.bedStatus.vacant') },
+    { value: 'occupied', label: t('halls.bedStatus.occupied') },
+    { value: 'reserved', label: t('halls.bedStatus.reserved') },
+    { value: 'maintenance', label: t('halls.bedStatus.maintenance') },
   ];
   
   const handleBedClick = (bed: BedType) => {
@@ -128,7 +128,7 @@ export default function HallDetailPage() {
   
   const handleAssignPilgrim = (bedId: string) => {
     // In a real app, this would open a pilgrim selection dialog
-    alert(locale === 'ar' ? 'سيتم فتح نافذة اختيار الحاج' : 'Pilgrim selection dialog will open');
+    alert(t('halls.bedDetailsDialog.assignPilgrim'));
   };
   
   const handleVacateBed = async (bedId: string) => {
@@ -162,7 +162,7 @@ export default function HallDetailPage() {
               className="gap-1"
             >
               {isRTL ? <ArrowRight className="h-4 w-4" /> : <ArrowLeft className="h-4 w-4" />}
-              العودة
+              {t('common.back')}
             </Button>
           </div>
           
@@ -184,18 +184,18 @@ export default function HallDetailPage() {
                   {selectedHall.code}
                 </Badge>
                 <Badge variant="secondary">
-                  {selectedHall.type === 'male' ? 'قاعة رجال' : 'قاعة نساء'}
+                  {selectedHall.type === 'male' ? t('halls.hallType.male') : t('halls.hallType.female')}
                 </Badge>
               </div>
               <p className="text-gray-600">
-                السعة: {selectedHall.capacity} سرير • الإشغال: {occupancy.rate.toFixed(0)}%
+                {t('halls.capacity')}: {selectedHall.capacity} {t('halls.stats.bed')} • {t('halls.occupancy')}: {occupancy.rate.toFixed(0)}%
               </p>
             </div>
             
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => setShowHallSettings(true)}>
                 <Settings className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
-                إعدادات القاعة
+                {t('halls.settingsDialog.title')}
               </Button>
             </div>
           </div>
@@ -206,7 +206,7 @@ export default function HallDetailPage() {
           <Card>
             <CardHeader className="p-4">
               <CardTitle className="text-sm font-medium text-gray-600">
-                إجمالي الأسرّة
+                {t('halls.totalBeds')}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4 pt-0">
@@ -216,11 +216,11 @@ export default function HallDetailPage() {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader className="p-4">
               <CardTitle className="text-sm font-medium text-gray-600">
-                أسرّة مشغولة
+                {t('halls.occupiedBeds')}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4 pt-0">
@@ -232,11 +232,11 @@ export default function HallDetailPage() {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader className="p-4">
               <CardTitle className="text-sm font-medium text-gray-600">
-                أسرّة شاغرة
+                {t('halls.availableBeds')}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4 pt-0">
@@ -248,11 +248,11 @@ export default function HallDetailPage() {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader className="p-4">
               <CardTitle className="text-sm font-medium text-gray-600">
-                احتياجات خاصة
+                {t('halls.specialNeeds')}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4 pt-0">
@@ -276,7 +276,7 @@ export default function HallDetailPage() {
               )} />
               <Input
                 type="text"
-                placeholder="البحث برقم السرير..."
+                placeholder={t('halls.searchBeds')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className={cn("w-full", isRTL ? "pr-10" : "pl-10")}
@@ -286,7 +286,7 @@ export default function HallDetailPage() {
             <Select value={statusFilter} onValueChange={(value: any) => setStatusFilter(value)}>
               <SelectTrigger className="w-full sm:w-48">
                 <Filter className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="حالة السرير" />
+                <SelectValue placeholder={t('halls.filters.status')} />
               </SelectTrigger>
               <SelectContent>
                 {statusOptions.map((option) => (

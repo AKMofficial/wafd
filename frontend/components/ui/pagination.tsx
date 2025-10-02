@@ -35,9 +35,6 @@ export function Pagination({
     pages.push(i);
   }
 
-  const previousLabel = locale === 'ar' ? 'السابق' : 'Previous';
-  const nextLabel = locale === 'ar' ? 'التالي' : 'Next';
-
   return (
     <div className={cn("flex items-center justify-center gap-1", className)}>
       <Button

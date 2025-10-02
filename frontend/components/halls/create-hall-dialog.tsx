@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useLocale } from '@/lib/i18n';
+import { useTranslations, useLocale } from '@/lib/i18n';
 import { CreateHallDto, HallType, DEFAULT_NUMBERING_CONFIG } from '@/types/hall';
 import { useHallStore } from '@/store/hall-store';
 import {
@@ -25,14 +25,12 @@ import { Plus, Building } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getBedNumberingPreview } from '@/lib/bed-numbering';
 
-const createHallSchema = z.object({
-  name: z.string().min(1, 'اسم القاعة مطلوب'),
-  code: z.string().regex(/^[A-Z]$/, 'يجب أن يكون حرف واحد بالإنجليزية (A-Z)'),
-  type: z.enum(['male', 'female']),
-  capacity: z.number().min(10, 'السعة يجب أن تكون 10 على الأقل').max(200, 'السعة يجب ألا تتجاوز 200'),
-});
-
-type CreateHallFormData = z.infer<typeof createHallSchema>;
+type CreateHallFormData = {
+  name: string;
+  code: string;
+  type: HallType;
+  capacity: number;
+};
 
 interface CreateHallDialogProps {
   isOpen: boolean;
@@ -41,11 +39,21 @@ interface CreateHallDialogProps {
 }
 
 export function CreateHallDialog({ isOpen, onClose, onSuccess }: CreateHallDialogProps) {
+  const t = useTranslations();
   const locale = useLocale();
   const isRTL = locale === 'ar';
   const { createHall, halls } = useHallStore();
   const [isLoading, setIsLoading] = useState(false);
-  
+
+  const createHallSchema = useMemo(() => z.object({
+    name: z.string().min(1, t('halls.createDialog.validation.nameRequired')),
+    code: z.string().regex(/^[A-Z]$/, t('halls.createDialog.validation.codeFormat')),
+    type: z.enum(['male', 'female']),
+    capacity: z.number()
+      .min(10, t('halls.createDialog.validation.capacityMin'))
+      .max(200, t('halls.createDialog.validation.capacityMax')),
+  }), [t]);
+
   const {
     register,
     handleSubmit,
@@ -108,7 +116,7 @@ export function CreateHallDialog({ isOpen, onClose, onSuccess }: CreateHallDialo
       onClose();
     } catch (error) {
       console.error('Failed to create hall:', error);
-      alert(locale === 'ar' ? 'فشل في إنشاء القاعة' : 'Failed to create hall');
+      alert(t('halls.createDialog.failedToCreate'));
     }
     
     setIsLoading(false);
@@ -126,12 +134,10 @@ export function CreateHallDialog({ isOpen, onClose, onSuccess }: CreateHallDialo
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Building className="h-5 w-5" />
-            {locale === 'ar' ? 'إضافة قاعة جديدة' : 'Add New Hall'}
+            {t('halls.createDialog.title')}
           </DialogTitle>
           <DialogDescription>
-            {locale === 'ar' 
-              ? 'قم بإدخال معلومات القاعة الجديدة' 
-              : 'Enter the information for the new hall'}
+            {t('halls.createDialog.description')}
           </DialogDescription>
         </DialogHeader>
         
@@ -139,7 +145,7 @@ export function CreateHallDialog({ isOpen, onClose, onSuccess }: CreateHallDialo
           {/* Hall Type */}
           <div>
             <Label htmlFor="type">
-              {locale === 'ar' ? 'نوع القاعة' : 'Hall Type'}
+              {t('halls.createDialog.hallType')}
             </Label>
             <Select
               value={hallType}
@@ -150,35 +156,35 @@ export function CreateHallDialog({ isOpen, onClose, onSuccess }: CreateHallDialo
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="male">
-                  {locale === 'ar' ? 'قاعة رجال' : 'Male Hall'}
+                  {t('halls.hallType.male')}
                 </SelectItem>
                 <SelectItem value="female">
-                  {locale === 'ar' ? 'قاعة نساء' : 'Female Hall'}
+                  {t('halls.hallType.female')}
                 </SelectItem>
               </SelectContent>
             </Select>
           </div>
-          
+
           {/* Hall Name */}
           <div>
             <Label htmlFor="name">
-              {locale === 'ar' ? 'اسم القاعة' : 'Hall Name'}
+              {t('halls.createDialog.hallName')}
             </Label>
             <Input
               id="name"
               {...register('name')}
-              placeholder={locale === 'ar' ? 'مثال: قاعة الصفا' : 'Example: Al-Safa Hall'}
+              placeholder={t('halls.createDialog.exampleName')}
               dir={isRTL ? 'rtl' : 'ltr'}
             />
             {errors.name && (
               <p className="text-sm text-red-500 mt-1">{errors.name.message}</p>
             )}
           </div>
-          
+
           {/* Hall Code */}
           <div>
             <Label htmlFor="code">
-              {locale === 'ar' ? 'رمز القاعة' : 'Hall Code'}
+              {t('halls.createDialog.hallCode')}
             </Label>
             <Input
               id="code"
@@ -191,11 +197,11 @@ export function CreateHallDialog({ isOpen, onClose, onSuccess }: CreateHallDialo
               <p className="text-sm text-red-500 mt-1">{errors.code.message}</p>
             )}
           </div>
-          
+
           {/* Capacity */}
           <div>
             <Label htmlFor="capacity">
-              {locale === 'ar' ? 'السعة (عدد الأسرّة)' : 'Capacity (Number of Beds)'}
+              {t('halls.createDialog.capacity')}
             </Label>
             <Input
               id="capacity"
@@ -213,7 +219,7 @@ export function CreateHallDialog({ isOpen, onClose, onSuccess }: CreateHallDialo
           {previewNumbers.length > 0 && (
             <Card className="p-4 space-y-3 bg-gray-50">
               <h3 className="font-semibold text-sm">
-                {locale === 'ar' ? 'معاينة ترقيم الأسرّة' : 'Bed Numbering Preview'}
+                {t('halls.createDialog.bedNumberingPreview')}
               </h3>
               <div className="flex flex-wrap gap-2">
                 {previewNumbers.map((num, i) => (
@@ -225,16 +231,16 @@ export function CreateHallDialog({ isOpen, onClose, onSuccess }: CreateHallDialo
               </div>
             </Card>
           )}
-          
+
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
-              {locale === 'ar' ? 'إلغاء' : 'Cancel'}
+              {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={isLoading}>
               <Plus className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
-              {isLoading 
-                ? (locale === 'ar' ? 'جاري الإنشاء...' : 'Creating...') 
-                : (locale === 'ar' ? 'إنشاء القاعة' : 'Create Hall')
+              {isLoading
+                ? t('halls.createDialog.creating')
+                : t('halls.createDialog.createHall')
               }
             </Button>
           </DialogFooter>

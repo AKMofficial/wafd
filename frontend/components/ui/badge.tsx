@@ -34,10 +34,11 @@ export interface BadgeProps
   icon?: React.ReactNode
   removable?: boolean
   onRemove?: () => void
+  removeAriaLabel?: string
 }
 
 const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
-  ({ className, variant, size, icon, removable, onRemove, children, ...props }, ref) => {
+  ({ className, variant, size, icon, removable, onRemove, removeAriaLabel, children, ...props }, ref) => {
     return (
       <div
         ref={ref}
@@ -53,7 +54,7 @@ const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
             type="button"
             onClick={onRemove}
             className="ml-1 rtl:ml-0 rtl:mr-1 hover:opacity-75 focus:outline-none"
-            aria-label="Remove"
+            aria-label={removeAriaLabel || "Remove"}
           >
             <svg
               className="h-3 w-3"
@@ -77,23 +78,22 @@ Badge.displayName = "Badge"
 
 export interface StatusBadgeProps extends Omit<BadgeProps, 'variant'> {
   status: 'occupied' | 'vacant' | 'reserved' | 'maintenance' | 'arrived' | 'not-arrived'
+  label: string
 }
 
-const StatusBadge: React.FC<StatusBadgeProps> = ({ status, ...props }) => {
-  const statusConfig = {
-    occupied: { variant: 'success' as const, label: 'مشغول' },
-    vacant: { variant: 'outline' as const, label: 'شاغر' },
-    reserved: { variant: 'warning' as const, label: 'محجوز' },
-    maintenance: { variant: 'error' as const, label: 'صيانة' },
-    arrived: { variant: 'success' as const, label: 'وصل' },
-    'not-arrived': { variant: 'secondary' as const, label: 'لم يصل' },
+const StatusBadge: React.FC<StatusBadgeProps> = ({ status, label, ...props }) => {
+  const statusVariantMap = {
+    occupied: 'success' as const,
+    vacant: 'outline' as const,
+    reserved: 'warning' as const,
+    maintenance: 'error' as const,
+    arrived: 'success' as const,
+    'not-arrived': 'secondary' as const,
   }
-  
-  const config = statusConfig[status]
-  
+
   return (
-    <Badge variant={config.variant} {...props}>
-      {config.label}
+    <Badge variant={statusVariantMap[status]} {...props}>
+      {label}
     </Badge>
   )
 }

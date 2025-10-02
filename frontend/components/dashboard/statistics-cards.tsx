@@ -2,10 +2,11 @@
 
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { 
-  Users, 
-  UserCheck, 
-  Clock, 
+import { useTranslations } from '@/lib/i18n';
+import {
+  Users,
+  UserCheck,
+  Clock,
   Accessibility,
   Building,
   Bed,
@@ -80,87 +81,89 @@ interface StatisticsCardsProps {
 }
 
 export function StatisticsCards({ pilgrimStats, hallStats, isLoading, locale }: StatisticsCardsProps) {
+  const t = useTranslations();
+
   const cards = [
     {
-      title: locale === 'ar' ? 'إجمالي الحجاج' : 'Total Pilgrims',
+      title: t('dashboard.stats.totalPilgrims'),
       value: pilgrimStats.total,
       icon: Users,
       color: 'text-blue-600 bg-blue-100',
       trend: { value: 5.2, isPositive: true }
     },
     {
-      title: locale === 'ar' ? 'وصلوا' : 'Arrived',
+      title: t('dashboard.stats.arrived'),
       value: pilgrimStats.arrived,
       icon: UserCheck,
       color: 'text-green-600 bg-green-100',
-      subtitle: `${((pilgrimStats.arrived / pilgrimStats.total) * 100).toFixed(1)}% من الإجمالي`
+      subtitle: `${((pilgrimStats.arrived / pilgrimStats.total) * 100).toFixed(1)}% ${t('dashboard.stats.ofTotal')}`
     },
     {
-      title: locale === 'ar' ? 'متوقع وصولهم' : 'Expected',
+      title: t('dashboard.stats.expected'),
       value: pilgrimStats.expected,
       icon: Clock,
       color: 'text-yellow-600 bg-yellow-100',
-      subtitle: locale === 'ar' ? 'خلال 48 ساعة' : 'Within 48 hours'
+      subtitle: t('dashboard.stats.within48Hours')
     },
     {
-      title: locale === 'ar' ? 'احتياجات خاصة' : 'Special Needs',
+      title: t('dashboard.stats.specialNeeds'),
       value: pilgrimStats.specialNeeds,
       icon: Accessibility,
       color: 'text-purple-600 bg-purple-100',
-      subtitle: `${((pilgrimStats.specialNeeds / pilgrimStats.total) * 100).toFixed(1)}% من الإجمالي`
+      subtitle: `${((pilgrimStats.specialNeeds / pilgrimStats.total) * 100).toFixed(1)}% ${t('dashboard.stats.ofTotal')}`
     },
     {
-      title: locale === 'ar' ? 'غادروا' : 'Departed',
+      title: t('dashboard.stats.departed'),
       value: pilgrimStats.departed,
       icon: CalendarClock,
       color: 'text-indigo-600 bg-indigo-100'
     },
     {
-      title: locale === 'ar' ? 'لم يحضروا' : 'No Show',
+      title: t('dashboard.stats.noShow'),
       value: pilgrimStats.noShow,
       icon: UserX,
       color: 'text-red-600 bg-red-100',
       trend: pilgrimStats.noShow > 5 ? { value: 2.1, isPositive: false } : undefined
     },
     {
-      title: locale === 'ar' ? 'إجمالي القاعات' : 'Total Halls',
+      title: t('dashboard.stats.totalHalls'),
       value: hallStats.totalHalls,
       icon: Building,
       color: 'text-emerald-600 bg-emerald-100'
     },
     {
-      title: locale === 'ar' ? 'إجمالي الأسرّة' : 'Total Beds',
+      title: t('dashboard.stats.totalBeds'),
       value: hallStats.totalBeds,
       icon: Bed,
       color: 'text-teal-600 bg-teal-100'
     },
     {
-      title: locale === 'ar' ? 'الأسرّة المشغولة' : 'Occupied Beds',
+      title: t('dashboard.stats.occupiedBeds'),
       value: hallStats.totalOccupied,
       icon: Home,
       color: 'text-orange-600 bg-orange-100',
-      subtitle: `${hallStats.totalBeds - hallStats.totalOccupied} ${locale === 'ar' ? 'متاح' : 'available'}`
+      subtitle: `${hallStats.totalBeds - hallStats.totalOccupied} ${t('dashboard.stats.available')}`
     },
     {
-      title: locale === 'ar' ? 'نسبة الإشغال' : 'Occupancy Rate',
+      title: t('dashboard.stats.occupancyRate'),
       value: `${hallStats.occupancyRate.toFixed(1)}%`,
       icon: TrendingUp,
       color: hallStats.occupancyRate > 90 ? 'text-red-600 bg-red-100' : 'text-rose-600 bg-rose-100',
       trend: hallStats.occupancyRate > 75 ? { value: hallStats.occupancyRate - 75, isPositive: true } : undefined
     },
     {
-      title: locale === 'ar' ? 'قاعات الرجال' : 'Male Halls',
+      title: t('dashboard.stats.maleHalls'),
       value: hallStats.maleHalls.total,
       icon: Building,
       color: 'text-sky-600 bg-sky-100',
-      subtitle: `${hallStats.maleHalls.occupied}/${hallStats.maleHalls.beds} ${locale === 'ar' ? 'مشغول' : 'occupied'}`
+      subtitle: `${hallStats.maleHalls.occupied}/${hallStats.maleHalls.beds} ${t('dashboard.stats.occupied')}`
     },
     {
-      title: locale === 'ar' ? 'قاعات النساء' : 'Female Halls',
+      title: t('dashboard.stats.femaleHalls'),
       value: hallStats.femaleHalls.total,
       icon: Building,
       color: 'text-pink-600 bg-pink-100',
-      subtitle: `${hallStats.femaleHalls.occupied}/${hallStats.femaleHalls.beds} ${locale === 'ar' ? 'مشغول' : 'occupied'}`
+      subtitle: `${hallStats.femaleHalls.occupied}/${hallStats.femaleHalls.beds} ${t('dashboard.stats.occupied')}`
     }
   ];
 

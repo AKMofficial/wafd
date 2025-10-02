@@ -3,17 +3,28 @@ import { Cairo } from 'next/font/google'
 import { notFound } from 'next/navigation'
 import { I18nProvider } from '@/lib/i18n'
 import RootLayoutWrapper from '@/components/layout/RootLayoutWrapper'
+import arMessages from '@/messages/ar.json'
+import enMessages from '@/messages/en.json'
 import '../globals.css'
 
-const cairo = Cairo({ 
+const cairo = Cairo({
   subsets: ['latin', 'arabic'],
   display: 'swap',
   variable: '--font-cairo',
 })
 
-export const metadata: Metadata = {
-  title: 'نظام إسكان الحجاج',
-  description: 'نظام متكامل لإدارة إسكان الحجاج',
+export async function generateMetadata({
+  params
+}: {
+  params: Promise<{ locale: string }>
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const messages = locale === 'ar' ? arMessages : enMessages;
+
+  return {
+    title: messages.app.title,
+    description: messages.app.description,
+  };
 }
 
 export default async function LocaleLayout({

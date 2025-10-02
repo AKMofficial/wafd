@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -13,9 +14,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { 
-  Plus, 
-  Edit, 
+import {
+  Plus,
+  Edit,
   Trash2,
   Users,
   Search,
@@ -39,6 +40,7 @@ interface Group {
 }
 
 export function GroupsManagement() {
+  const t = useTranslations();
   const [groups, setGroups] = useState<Group[]>([
     {
       id: '1',
@@ -77,7 +79,7 @@ export function GroupsManagement() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   const [formData, setFormData] = useState({
     name: '',
     code: '',
@@ -124,7 +126,7 @@ export function GroupsManagement() {
   const handleDelete = () => {
     if (selectedGroup) {
       if (selectedGroup.pilgrimsCount > 0) {
-        alert('لا يمكن حذف مجموعة بها حجاج. يرجى نقل الحجاج أولاً.');
+        alert(t('settings.groups.cannotDelete'));
         setShowDeleteConfirm(false);
         return;
       }
@@ -134,7 +136,7 @@ export function GroupsManagement() {
       setSelectedGroup(null);
     }
   };
-  
+
   const handleDeleteClick = () => {
     setShowDeleteConfirm(true);
   };
@@ -166,11 +168,11 @@ export function GroupsManagement() {
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold flex items-center gap-2">
           <Users2 className="h-5 w-5" />
-          <span>إدارة المجموعات</span>
+          <span>{t('settings.groups.title')}</span>
         </h3>
         <Button onClick={() => setShowAddDialog(true)}>
           <Plus className="h-4 w-4 ml-2" />
-          إضافة مجموعة
+          {t('settings.groups.addGroup')}
         </Button>
       </div>
 
@@ -178,51 +180,52 @@ export function GroupsManagement() {
         <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
         <Input
           type="text"
-          placeholder="البحث باسم المجموعة أو المسؤول..."
+          placeholder={t('settings.groups.searchPlaceholder')}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="pr-10"
         />
       </div>
 
-      <div className="rounded-lg border">
+      {/* Desktop View */}
+      <div className="hidden md:block rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>
                 <div className="flex items-center gap-2">
                   <Users2 className="h-4 w-4" />
-                  <span>اسم المجموعة</span>
+                  <span>{t('settings.groups.groupName')}</span>
                 </div>
               </TableHead>
               <TableHead className="text-center">
                 <div className="flex items-center justify-center gap-2">
                   <User className="h-4 w-4" />
-                  <span>المسؤول</span>
+                  <span>{t('settings.groups.leader')}</span>
                 </div>
               </TableHead>
               <TableHead className="text-center">
                 <div className="flex items-center justify-center gap-2">
                   <Phone className="h-4 w-4" />
-                  <span>رقم الهاتف</span>
+                  <span>{t('settings.groups.phone')}</span>
                 </div>
               </TableHead>
               <TableHead className="text-center">
                 <div className="flex items-center justify-center gap-2">
                   <Users className="h-4 w-4" />
-                  <span>عدد الحجاج</span>
+                  <span>{t('settings.groups.pilgrimsCount')}</span>
                 </div>
               </TableHead>
               <TableHead className="text-center">
                 <div className="flex items-center justify-center gap-2">
                   <FileText className="h-4 w-4" />
-                  <span>ملاحظات</span>
+                  <span>{t('settings.groups.notes')}</span>
                 </div>
               </TableHead>
               <TableHead className="text-center">
                 <div className="flex items-center justify-center gap-2">
                   <Settings2 className="h-4 w-4" />
-                  <span>الإجراءات</span>
+                  <span>{t('common.actions')}</span>
                 </div>
               </TableHead>
             </TableRow>
@@ -231,7 +234,7 @@ export function GroupsManagement() {
             {filteredGroups.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center text-gray-500 py-8">
-                  لا توجد مجموعات
+                  {t('settings.groups.noGroups')}
                 </TableCell>
               </TableRow>
             ) : (
@@ -259,9 +262,79 @@ export function GroupsManagement() {
                         onClick={() => openEditDialog(group)}
                       >
                         <Edit className="h-4 w-4 ml-1" />
-                        تعديل
+                        {t('common.edit')}
                       </Button>
                     </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Mobile View */}
+      <div className="md:hidden rounded-lg border overflow-x-auto">
+        <Table className="min-w-[400px]">
+          <TableHeader>
+            <TableRow>
+              <TableHead className="text-xs px-2 py-2">
+                <div className="flex items-center gap-1">
+                  <Users2 className="h-3 w-3 flex-shrink-0" />
+                  <span className="whitespace-nowrap">{t('settings.groups.groupName')}</span>
+                </div>
+              </TableHead>
+              <TableHead className="text-center text-xs px-2 py-2">
+                <div className="flex items-center justify-center gap-1">
+                  <User className="h-3 w-3 flex-shrink-0" />
+                  <span className="whitespace-nowrap">{t('settings.groups.leader')}</span>
+                </div>
+              </TableHead>
+              <TableHead className="text-center text-xs px-2 py-2">
+                <div className="flex items-center justify-center gap-1">
+                  <Users className="h-3 w-3 flex-shrink-0" />
+                  <span className="whitespace-nowrap">{t('settings.groups.pilgrims')}</span>
+                </div>
+              </TableHead>
+              <TableHead className="text-center text-xs px-2 py-2">
+                <div className="flex items-center justify-center gap-1">
+                  <Settings2 className="h-3 w-3 flex-shrink-0" />
+                  <span className="whitespace-nowrap">{t('common.edit')}</span>
+                </div>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredGroups.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={4} className="text-center text-gray-500 py-8 text-xs">
+                  {t('settings.groups.noGroups')}
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredGroups.map((group) => (
+                <TableRow key={group.id} className="hover:bg-gray-50">
+                  <TableCell className="text-xs px-2 py-2 min-w-[120px]">
+                    <span className="truncate max-w-[150px] block font-medium">{group.name}</span>
+                  </TableCell>
+                  <TableCell className="text-center text-xs px-2 py-2">
+                    <span className="truncate max-w-[100px] block">{group.leader}</span>
+                  </TableCell>
+                  <TableCell className="text-center px-2 py-2">
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0.5 whitespace-nowrap">
+                      <Users className="h-3 w-3 ml-1" />
+                      {group.pilgrimsCount}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-center px-2 py-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 w-7 p-0"
+                      onClick={() => openEditDialog(group)}
+                    >
+                      <Edit className="h-3 w-3" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))
@@ -282,27 +355,27 @@ export function GroupsManagement() {
           resetForm();
         }}>
           <DialogHeader>
-            <DialogTitle>إضافة مجموعة جديدة</DialogTitle>
+            <DialogTitle>{t('settings.groups.addNewGroup')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-4">
             <div>
-              <label className="block text-sm font-medium mb-1">اسم المجموعة</label>
+              <label className="block text-sm font-medium mb-1">{t('settings.groups.groupName')}</label>
               <Input
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="أدخل اسم المجموعة"
+                placeholder={t('settings.groups.enterGroupName')}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">اسم المسؤول</label>
+              <label className="block text-sm font-medium mb-1">{t('settings.groups.leaderName')}</label>
               <Input
                 value={formData.leader}
                 onChange={(e) => setFormData({ ...formData, leader: e.target.value })}
-                placeholder="أدخل اسم مسؤول المجموعة"
+                placeholder={t('settings.groups.enterLeaderName')}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">رقم هاتف المسؤول</label>
+              <label className="block text-sm font-medium mb-1">{t('settings.groups.leaderPhone')}</label>
               <Input
                 value={formData.leaderPhone}
                 onChange={(e) => setFormData({ ...formData, leaderPhone: e.target.value })}
@@ -311,11 +384,11 @@ export function GroupsManagement() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">ملاحظات (اختياري)</label>
+              <label className="block text-sm font-medium mb-1">{t('settings.groups.notes')} ({t('settings.groups.optional')})</label>
               <Input
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                placeholder="أدخل أي ملاحظات"
+                placeholder={t('settings.groups.enterNotes')}
               />
             </div>
             <div className="flex justify-end gap-2 pt-4">
@@ -323,10 +396,10 @@ export function GroupsManagement() {
                 setShowAddDialog(false);
                 resetForm();
               }}>
-                إلغاء
+                {t('common.cancel')}
               </Button>
               <Button onClick={handleAdd}>
-                إضافة
+                {t('common.add')}
               </Button>
             </div>
           </div>
@@ -347,27 +420,27 @@ export function GroupsManagement() {
           resetForm();
         }}>
           <DialogHeader>
-            <DialogTitle>تعديل المجموعة</DialogTitle>
+            <DialogTitle>{t('settings.groups.editGroup')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-4">
             <div>
-              <label className="block text-sm font-medium mb-1">اسم المجموعة</label>
+              <label className="block text-sm font-medium mb-1">{t('settings.groups.groupName')}</label>
               <Input
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="أدخل اسم المجموعة"
+                placeholder={t('settings.groups.enterGroupName')}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">اسم المسؤول</label>
+              <label className="block text-sm font-medium mb-1">{t('settings.groups.leaderName')}</label>
               <Input
                 value={formData.leader}
                 onChange={(e) => setFormData({ ...formData, leader: e.target.value })}
-                placeholder="أدخل اسم مسؤول المجموعة"
+                placeholder={t('settings.groups.enterLeaderName')}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">رقم هاتف المسؤول</label>
+              <label className="block text-sm font-medium mb-1">{t('settings.groups.leaderPhone')}</label>
               <Input
                 value={formData.leaderPhone}
                 onChange={(e) => setFormData({ ...formData, leaderPhone: e.target.value })}
@@ -376,11 +449,11 @@ export function GroupsManagement() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">ملاحظات</label>
+              <label className="block text-sm font-medium mb-1">{t('settings.groups.notes')}</label>
               <Input
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                placeholder="أدخل أي ملاحظات"
+                placeholder={t('settings.groups.enterNotes')}
               />
             </div>
             <DialogFooter className="flex justify-between pt-4">
@@ -391,7 +464,7 @@ export function GroupsManagement() {
                 className="text-red-600 hover:text-red-700 hover:bg-red-50"
               >
                 <Trash2 className="h-4 w-4 ml-1" />
-                حذف المجموعة
+                {t('settings.groups.deleteGroup')}
               </Button>
               <div className="flex gap-2">
                 <Button variant="outline" onClick={() => {
@@ -399,52 +472,52 @@ export function GroupsManagement() {
                   setSelectedGroup(null);
                   resetForm();
                 }}>
-                  إلغاء
+                  {t('common.cancel')}
                 </Button>
                 <Button onClick={handleEdit}>
-                  حفظ التغييرات
+                  {t('common.saveChanges')}
                 </Button>
               </div>
             </DialogFooter>
           </div>
         </DialogContent>
       </Dialog>
-      
+
       {/* Delete Confirmation Dialog */}
       <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-red-600">
               <AlertCircle className="h-5 w-5" />
-              تأكيد حذف المجموعة
+              {t('settings.groups.confirmDelete')}
             </DialogTitle>
             <DialogDescription>
-              هل أنت متأكد من رغبتك في حذف مجموعة "{selectedGroup?.name}"؟ هذا الإجراء لا يمكن التراجع عنه.
+              {t('settings.groups.deleteWarning').replace('{name}', selectedGroup?.name || '')}
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 my-4">
             <div className="flex items-center gap-2 text-yellow-800">
               <AlertCircle className="h-4 w-4 flex-shrink-0" />
               <p className="text-sm">
-                سيتم حذف جميع بيانات المجموعة بشكل نهائي.
+                {t('settings.groups.deleteNote')}
               </p>
             </div>
           </div>
-          
+
           <DialogFooter>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setShowDeleteConfirm(false)}
             >
-              إلغاء
+              {t('common.cancel')}
             </Button>
-            <Button 
-              variant="destructive" 
+            <Button
+              variant="destructive"
               onClick={handleDelete}
             >
               <Trash2 className="h-4 w-4 ml-1" />
-              حذف نهائياً
+              {t('settings.groups.deletePermanently')}
             </Button>
           </DialogFooter>
         </DialogContent>

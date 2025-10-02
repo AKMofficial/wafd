@@ -46,19 +46,16 @@ export default function Home() {
   }, []);
   
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
-      <div className="p-6">
+    <main className="p-4 sm:p-6">
+      <div>
         <div className="max-w-[1600px] mx-auto">
           <div className="flex items-center justify-between mb-8">
             <div>
               <h1 className="text-4xl font-bold text-gray-900 mb-2">
-                {locale === 'ar' ? 'لوحة التحكم' : 'Dashboard'}
+                {t('nav.dashboard')}
               </h1>
               <p className="text-gray-600">
-                {locale === 'ar' 
-                  ? `مرحباً بك في نظام إدارة الحجاج - ${new Date().toLocaleDateString('ar-SA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`
-                  : `Welcome to Pilgrim Management System - ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`
-                }
+                {`${t('app.welcome')} - ${new Date().toLocaleDateString(locale === 'ar' ? 'ar-SA' : 'en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`}
               </p>
             </div>
             <QuickActions locale={locale} />
@@ -68,7 +65,7 @@ export default function Home() {
             {/* Statistics Cards */}
             <div>
               <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                {locale === 'ar' ? 'نظرة عامة' : 'Overview'}
+                {t('dashboard.overview')}
               </h2>
               <StatisticsCards
                 pilgrimStats={pilgrimStats}
@@ -81,7 +78,7 @@ export default function Home() {
             {/* Charts Section */}
             <div>
               <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                {locale === 'ar' ? 'التحليلات والإحصائيات' : 'Analytics & Statistics'}
+                {t('dashboard.analyticsStats')}
               </h2>
               <Charts
                 pilgrimStats={pilgrimStats}
