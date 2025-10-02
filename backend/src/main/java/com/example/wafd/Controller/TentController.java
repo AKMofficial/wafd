@@ -1,6 +1,7 @@
 package com.example.wafd.Controller;
 
 import com.example.wafd.Api.ApiResponse;
+import com.example.wafd.DTO.TentDTOIn;
 import com.example.wafd.Model.Tent;
 import com.example.wafd.Service.TentService;
 import jakarta.validation.Valid;
@@ -21,15 +22,20 @@ public class TentController {
         return ResponseEntity.ok(tentService.findAllTents());
     }
 
+    @GetMapping("/get/{id}")
+    public ResponseEntity<?> findTentById(@PathVariable Integer id){
+        return ResponseEntity.ok(tentService.findTentById(id));
+    }
+
     @PostMapping("/add")
-    public ResponseEntity<?> addTent(@RequestBody @Valid Tent tent){
-        tentService.addTent(tent);
+    public ResponseEntity<?> addTent(@RequestBody TentDTOIn tentDTO){
+        tentService.addTent(tentDTO);
         return ResponseEntity.status(HttpStatus.CREATED.value()).body(new ApiResponse("Tent added successfully"));
     }
-    
+
     @PutMapping("/update/{id}")
-    public ResponseEntity<?> updateTent(@RequestBody @Valid Tent tent, @PathVariable Integer id){
-        tentService.updateTent(tent, id);
+    public ResponseEntity<?> updateTent(@RequestBody TentDTOIn tentDTO, @PathVariable Integer id){
+        tentService.updateTent(tentDTO, id);
         return ResponseEntity.ok(new ApiResponse("Tent updated successfully"));
     }
     

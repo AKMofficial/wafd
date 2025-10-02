@@ -14,6 +14,7 @@ import {
   DEFAULT_NUMBERING_CONFIG,
 } from '@/types/hall';
 import { PaginationParams } from '@/types/pilgrim';
+import { buildingAPI, bedAPI } from '@/lib/api';
 
 // Hall-specific pagination params
 interface HallPaginationParams {
@@ -22,7 +23,6 @@ interface HallPaginationParams {
   sortBy?: keyof Hall;
   sortOrder?: 'asc' | 'desc';
 }
-import { generateMockHalls } from '@/lib/mock-halls';
 
 interface HallState {
   halls: Hall[];
@@ -69,8 +69,6 @@ const initialPagination: HallPaginationParams = {
   sortOrder: 'asc'
 };
 
-const allHalls = generateMockHalls();
-
 export const useHallStore = create<HallState>()(
   devtools(
     (set, get) => ({
@@ -97,50 +95,50 @@ export const useHallStore = create<HallState>()(
         set({ isLoading: true, error: null });
 
         try {
-          await new Promise(resolve => setTimeout(resolve, 500));
-
-          let filtered = [...allHalls];
+          // Fetch halls (tents) from the backend API
+          const data = await buildingAPI.getAll();
+          let filtered = data || [];
 
           if (filters.search) {
             const searchLower = filters.search.toLowerCase();
-            filtered = filtered.filter(h =>
+            filtered = filtered.filter((h: Hall) =>
               h.name.toLowerCase().includes(searchLower) ||
               h.code.toLowerCase().includes(searchLower)
             );
           }
 
           if (filters.type) {
-            filtered = filtered.filter(h => h.type === filters.type);
+            filtered = filtered.filter((h: Hall) => h.type === filters.type);
           }
 
           if (filters.hasAvailableBeds !== undefined) {
-            filtered = filtered.filter(h => 
+            filtered = filtered.filter((h: Hall) =>
               filters.hasAvailableBeds ? h.availableBeds > 0 : h.availableBeds === 0
             );
           }
 
           if (filters.minOccupancy !== undefined) {
-            filtered = filtered.filter(h => 
+            filtered = filtered.filter((h: Hall) =>
               (h.currentOccupancy / h.capacity * 100) >= filters.minOccupancy!
             );
           }
 
           if (filters.maxOccupancy !== undefined) {
-            filtered = filtered.filter(h => 
+            filtered = filtered.filter((h: Hall) =>
               (h.currentOccupancy / h.capacity * 100) <= filters.maxOccupancy!
             );
           }
 
           if (pagination.sortBy) {
-            filtered.sort((a, b) => {
+            filtered.sort((a: Hall, b: Hall) => {
               const aVal = a[pagination.sortBy as keyof Hall];
               const bVal = b[pagination.sortBy as keyof Hall];
-              
+
               // Handle undefined values
               if (aVal == null && bVal == null) return 0;
               if (aVal == null) return pagination.sortOrder === 'asc' ? -1 : 1;
               if (bVal == null) return pagination.sortOrder === 'asc' ? 1 : -1;
-              
+
               if (aVal < bVal) return pagination.sortOrder === 'asc' ? -1 : 1;
               if (aVal > bVal) return pagination.sortOrder === 'asc' ? 1 : -1;
               return 0;
@@ -172,8 +170,7 @@ export const useHallStore = create<HallState>()(
       fetchHallById: async (id) => {
         set({ isLoading: true, error: null });
         try {
-          await new Promise(resolve => setTimeout(resolve, 300));
-          const hall = allHalls.find(h => h.id === id) || null;
+          const hall = await buildingAPI.getById(Number(id));
           set({ selectedHall: hall, isLoading: false });
           return hall;
         } catch (error) {
@@ -185,37 +182,10 @@ export const useHallStore = create<HallState>()(
       createHall: async (data) => {
         set({ isLoading: true, error: null });
         try {
-          await new Promise(resolve => setTimeout(resolve, 500));
-
-          const beds: Bed[] = [];
-          const config = data.numberingConfig || DEFAULT_NUMBERING_CONFIG[data.type];
-          
-          for (let i = 0; i < data.capacity; i++) {
-            const bedNumber = generateBedNumber(data.code, i, config);
-            beds.push({
-              id: `${data.code}-bed-${i + 1}`,
-              number: bedNumber,
-              hallId: (allHalls.length + 1).toString(),
-              hallCode: data.code,
-              status: 'vacant',
-              isSpecialNeeds: false,
-            });
-          }
-
-          const newHall: Hall = {
-            id: (allHalls.length + 1).toString(),
-            ...data,
-            currentOccupancy: 0,
-            availableBeds: data.capacity,
-            specialNeedsOccupancy: 0,
-            beds,
-            numberingFormat: data.numberingFormat || 'standard',
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          };
-
-          allHalls.push(newHall);
+          const newHall = await buildingAPI.create(data);
           set({ isLoading: false });
+          // Refresh the list
+          await get().fetchHalls();
           return newHall;
         } catch (error) {
           set({ error: 'errors.failedToCreateHall', isLoading: false });
@@ -226,19 +196,10 @@ export const useHallStore = create<HallState>()(
       updateHall: async (id, data) => {
         set({ isLoading: true, error: null });
         try {
-          await new Promise(resolve => setTimeout(resolve, 500));
-
-          const index = allHalls.findIndex(h => h.id === id);
-          if (index === -1) throw new Error('errors.hallNotFound');
-
-          const updated = {
-            ...allHalls[index],
-            ...data,
-            updatedAt: new Date(),
-          };
-
-          allHalls[index] = updated;
+          const updated = await buildingAPI.update(Number(id), data);
           set({ isLoading: false });
+          // Refresh the list
+          await get().fetchHalls();
           return updated;
         } catch (error) {
           set({ error: 'errors.failedToUpdateHall', isLoading: false });
@@ -249,17 +210,10 @@ export const useHallStore = create<HallState>()(
       deleteHall: async (id) => {
         set({ isLoading: true, error: null });
         try {
-          await new Promise(resolve => setTimeout(resolve, 500));
-
-          const index = allHalls.findIndex(h => h.id === id);
-          if (index === -1) throw new Error('errors.hallNotFound');
-
-          if (allHalls[index].currentOccupancy > 0) {
-            throw new Error('errors.cannotDeleteOccupiedHall');
-          }
-
-          allHalls.splice(index, 1);
+          await buildingAPI.delete(Number(id));
           set({ isLoading: false });
+          // Refresh the list
+          await get().fetchHalls();
           return true;
         } catch (error) {
           set({ error: error instanceof Error ? error.message : 'errors.failedToDeleteHall', isLoading: false });
@@ -272,7 +226,7 @@ export const useHallStore = create<HallState>()(
         try {
           await new Promise(resolve => setTimeout(resolve, 300));
 
-          const hall = allHalls.find(h => h.beds.some(b => b.id === data.bedId));
+          const hall = get().halls.find(h => h.beds?.some(b => b.id === data.bedId));
           if (!hall) throw new Error('errors.bedNotFound');
 
           const bedIndex = hall.beds.findIndex(b => b.id === data.bedId);
@@ -309,7 +263,7 @@ export const useHallStore = create<HallState>()(
         try {
           await new Promise(resolve => setTimeout(resolve, 300));
 
-          const hall = allHalls.find(h => h.beds.some(b => b.id === bedId));
+          const hall = get().halls.find(h => h.beds?.some(b => b.id === bedId));
           if (!hall) throw new Error('errors.bedNotFound');
 
           const bedIndex = hall.beds.findIndex(b => b.id === bedId);
@@ -366,7 +320,7 @@ export const useHallStore = create<HallState>()(
         try {
           await new Promise(resolve => setTimeout(resolve, 300));
 
-          const hall = allHalls.find(h => h.beds.some(b => b.id === bedId));
+          const hall = get().halls.find(h => h.beds?.some(b => b.id === bedId));
           if (!hall) throw new Error('errors.bedNotFound');
 
           const bedIndex = hall.beds.findIndex(b => b.id === bedId);
@@ -387,32 +341,33 @@ export const useHallStore = create<HallState>()(
       },
 
       getStatistics: () => {
+        const halls = get().halls;
         const stats: HallStatistics = {
-          totalHalls: allHalls.length,
-          totalBeds: allHalls.reduce((sum, h) => sum + h.capacity, 0),
-          totalOccupied: allHalls.reduce((sum, h) => sum + h.currentOccupancy, 0),
-          totalAvailable: allHalls.reduce((sum, h) => sum + h.availableBeds, 0),
-          totalMaintenance: allHalls.reduce((sum, h) => 
-            sum + h.beds.filter(b => b.status === 'maintenance').length, 0
+          totalHalls: halls.length,
+          totalBeds: halls.reduce((sum, h) => sum + h.capacity, 0),
+          totalOccupied: halls.reduce((sum, h) => sum + h.currentOccupancy, 0),
+          totalAvailable: halls.reduce((sum, h) => sum + h.availableBeds, 0),
+          totalMaintenance: halls.reduce((sum, h) =>
+            sum + (h.beds?.filter(b => b.status === 'maintenance').length || 0), 0
           ),
-          totalReserved: allHalls.reduce((sum, h) => 
-            sum + h.beds.filter(b => b.status === 'reserved').length, 0
+          totalReserved: halls.reduce((sum, h) =>
+            sum + (h.beds?.filter(b => b.status === 'reserved').length || 0), 0
           ),
           occupancyRate: 0,
           maleHalls: {
-            count: allHalls.filter(h => h.type === 'male').length,
-            beds: allHalls.filter(h => h.type === 'male').reduce((sum, h) => sum + h.capacity, 0),
-            occupied: allHalls.filter(h => h.type === 'male').reduce((sum, h) => sum + h.currentOccupancy, 0),
+            count: halls.filter(h => h.type === 'male').length,
+            beds: halls.filter(h => h.type === 'male').reduce((sum, h) => sum + h.capacity, 0),
+            occupied: halls.filter(h => h.type === 'male').reduce((sum, h) => sum + h.currentOccupancy, 0),
             occupancyRate: 0,
           },
           femaleHalls: {
-            count: allHalls.filter(h => h.type === 'female').length,
-            beds: allHalls.filter(h => h.type === 'female').reduce((sum, h) => sum + h.capacity, 0),
-            occupied: allHalls.filter(h => h.type === 'female').reduce((sum, h) => sum + h.currentOccupancy, 0),
+            count: halls.filter(h => h.type === 'female').length,
+            beds: halls.filter(h => h.type === 'female').reduce((sum, h) => sum + h.capacity, 0),
+            occupied: halls.filter(h => h.type === 'female').reduce((sum, h) => sum + h.currentOccupancy, 0),
             occupancyRate: 0,
           },
-          specialNeedsOccupied: allHalls.reduce((sum, h) => sum + h.specialNeedsOccupancy, 0),
-          byHall: allHalls.reduce((acc, h) => {
+          specialNeedsOccupied: halls.reduce((sum, h) => sum + h.specialNeedsOccupancy, 0),
+          byHall: halls.reduce((acc, h) => {
             acc[h.id] = {
               name: h.name,
               occupancy: h.currentOccupancy,
@@ -439,7 +394,7 @@ export const useHallStore = create<HallState>()(
       },
 
       getHallOccupancy: (hallId) => {
-        const hall = allHalls.find(h => h.id === hallId);
+        const hall = get().halls.find(h => h.id === hallId);
         if (!hall) return { occupied: 0, available: 0, rate: 0 };
 
         return {
@@ -450,8 +405,8 @@ export const useHallStore = create<HallState>()(
       },
 
       getAvailableBeds: (hallId, filters) => {
-        const hall = allHalls.find(h => h.id === hallId);
-        if (!hall) return [];
+        const hall = get().halls.find(h => h.id === hallId);
+        if (!hall || !hall.beds) return [];
 
         let beds = [...hall.beds];
 
@@ -472,7 +427,9 @@ export const useHallStore = create<HallState>()(
       },
 
       refreshOccupancy: () => {
-        allHalls.forEach(hall => {
+        const halls = get().halls;
+        halls.forEach(hall => {
+          if (!hall.beds) return;
           const occupied = hall.beds.filter(b => b.status === 'occupied').length;
           const specialNeeds = hall.beds.filter(b => b.status === 'occupied' && b.isSpecialNeeds).length;
           

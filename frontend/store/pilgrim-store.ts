@@ -1,16 +1,16 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import { 
-  Pilgrim, 
-  PilgrimFilters, 
-  PaginationParams, 
+import {
+  Pilgrim,
+  PilgrimFilters,
+  PaginationParams,
   PaginatedResponse,
   CreatePilgrimDto,
   UpdatePilgrimDto,
   ImportResult,
   PilgrimStatistics
 } from '@/types/pilgrim';
-import { generateMockPilgrims, mockGroups } from '@/lib/mock-data';
+import { pilgrimAPI } from '@/lib/api';
 import { gregorianToHijri } from '@/lib/hijri-date';
 
 interface PilgrimState {
@@ -49,8 +49,6 @@ const initialPagination: PaginationParams = {
   sortOrder: 'desc'
 };
 
-const allPilgrims = generateMockPilgrims(150);
-
 // Generate registration number helper function
 const generateRegistrationNumber = (): string => {
   const currentDate = new Date();
@@ -82,78 +80,79 @@ export const usePilgrimStore = create<PilgrimState>()(
       fetchPilgrims: async () => {
         const { filters, pagination } = get();
         set({ isLoading: true, error: null });
-        
+
         try {
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          let filtered = [...allPilgrims];
-          
+          // Fetch all pilgrims from the backend API
+          const data = await pilgrimAPI.getAll();
+          let filtered = data || [];
+
+          // Apply client-side filters
           if (filters.search) {
             const searchLower = filters.search.toLowerCase();
-            filtered = filtered.filter(p => 
+            filtered = filtered.filter((p: Pilgrim) =>
               p.fullName.toLowerCase().includes(searchLower) ||
               p.registrationNumber.toLowerCase().includes(searchLower) ||
               p.nationalId.includes(searchLower) ||
               p.phoneNumber.includes(searchLower)
             );
           }
-          
+
           if (filters.status && filters.status.length > 0) {
-            filtered = filtered.filter(p => filters.status!.includes(p.status));
+            filtered = filtered.filter((p: Pilgrim) => filters.status!.includes(p.status));
           }
-          
+
           if (filters.gender) {
-            filtered = filtered.filter(p => p.gender === filters.gender);
+            filtered = filtered.filter((p: Pilgrim) => p.gender === filters.gender);
           }
-          
+
           if (filters.hasSpecialNeeds !== undefined) {
-            filtered = filtered.filter(p => p.hasSpecialNeeds === filters.hasSpecialNeeds);
+            filtered = filtered.filter((p: Pilgrim) => p.hasSpecialNeeds === filters.hasSpecialNeeds);
           }
-          
+
           if (filters.hall) {
-            filtered = filtered.filter(p => p.assignedHall === filters.hall);
+            filtered = filtered.filter((p: Pilgrim) => p.assignedHall === filters.hall);
           }
-          
+
           if (filters.group) {
-            filtered = filtered.filter(p => p.groupId === filters.group);
+            filtered = filtered.filter((p: Pilgrim) => p.groupId === filters.group);
           }
-          
+
           if (filters.nationality) {
-            filtered = filtered.filter(p => p.nationality === filters.nationality);
+            filtered = filtered.filter((p: Pilgrim) => p.nationality === filters.nationality);
           }
-          
+
           if (filters.ageRange) {
             if (filters.ageRange.min !== undefined) {
-              filtered = filtered.filter(p => p.age >= filters.ageRange!.min!);
+              filtered = filtered.filter((p: Pilgrim) => p.age >= filters.ageRange!.min!);
             }
             if (filters.ageRange.max !== undefined) {
-              filtered = filtered.filter(p => p.age <= filters.ageRange!.max!);
+              filtered = filtered.filter((p: Pilgrim) => p.age <= filters.ageRange!.max!);
             }
           }
-          
+
           if (pagination.sortBy) {
-            filtered.sort((a, b) => {
+            filtered.sort((a: Pilgrim, b: Pilgrim) => {
               const aVal = a[pagination.sortBy!];
               const bVal = b[pagination.sortBy!];
-              
+
               // Handle null/undefined values
               if (aVal == null && bVal == null) return 0;
               if (aVal == null) return pagination.sortOrder === 'asc' ? -1 : 1;
               if (bVal == null) return pagination.sortOrder === 'asc' ? 1 : -1;
-              
+
               if (aVal < bVal) return pagination.sortOrder === 'asc' ? -1 : 1;
               if (aVal > bVal) return pagination.sortOrder === 'asc' ? 1 : -1;
               return 0;
             });
           }
-          
+
           const total = filtered.length;
           const start = (pagination.page - 1) * pagination.limit;
           const end = start + pagination.limit;
           const paginatedData = filtered.slice(start, end);
-          
+
           set({ pilgrims: paginatedData, isLoading: false });
-          
+
           return {
             data: paginatedData,
             total,
@@ -172,8 +171,7 @@ export const usePilgrimStore = create<PilgrimState>()(
       fetchPilgrimById: async (id) => {
         set({ isLoading: true, error: null });
         try {
-          await new Promise(resolve => setTimeout(resolve, 300));
-          const pilgrim = allPilgrims.find(p => p.id === id) || null;
+          const pilgrim = await pilgrimAPI.getById(Number(id));
           set({ selectedPilgrim: pilgrim, isLoading: false });
           return pilgrim;
         } catch (error) {
@@ -185,28 +183,10 @@ export const usePilgrimStore = create<PilgrimState>()(
       createPilgrim: async (data) => {
         set({ isLoading: true, error: null });
         try {
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          // Find group name if groupId is provided
-          const groupName = data.groupId 
-            ? mockGroups.find(g => g.id === data.groupId)?.name
-            : undefined;
-          
-          const newPilgrim: Pilgrim = {
-            id: (allPilgrims.length + 1).toString(),
-            registrationNumber: generateRegistrationNumber(),
-            ...data,
-            fullName: `${data.firstName} ${data.lastName}`,
-            groupName,
-            birthDate: new Date(), // Will be calculated from age if needed
-            status: 'expected',
-            hasSpecialNeeds: data.hasSpecialNeeds || false,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          };
-          
-          allPilgrims.push(newPilgrim);
+          const newPilgrim = await pilgrimAPI.create(data);
           set({ isLoading: false });
+          // Refresh the list
+          await get().fetchPilgrims();
           return newPilgrim;
         } catch (error) {
           set({ error: 'errors.failedToAddPilgrim', isLoading: false });
@@ -217,30 +197,10 @@ export const usePilgrimStore = create<PilgrimState>()(
       updatePilgrim: async (id, data) => {
         set({ isLoading: true, error: null });
         try {
-          await new Promise(resolve => setTimeout(resolve, 500));
-
-          const index = allPilgrims.findIndex(p => p.id === id);
-          if (index === -1) throw new Error('errors.pilgrimNotFound');
-          
-          // Find group name if groupId is being updated
-          const groupName = data.groupId !== undefined
-            ? data.groupId 
-              ? mockGroups.find(g => g.id === data.groupId)?.name
-              : undefined
-            : allPilgrims[index].groupName;
-          
-          const updated = {
-            ...allPilgrims[index],
-            ...data,
-            fullName: data.firstName && data.lastName 
-              ? `${data.firstName} ${data.lastName}`
-              : allPilgrims[index].fullName,
-            groupName,
-            updatedAt: new Date(),
-          };
-          
-          allPilgrims[index] = updated;
+          const updated = await pilgrimAPI.update(Number(id), data);
           set({ isLoading: false });
+          // Refresh the list
+          await get().fetchPilgrims();
           return updated;
         } catch (error) {
           set({ error: 'errors.failedToUpdatePilgrim', isLoading: false });
@@ -251,13 +211,10 @@ export const usePilgrimStore = create<PilgrimState>()(
       deletePilgrim: async (id) => {
         set({ isLoading: true, error: null });
         try {
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          const index = allPilgrims.findIndex(p => p.id === id);
-          if (index === -1) throw new Error('errors.pilgrimNotFound');
-
-          allPilgrims.splice(index, 1);
+          await pilgrimAPI.delete(Number(id));
           set({ isLoading: false });
+          // Refresh the list
+          await get().fetchPilgrims();
           return true;
         } catch (error) {
           set({ error: 'errors.failedToDeletePilgrim', isLoading: false });
@@ -273,20 +230,12 @@ export const usePilgrimStore = create<PilgrimState>()(
       },
       
       assignBed: async (pilgrimId, hallId, bedNumber) => {
-        // First update the pilgrim in the mock data directly
-        const index = allPilgrims.findIndex(p => p.id === pilgrimId);
-        if (index !== -1) {
-          allPilgrims[index] = {
-            ...allPilgrims[index],
-            assignedHall: hallId,
-            assignedBed: bedNumber,
-            status: 'arrived',
-            arrivalDate: new Date(),
-            updatedAt: new Date()
-          };
-          return allPilgrims[index];
-        }
-        throw new Error('errors.pilgrimNotFound');
+        return get().updatePilgrim(pilgrimId, {
+          assignedHall: hallId,
+          assignedBed: bedNumber,
+          status: 'arrived',
+          arrivalDate: new Date()
+        });
       },
       
       importFromExcel: async (file) => {
@@ -381,8 +330,9 @@ export const usePilgrimStore = create<PilgrimState>()(
               specialNeedsType = specialNeedsMap[specialNeedsTypeText.toLowerCase()] || 'other';
             }
             
-            // Check for duplicates
-            if (allPilgrims.some(p => p.nationalId === nationalId)) {
+            // Check for duplicates (against existing pilgrims from state)
+            const existingPilgrims = get().pilgrims;
+            if (existingPilgrims.some((p: Pilgrim) => p.nationalId === nationalId)) {
               duplicates.push(nationalId);
               hasError = true;
             }
@@ -428,21 +378,24 @@ export const usePilgrimStore = create<PilgrimState>()(
       },
       
       getStatistics: () => {
+        const pilgrims = get().pilgrims;
         const stats: PilgrimStatistics = {
-          total: allPilgrims.length,
-          arrived: allPilgrims.filter(p => p.status === 'arrived').length,
-          expected: allPilgrims.filter(p => p.status === 'expected').length,
-          departed: allPilgrims.filter(p => p.status === 'departed').length,
-          noShow: allPilgrims.filter(p => p.status === 'no_show').length,
-          specialNeeds: allPilgrims.filter(p => p.hasSpecialNeeds).length,
-          maleCount: allPilgrims.filter(p => p.gender === 'male').length,
-          femaleCount: allPilgrims.filter(p => p.gender === 'female').length,
-          occupancyRate: (allPilgrims.filter(p => p.status === 'arrived').length / allPilgrims.length) * 100,
-          byNationality: allPilgrims.reduce((acc, p) => {
+          total: pilgrims.length,
+          arrived: pilgrims.filter(p => p.status === 'arrived').length,
+          expected: pilgrims.filter(p => p.status === 'expected').length,
+          departed: pilgrims.filter(p => p.status === 'departed').length,
+          noShow: pilgrims.filter(p => p.status === 'no_show').length,
+          specialNeeds: pilgrims.filter(p => p.hasSpecialNeeds).length,
+          maleCount: pilgrims.filter(p => p.gender === 'male').length,
+          femaleCount: pilgrims.filter(p => p.gender === 'female').length,
+          occupancyRate: pilgrims.length > 0
+            ? (pilgrims.filter(p => p.status === 'arrived').length / pilgrims.length) * 100
+            : 0,
+          byNationality: pilgrims.reduce((acc, p) => {
             acc[p.nationality] = (acc[p.nationality] || 0) + 1;
             return acc;
           }, {} as Record<string, number>),
-          byAgeGroup: allPilgrims.reduce((acc, p) => {
+          byAgeGroup: pilgrims.reduce((acc, p) => {
             const group = p.age < 30 ? '18-29' : p.age < 50 ? '30-49' : p.age < 70 ? '50-69' : '70+';
             acc[group] = (acc[group] || 0) + 1;
             return acc;
