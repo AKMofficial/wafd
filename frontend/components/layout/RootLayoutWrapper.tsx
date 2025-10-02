@@ -14,6 +14,9 @@ interface RootLayoutWrapperProps {
 
 const RootLayoutContent = ({ children }: RootLayoutWrapperProps) => {
   const pathname = usePathname();
+  const locale = useLocale();
+  const isRtl = locale === 'ar';
+  const { isCollapsed } = useSidebar();
 
   // Check if on login page
   const isLoginPage = pathname?.includes('/login');
@@ -22,10 +25,6 @@ const RootLayoutContent = ({ children }: RootLayoutWrapperProps) => {
   if (isLoginPage) {
     return <>{children}</>;
   }
-
-  const locale = useLocale();
-  const isRtl = locale === 'ar';
-  const { isCollapsed } = useSidebar();
 
   return (
     <div className="min-h-screen bg-background">
