@@ -8,7 +8,13 @@ import com.example.wafd.Model.User;
 import com.example.wafd.Repository.AgencyRepository;
 import com.example.wafd.Repository.PilgrimRepository;
 import com.example.wafd.Repository.UserRepository;
+import com.example.wafd.Util.RegistrationNumberGenerator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,18 +26,35 @@ public class PilgrimService {
     private final PilgrimRepository pilgrimRepository;
     private final UserRepository userRepository;
     private final AgencyRepository agencyRepository;
+    private final RegistrationNumberGenerator registrationNumberGenerator;
+    private final PasswordEncoder passwordEncoder;
 
+    @Cacheable("pilgrims")
     public List<Pilgrim> getAllPilgrims(){
-        return pilgrimRepository.findAll();
+        return pilgrimRepository.findAllWithDetails();
     }
 
-    public void addPilgrim(PilgrimDTOIn pilgrimDTOIn){
-        User user = new User(null,pilgrimDTOIn.getName(),pilgrimDTOIn.getEmail(),pilgrimDTOIn.getPhone(),pilgrimDTOIn.getPassword(),"Pilgrim",null,null,null);
-        Pilgrim pilgrim = new Pilgrim(null,pilgrimDTOIn.getPassportNumber(),pilgrimDTOIn.getNationality(),pilgrimDTOIn.getDateOfBirth(),pilgrimDTOIn.getGender(),"Registered",null,null,user);
+    public Page<Pilgrim> getAllPilgrims(Pageable pageable){
+        return pilgrimRepository.findAllWithDetails(pageable);
+    }
+
+    @CacheEvict(value = "pilgrims", allEntries = true)
+    public Pilgrim addPilgrim(PilgrimDTOIn pilgrimDTOIn){
+        String encodedPassword = passwordEncoder.encode(pilgrimDTOIn.getPassword());
+        User user = new User(null,pilgrimDTOIn.getName(),pilgrimDTOIn.getEmail(),pilgrimDTOIn.getPhone(),encodedPassword,"Pilgrim",null,null,null);
+
+        String registrationNumber = registrationNumberGenerator.generate();
+        String nationalId = pilgrimDTOIn.getPassportNumber(); // Use passport as national ID for now
+        Pilgrim pilgrim = new Pilgrim(null, registrationNumber, nationalId, pilgrimDTOIn.getPassportNumber(),pilgrimDTOIn.getNationality(),pilgrimDTOIn.getDateOfBirth(),pilgrimDTOIn.getGender(),"Registered",null,null,user);
+
         user.setPilgrim(pilgrim);
         pilgrim.setUser(user);
+
+        // Save user only - cascade will save pilgrim with matching ID due to @MapsId
         userRepository.save(user);
-        pilgrimRepository.save(pilgrim);
+
+        // Return the saved pilgrim with its generated ID
+        return pilgrim;
     }
 
     public void addPilgrimToAgency(Integer pilgrim_id, Integer agency_id){
@@ -50,6 +73,7 @@ public class PilgrimService {
         pilgrimRepository.save(pilgrim);
     }
 
+    @CacheEvict(value = "pilgrims", allEntries = true)
     public void updatePilgrim(Integer id, PilgrimDTOIn pilgrimDTOIn){
         Pilgrim pilgrim = pilgrimRepository.findPilgrimById(id);
         if (pilgrim == null){
@@ -60,7 +84,7 @@ public class PilgrimService {
         user.setName(pilgrimDTOIn.getName());
         user.setEmail(pilgrimDTOIn.getEmail());
         user.setPhone(pilgrimDTOIn.getPhone());
-        user.setPassword(pilgrimDTOIn.getPassword());
+        user.setPassword(passwordEncoder.encode(pilgrimDTOIn.getPassword()));
 
         pilgrim.setPassport_number(pilgrimDTOIn.getPassportNumber());
         pilgrim.setNationality(pilgrimDTOIn.getNationality());
@@ -71,6 +95,7 @@ public class PilgrimService {
         pilgrimRepository.save(pilgrim);
     }
 
+    @CacheEvict(value = "pilgrims", allEntries = true)
     public void deletePilgrim(Integer id){
         Pilgrim pilgrim = pilgrimRepository.findPilgrimById(id);
         if (pilgrim == null){
@@ -79,8 +104,9 @@ public class PilgrimService {
         pilgrimRepository.delete(pilgrim);
     }
 
+    @Cacheable(value = "pilgrims", key = "#id")
     public Pilgrim getPilgrimById(Integer id){
-        return pilgrimRepository.findPilgrimById(id);
+        return pilgrimRepository.findByIdWithDetails(id).orElse(null);
     }
 
 

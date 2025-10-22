@@ -87,25 +87,25 @@ export default function PilgrimsPage() {
   const statsCards = [
     {
       title: t('dashboard.stats.totalPilgrims'),
-      value: stats.total,
+      value: stats?.total || 0,
       icon: Users,
       color: 'text-blue-600 bg-blue-100'
     },
     {
       title: t('dashboard.stats.arrived'),
-      value: stats.arrived,
+      value: stats?.arrived || 0,
       icon: UserCheck,
       color: 'text-green-600 bg-green-100'
     },
     {
       title: t('dashboard.stats.expected'),
-      value: stats.expected,
+      value: stats?.expected || 0,
       icon: Clock,
       color: 'text-yellow-600 bg-yellow-100'
     },
     {
       title: t('dashboard.stats.specialNeeds'),
-      value: stats.specialNeeds,
+      value: stats?.specialNeeds || 0,
       icon: Accessibility,
       color: 'text-purple-600 bg-purple-100'
     }
@@ -161,19 +161,19 @@ export default function PilgrimsPage() {
             <div className="flex gap-3 text-sm">
               <span className="flex items-center gap-1">
                 <span className="text-blue-600">●</span>
-                {t('common.total')}: {stats.total}
+                {t('common.total')}: {stats?.total || 0}
               </span>
               <span className="flex items-center gap-1">
                 <span className="text-green-600">●</span>
-                {t('dashboard.stats.arrived')}: {stats.arrived}
+                {t('dashboard.stats.arrived')}: {stats?.arrived || 0}
               </span>
               <span className="flex items-center gap-1">
                 <span className="text-yellow-600">●</span>
-                {t('dashboard.stats.expected')}: {stats.expected}
+                {t('dashboard.stats.expected')}: {stats?.expected || 0}
               </span>
               <span className="flex items-center gap-1">
                 <span className="text-purple-600">●</span>
-                {t('dashboard.stats.specialNeeds')}: {stats.specialNeeds}
+                {t('dashboard.stats.specialNeeds')}: {stats?.specialNeeds || 0}
               </span>
             </div>
           </div>

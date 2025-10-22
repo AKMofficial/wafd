@@ -2,7 +2,9 @@ package com.example.wafd.Service;
 
 import com.example.wafd.Api.ApiException;
 import com.example.wafd.Model.Agency;
+import com.example.wafd.Model.Pilgrim;
 import com.example.wafd.Repository.AgencyRepository;
+import com.example.wafd.Repository.PilgrimRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -13,9 +15,14 @@ import java.util.List;
 public class AgencyService {
 
     private final AgencyRepository agencyRepository;
+    private final PilgrimRepository pilgrimRepository;
 
     public List<Agency> findAllAgencies(){
         return agencyRepository.findAll();
+    }
+
+    public Agency findAgencyById(Integer id){
+        return agencyRepository.findAgencyById(id);
     }
 
     public void addAgency(Agency agency){
@@ -41,5 +48,13 @@ public class AgencyService {
             throw new ApiException("Agency not found");
         }
         agencyRepository.delete(agencyToDelete);
+    }
+
+    public List<Pilgrim> findPilgrimsByAgencyId(Integer agencyId){
+        Agency agency = agencyRepository.findAgencyById(agencyId);
+        if (agency == null){
+            throw new ApiException("Agency not found");
+        }
+        return pilgrimRepository.findByAgencyId(agencyId);
     }
 }

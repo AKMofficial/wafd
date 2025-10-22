@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslations } from '@/lib/i18n';
+import { useSettingsStore } from '@/store/settings-store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -24,142 +25,138 @@ import {
   User,
   UserCircle,
   Mail,
-  Settings2
+  Settings2,
+  Loader2
 } from 'lucide-react';
-
-interface Account {
-  id: string;
-  username: string;
-  fullName: string;
-  email: string;
-  role: 'admin' | 'supervisor' | 'operator';
-  lastLogin?: Date;
-  createdAt: Date;
-}
+import { CreateUserDto, UpdateUserDto, User as UserType } from '@/types/user';
+import { toast } from '@/components/ui/toast';
 
 export function AccountsManagement() {
   const t = useTranslations();
-  const [accounts, setAccounts] = useState<Account[]>([
-    {
-      id: '1',
-      username: 'admin',
-      fullName: 'مدير النظام',
-      email: 'admin@hajj.com',
-      role: 'admin',
-      lastLogin: new Date('2024-01-15T10:30:00'),
-      createdAt: new Date('2023-01-01'),
-    },
-    {
-      id: '2',
-      username: 'supervisor1',
-      fullName: 'أحمد محمد',
-      email: 'ahmad@hajj.com',
-      role: 'supervisor',
-      lastLogin: new Date('2024-01-14T15:20:00'),
-      createdAt: new Date('2023-06-15'),
-    },
-    {
-      id: '3',
-      username: 'operator1',
-      fullName: 'فاطمة علي',
-      email: 'fatima@hajj.com',
-      role: 'operator',
-      lastLogin: new Date('2024-01-15T08:00:00'),
-      createdAt: new Date('2023-09-20'),
-    },
-  ]);
+  const {
+    users,
+    isLoading,
+    error,
+    fetchUsers,
+    createUser,
+    updateUser,
+    deleteUser,
+  } = useSettingsStore();
 
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
+  const [selectedUser, setSelectedUser] = useState<UserType | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   const [formData, setFormData] = useState({
-    username: '',
-    fullName: '',
+    name: '',
     email: '',
+    phone: '',
     password: '',
-    role: 'operator' as 'admin' | 'supervisor' | 'operator',
+    role: 'Supervisor' as 'Admin' | 'Supervisor' | 'Pilgrim',
   });
 
-  const filteredAccounts = accounts.filter(account =>
-    account.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    account.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    account.email.toLowerCase().includes(searchQuery.toLowerCase())
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+
+  const filteredUsers = users.filter(user =>
+    user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    user.phone.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleAdd = () => {
-    const newAccount: Account = {
-      id: (accounts.length + 1).toString(),
-      username: formData.username,
-      fullName: formData.fullName,
-      email: formData.email,
-      role: formData.role,
-      createdAt: new Date(),
-    };
-    setAccounts([...accounts, newAccount]);
-    setShowAddDialog(false);
-    resetForm();
-  };
-
-  const handleEdit = () => {
-    if (selectedAccount) {
-      setAccounts(accounts.map(acc =>
-        acc.id === selectedAccount.id
-          ? { ...acc, ...formData }
-          : acc
-      ));
-      setShowEditDialog(false);
-      setSelectedAccount(null);
+  const handleAdd = async () => {
+    try {
+      await createUser(formData as CreateUserDto);
+      toast.success(t('common.success'), t('settings.accounts.userAdded'));
+      setShowAddDialog(false);
       resetForm();
+    } catch (error) {
+      toast.error(t('common.error'), error instanceof Error ? error.message : t('settings.accounts.addFailed'));
     }
   };
 
-  const handleDelete = () => {
-    if (selectedAccount) {
-      setAccounts(accounts.filter(acc => acc.id !== selectedAccount.id));
-      setShowDeleteConfirm(false);
-      setShowEditDialog(false);
-      setSelectedAccount(null);
+  const handleEdit = async () => {
+    if (selectedUser) {
+      try {
+        const updateData: UpdateUserDto = {
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          role: formData.role,
+        };
+        if (formData.password) {
+          updateData.password = formData.password;
+        }
+        await updateUser(selectedUser.id.toString(), updateData);
+        toast.success(t('common.success'), t('settings.accounts.userUpdated'));
+        setShowEditDialog(false);
+        setSelectedUser(null);
+        resetForm();
+      } catch (error) {
+        toast.error(t('common.error'), error instanceof Error ? error.message : t('settings.accounts.updateFailed'));
+      }
     }
   };
-  
+
+  const handleDelete = async () => {
+    if (selectedUser) {
+      try {
+        await deleteUser(selectedUser.id.toString());
+        toast.success(t('common.success'), t('settings.accounts.userDeleted'));
+        setShowDeleteConfirm(false);
+        setShowEditDialog(false);
+        setSelectedUser(null);
+      } catch (error) {
+        toast.error(t('common.error'), error instanceof Error ? error.message : t('settings.accounts.deleteFailed'));
+      }
+    }
+  };
+
   const handleDeleteClick = () => {
     setShowDeleteConfirm(true);
   };
 
-
   const resetForm = () => {
     setFormData({
-      username: '',
-      fullName: '',
+      name: '',
       email: '',
+      phone: '',
       password: '',
-      role: 'operator',
+      role: 'Supervisor',
     });
   };
 
-  const openEditDialog = (account: Account) => {
-    setSelectedAccount(account);
+  const openEditDialog = (user: UserType) => {
+    setSelectedUser(user);
     setFormData({
-      username: account.username,
-      fullName: account.fullName,
-      email: account.email,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
       password: '',
-      role: account.role,
+      role: user.role,
     });
     setShowEditDialog(true);
   };
 
   const getRoleLabel = (role: string) => {
     const labels = {
-      admin: t('settings.accounts.roles.admin'),
-      supervisor: t('settings.accounts.roles.supervisor'),
-      operator: t('settings.accounts.roles.operator'),
+      Admin: t('settings.accounts.roles.admin'),
+      Supervisor: t('settings.accounts.roles.supervisor'),
+      Pilgrim: t('settings.accounts.roles.operator'),
     };
     return labels[role as keyof typeof labels] || role;
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -190,12 +187,6 @@ export function AccountsManagement() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[160px]">
-                <div className="flex items-center gap-2">
-                  <User className="h-4 w-4" />
-                  <span>{t('settings.accounts.username')}</span>
-                </div>
-              </TableHead>
               <TableHead>
                 <div className="flex items-center gap-2">
                   <UserCircle className="h-4 w-4" />
@@ -210,6 +201,12 @@ export function AccountsManagement() {
               </TableHead>
               <TableHead className="text-center">
                 <div className="flex items-center justify-center gap-2">
+                  <User className="h-4 w-4" />
+                  <span>{t('settings.accounts.role')}</span>
+                </div>
+              </TableHead>
+              <TableHead className="text-center">
+                <div className="flex items-center justify-center gap-2">
                   <Settings2 className="h-4 w-4" />
                   <span>{t('common.actions')}</span>
                 </div>
@@ -217,28 +214,28 @@ export function AccountsManagement() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredAccounts.length === 0 ? (
+            {filteredUsers.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="text-center text-gray-500 py-8">
                   {t('settings.accounts.noAccounts')}
                 </TableCell>
               </TableRow>
             ) : (
-              filteredAccounts.map((account) => (
-                <TableRow key={account.id} className="hover:bg-gray-50">
-                  <TableCell>
+              filteredUsers.map((user) => (
+                <TableRow key={user.id} className="hover:bg-gray-50">
+                  <TableCell className="font-medium">{user.name}</TableCell>
+                  <TableCell className="text-center">{user.email}</TableCell>
+                  <TableCell className="text-center">
                     <Badge variant="outline" className="text-xs px-2 py-0.5 bg-gray-50 text-gray-700 border-gray-200">
-                      {account.username}
+                      {getRoleLabel(user.role)}
                     </Badge>
                   </TableCell>
-                  <TableCell className="font-medium">{account.fullName}</TableCell>
-                  <TableCell className="text-center">{account.email}</TableCell>
                   <TableCell className="text-center">
                     <div className="flex justify-center gap-1">
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => openEditDialog(account)}
+                        onClick={() => openEditDialog(user)}
                       >
                         <Edit className="h-4 w-4 ml-1" />
                         {t('common.edit')}
@@ -259,14 +256,14 @@ export function AccountsManagement() {
             <TableRow>
               <TableHead className="text-xs px-2 py-2">
                 <div className="flex items-center gap-1">
-                  <User className="h-3 w-3 flex-shrink-0" />
-                  <span className="whitespace-nowrap">{t('settings.accounts.username')}</span>
+                  <UserCircle className="h-3 w-3 flex-shrink-0" />
+                  <span className="whitespace-nowrap">{t('settings.accounts.fullName')}</span>
                 </div>
               </TableHead>
               <TableHead className="text-xs px-2 py-2">
                 <div className="flex items-center gap-1">
-                  <UserCircle className="h-3 w-3 flex-shrink-0" />
-                  <span className="whitespace-nowrap">{t('settings.accounts.fullName')}</span>
+                  <User className="h-3 w-3 flex-shrink-0" />
+                  <span className="whitespace-nowrap">{t('settings.accounts.role')}</span>
                 </div>
               </TableHead>
               <TableHead className="text-center text-xs px-2 py-2">
@@ -278,29 +275,29 @@ export function AccountsManagement() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredAccounts.length === 0 ? (
+            {filteredUsers.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={3} className="text-center text-gray-500 py-8 text-xs">
                   {t('settings.accounts.noAccounts')}
                 </TableCell>
               </TableRow>
             ) : (
-              filteredAccounts.map((account) => (
-                <TableRow key={account.id} className="hover:bg-gray-50">
+              filteredUsers.map((user) => (
+                <TableRow key={user.id} className="hover:bg-gray-50">
+                  <TableCell className="text-xs px-2 py-2 min-w-[120px]">
+                    <span className="truncate max-w-[150px] block">{user.name}</span>
+                  </TableCell>
                   <TableCell className="text-xs px-2 py-2">
                     <Badge variant="outline" className="text-[10px] px-1.5 py-0.5 bg-gray-50 text-gray-700 border-gray-200 whitespace-nowrap">
-                      {account.username}
+                      {getRoleLabel(user.role)}
                     </Badge>
-                  </TableCell>
-                  <TableCell className="text-xs px-2 py-2 min-w-[120px]">
-                    <span className="truncate max-w-[150px] block">{account.fullName}</span>
                   </TableCell>
                   <TableCell className="text-center px-2 py-2">
                     <Button
                       variant="outline"
                       size="sm"
                       className="h-7 w-7 p-0"
-                      onClick={() => openEditDialog(account)}
+                      onClick={() => openEditDialog(user)}
                     >
                       <Edit className="h-3 w-3" />
                     </Button>
@@ -328,18 +325,10 @@ export function AccountsManagement() {
           </DialogHeader>
           <div className="space-y-4 pt-4">
             <div>
-              <label className="block text-sm font-medium mb-1">{t('settings.accounts.username')}</label>
-              <Input
-                value={formData.username}
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                placeholder={t('settings.accounts.enterUsername')}
-              />
-            </div>
-            <div>
               <label className="block text-sm font-medium mb-1">{t('settings.accounts.fullName')}</label>
               <Input
-                value={formData.fullName}
-                onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder={t('settings.accounts.enterFullName')}
               />
             </div>
@@ -353,6 +342,15 @@ export function AccountsManagement() {
               />
             </div>
             <div>
+              <label className="block text-sm font-medium mb-1">{t('settings.accounts.phone')}</label>
+              <Input
+                type="tel"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                placeholder="+966501234567"
+              />
+            </div>
+            <div>
               <label className="block text-sm font-medium mb-1">{t('settings.accounts.password')}</label>
               <Input
                 type="password"
@@ -360,6 +358,19 @@ export function AccountsManagement() {
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 placeholder={t('settings.accounts.enterPassword')}
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">{t('settings.accounts.role')}</label>
+              <Select value={formData.role} onValueChange={(value) => setFormData({ ...formData, role: value as 'Admin' | 'Supervisor' | 'Pilgrim' })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Admin">{t('settings.accounts.roles.admin')}</SelectItem>
+                  <SelectItem value="Supervisor">{t('settings.accounts.roles.supervisor')}</SelectItem>
+                  <SelectItem value="Pilgrim">{t('settings.accounts.roles.operator')}</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="flex justify-end gap-2 pt-4">
               <Button variant="outline" onClick={() => {
@@ -380,13 +391,13 @@ export function AccountsManagement() {
       <Dialog open={showEditDialog} onOpenChange={(open) => {
         if (!open) {
           setShowEditDialog(false);
-          setSelectedAccount(null);
+          setSelectedUser(null);
           resetForm();
         }
       }}>
         <DialogContent onClose={() => {
           setShowEditDialog(false);
-          setSelectedAccount(null);
+          setSelectedUser(null);
           resetForm();
         }}>
           <DialogHeader>
@@ -394,18 +405,10 @@ export function AccountsManagement() {
           </DialogHeader>
           <div className="space-y-4 pt-4">
             <div>
-              <label className="block text-sm font-medium mb-1">{t('settings.accounts.username')}</label>
-              <Input
-                value={formData.username}
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                placeholder={t('settings.accounts.enterUsername')}
-              />
-            </div>
-            <div>
               <label className="block text-sm font-medium mb-1">{t('settings.accounts.fullName')}</label>
               <Input
-                value={formData.fullName}
-                onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder={t('settings.accounts.enterFullName')}
               />
             </div>
@@ -419,6 +422,15 @@ export function AccountsManagement() {
               />
             </div>
             <div>
+              <label className="block text-sm font-medium mb-1">{t('settings.accounts.phone')}</label>
+              <Input
+                type="tel"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                placeholder="+966501234567"
+              />
+            </div>
+            <div>
               <label className="block text-sm font-medium mb-1">{t('settings.accounts.password')} ({t('settings.accounts.passwordHint')})</label>
               <Input
                 type="password"
@@ -426,6 +438,19 @@ export function AccountsManagement() {
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 placeholder={t('settings.accounts.enterNewPassword')}
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">{t('settings.accounts.role')}</label>
+              <Select value={formData.role} onValueChange={(value) => setFormData({ ...formData, role: value as 'Admin' | 'Supervisor' | 'Pilgrim' })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Admin">{t('settings.accounts.roles.admin')}</SelectItem>
+                  <SelectItem value="Supervisor">{t('settings.accounts.roles.supervisor')}</SelectItem>
+                  <SelectItem value="Pilgrim">{t('settings.accounts.roles.operator')}</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <DialogFooter className="flex justify-between pt-4">
               <Button
@@ -439,7 +464,7 @@ export function AccountsManagement() {
               <div className="flex gap-2">
                 <Button variant="outline" onClick={() => {
                   setShowEditDialog(false);
-                  setSelectedAccount(null);
+                  setSelectedUser(null);
                   resetForm();
                 }}>
                   {t('common.cancel')}
@@ -462,7 +487,7 @@ export function AccountsManagement() {
               {t('settings.accounts.confirmDelete')}
             </DialogTitle>
             <DialogDescription>
-              {t('settings.accounts.deleteWarning').replace('{name}', selectedAccount?.fullName || '')}
+              {t('settings.accounts.deleteWarning').replace('{name}', selectedUser?.name || '')}
             </DialogDescription>
           </DialogHeader>
 

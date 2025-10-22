@@ -21,6 +21,20 @@ public class AgencyController {
         return ResponseEntity.ok(agencyService.findAllAgencies());
     }
 
+    @GetMapping("/get/{id}")
+    public ResponseEntity<?> findAgencyById(@PathVariable Integer id){
+        Agency agency = agencyService.findAgencyById(id);
+        if (agency == null){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse("Agency not found"));
+        }
+        return ResponseEntity.ok(agency);
+    }
+
+    @GetMapping("/get/{id}/pilgrims")
+    public ResponseEntity<?> getPilgrimsByAgencyId(@PathVariable Integer id){
+        return ResponseEntity.ok(agencyService.findPilgrimsByAgencyId(id));
+    }
+
     @PostMapping("/add")
     public ResponseEntity<?> addAgency(@RequestBody @Valid Agency agency){
         agencyService.addAgency(agency);

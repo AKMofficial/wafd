@@ -21,6 +21,15 @@ public class TentController {
         return ResponseEntity.ok(tentService.findAllTents());
     }
 
+    @GetMapping("/get/{id}")
+    public ResponseEntity<?> findTentById(@PathVariable Integer id){
+        Tent tent = tentService.findTentById(id);
+        if (tent == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse("Tent not found"));
+        }
+        return ResponseEntity.ok(tent);
+    }
+
     @PostMapping("/add")
     public ResponseEntity<?> addTent(@RequestBody @Valid Tent tent){
         tentService.addTent(tent);

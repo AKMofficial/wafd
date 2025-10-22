@@ -39,7 +39,8 @@
     "switchToArabic": "العربية",
     "switchLanguage": "العربية",
     "notFoundTitle": "404 - Page Not Found",
-    "notFoundMessage": "Sorry, we could not find the requested resource"
+    "notFoundMessage": "Sorry, we could not find the requested resource",
+    "backToHome": "Back to Home"
   },
   "auth": {
     "login": "Login",
@@ -467,6 +468,8 @@
       "failedToCreate": "Failed to create hall",
       "validation": {
         "nameRequired": "Hall name is required",
+        "nameMin": "Hall name must be at least 3 characters",
+        "nameMax": "Hall name must not exceed 255 characters",
         "codeFormat": "Must be a single English letter (A-Z)",
         "capacityMin": "Capacity must be at least 10",
         "capacityMax": "Capacity must not exceed 200"

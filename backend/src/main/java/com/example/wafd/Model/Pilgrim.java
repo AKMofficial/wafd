@@ -2,10 +2,6 @@ package com.example.wafd.Model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Past;
-import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,6 +18,12 @@ public class Pilgrim {
 
     @Id
     private Integer id;
+
+    @Column(columnDefinition = "varchar(50) unique")
+    private String registration_number;
+
+    @Column(columnDefinition = "varchar(20) unique")
+    private String national_id;
 
 /*
     @NotEmpty(message = "Passport number is required")

@@ -12,13 +12,21 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserService {
 
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
     public List<User> findAllUsers(){
         return userRepository.findAll();
     }
 
+    public User findUserById(Integer id) {
+        return userRepository.findUserById(id);
+    }
+
     public void addUser(User user){
+        userRepository.save(user);
+    }
+
+    public void updateUser(User user){
         userRepository.save(user);
     }
 

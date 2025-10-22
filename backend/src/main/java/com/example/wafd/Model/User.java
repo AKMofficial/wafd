@@ -8,15 +8,20 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.Collections;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-public class User {
+public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,17 +41,14 @@ public class User {
     @NotEmpty(message = "Phone is required")
     @Pattern(regexp = "^\\+[1-9]\\d{1,14}$", message = "Phone number must include country code (e.g., +1234567890)")
     @Column(columnDefinition = "varchar(255) not null unique")
-    private String Phone;
+    private String phone;
     @NotEmpty(message = "Password is required")
-    @Size(min = 8, max = 20,message = "Password must be between 3 and 20 characters")
-    @Pattern(regexp = "^(?=.*[!@#$%^&*]).*$", message = "Password must contain at least one special character")
     @Column(columnDefinition = "varchar(255) not null")
     private String password;
     @Pattern(regexp = "^(Admin|Pilgrim|Supervisor)$",message = "Role must be Admin, Pilgrim or Supervisor")
     private String role;
 
     @OneToOne(cascade = CascadeType.ALL, mappedBy = "user")
-    @PrimaryKeyJoinColumn
     private Pilgrim pilgrim;
 
     @CreationTimestamp
@@ -56,4 +58,40 @@ public class User {
     @UpdateTimestamp
     @Column
     private LocalDateTime updated_at;
+
+    // UserDetails interface methods
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()));
+    }
+
+    @Override
+    public String getUsername() {
+        return email;
+    }
+
+    @Override
+    public String getPassword() {
+        return password;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
 }

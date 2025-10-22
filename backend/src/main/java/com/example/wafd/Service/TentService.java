@@ -17,7 +17,11 @@ public class TentService {
     public List<Tent> findAllTents(){
         return tentRepository.findAll();
     }
-    
+
+    public Tent findTentById(Integer id){
+        return tentRepository.findTentById(id);
+    }
+
     public void addTent(Tent tent){
         tentRepository.save(tent);
     }

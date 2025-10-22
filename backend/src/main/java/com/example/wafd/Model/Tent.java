@@ -34,6 +34,15 @@ public class Tent {
     @Column(columnDefinition = "Integer not null")
     private Integer capacity;
 
+    @Column(columnDefinition = "varchar(100)")
+    private String name;
+
+    @Column(columnDefinition = "varchar(10) unique")
+    private String code;
+
+    @Column(columnDefinition = "varchar(10)")
+    private String type;
+
     @ManyToOne
     @JsonIgnore
     private Agency agency;

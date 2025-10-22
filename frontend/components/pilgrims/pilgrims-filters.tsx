@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations, useLocale } from '@/lib/i18n';
+import { useDebounce } from '@/hooks/use-debounce';
 import { PilgrimFilters, PilgrimStatus, Gender } from '@/types/pilgrim';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -28,12 +29,31 @@ export function PilgrimsFilters({
   const locale = useLocale();
   const isRTL = locale === 'ar';
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [searchValue, setSearchValue] = useState(filters.search ?? '');
+  const debouncedSearch = useDebounce(searchValue, 300);
 
   const { halls, fetchHalls } = useHallStore();
 
   useEffect(() => {
+    setSearchValue(filters.search ?? '');
+  }, [filters.search]);
+
+  useEffect(() => {
     fetchHalls();
-  }, [fetchHalls]);
+    // eslint-disable-next-line react-hooks-exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (debouncedSearch === filters.search) return;
+    const nextFilters = { ...filters } as PilgrimFilters;
+    if (!debouncedSearch) {
+      delete nextFilters.search;
+    } else {
+      nextFilters.search = debouncedSearch;
+    }
+    onFiltersChange(nextFilters);
+    // eslint-disable-next-line react-hooks-exhaustive-deps
+  }, [debouncedSearch]);
 
   const handleSearchChange = (value: string) => {
     onFiltersChange({ ...filters, search: value });
@@ -79,8 +99,8 @@ export function PilgrimsFilters({
           <Input
             type="text"
             placeholder={t('pilgrims.filters.searchPlaceholder')}
-            value={filters.search || ''}
-            onChange={(e) => handleSearchChange(e.target.value)}
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
             className={cn("pl-10", isRTL && "pl-3 pr-10")}
           />
         </div>

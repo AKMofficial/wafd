@@ -5,6 +5,9 @@ import com.example.wafd.DTO.PilgrimDTOIn;
 import com.example.wafd.Service.PilgrimService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,14 +20,22 @@ public class PilgrimController {
     private final PilgrimService pilgrimService;
 
     @GetMapping("/get/all")
-    public ResponseEntity<?> findAllPilgrims(){
-        return ResponseEntity.ok(pilgrimService.getAllPilgrims());
+    public ResponseEntity<?> findAllPilgrims(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "DESC") String sortDirection){
+
+        Sort.Direction direction = sortDirection.equalsIgnoreCase("ASC")
+            ? Sort.Direction.ASC
+            : Sort.Direction.DESC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+        return ResponseEntity.ok(pilgrimService.getAllPilgrims(pageable));
     }
 
     @PostMapping("/add")
     public ResponseEntity<?> addPilgrim(@RequestBody @Valid PilgrimDTOIn pilgrimDTOIn){
-        pilgrimService.addPilgrim(pilgrimDTOIn);
-        return ResponseEntity.status(HttpStatus.CREATED.value()).body(new ApiResponse("Pilgrim added successfully"));
+        return ResponseEntity.status(HttpStatus.CREATED.value()).body(pilgrimService.addPilgrim(pilgrimDTOIn));
     }
     
     @PutMapping("/update/{id}")

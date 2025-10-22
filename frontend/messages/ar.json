@@ -39,7 +39,8 @@
     "switchToArabic": "العربية",
     "switchLanguage": "English",
     "notFoundTitle": "404 - الصفحة غير موجودة",
-    "notFoundMessage": "عذرًا، لم نتمكن من العثور على الصفحة المطلوبة"
+    "notFoundMessage": "عذرًا، لم نتمكن من العثور على الصفحة المطلوبة",
+    "backToHome": "العودة للرئيسية"
   },
   "auth": {
     "login": "تسجيل الدخول",
@@ -467,6 +468,8 @@
       "failedToCreate": "فشل في إنشاء القاعة",
       "validation": {
         "nameRequired": "اسم القاعة مطلوب",
+        "nameMin": "اسم القاعة يجب أن يكون 3 أحرف على الأقل",
+        "nameMax": "اسم القاعة يجب ألا يتجاوز 255 حرف",
         "codeFormat": "يجب أن يكون حرف واحد بالإنجليزية (A-Z)",
         "capacityMin": "السعة يجب أن تكون 10 على الأقل",
         "capacityMax": "السعة يجب ألا تتجاوز 200"

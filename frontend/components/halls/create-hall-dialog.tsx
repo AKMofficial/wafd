@@ -46,7 +46,9 @@ export function CreateHallDialog({ isOpen, onClose, onSuccess }: CreateHallDialo
   const [isLoading, setIsLoading] = useState(false);
 
   const createHallSchema = useMemo(() => z.object({
-    name: z.string().min(1, t('halls.createDialog.validation.nameRequired')),
+    name: z.string()
+      .min(3, t('halls.createDialog.validation.nameMin'))
+      .max(255, t('halls.createDialog.validation.nameMax')),
     code: z.string().regex(/^[A-Z]$/, t('halls.createDialog.validation.codeFormat')),
     type: z.enum(['male', 'female']),
     capacity: z.number()

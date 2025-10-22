@@ -97,11 +97,11 @@ export function Charts({ pilgrimStats, hallStats, locale }: ChartsProps) {
     { day: t('dashboard.charts.days.fri'), arrivals: 42, expected: 45, difference: -3 },
   ];
 
-  const nationalityData = Object.entries(pilgrimStats.byNationality || {})
+  const nationalityData = Object.entries(pilgrimStats?.byNationality || {})
     .map(([country, count]) => ({
       name: country,
       value: count as number,
-      percentage: ((count as number / pilgrimStats.total) * 100).toFixed(1)
+      percentage: ((count as number / (pilgrimStats?.total || 1)) * 100).toFixed(1)
     }))
     .sort((a, b) => b.value - a.value)
     .slice(0, 5);
@@ -124,12 +124,12 @@ export function Charts({ pilgrimStats, hallStats, locale }: ChartsProps) {
   ].sort((a, b) => b.occupancy - a.occupancy);
 
   const genderDistribution = [
-    { name: t('dashboard.charts.male'), value: pilgrimStats.maleCount, fill: '#3B82F6' },
-    { name: t('dashboard.charts.female'), value: pilgrimStats.femaleCount, fill: '#EC4899' }
+    { name: t('dashboard.charts.male'), value: pilgrimStats?.maleCount || 0, fill: '#3B82F6' },
+    { name: t('dashboard.charts.female'), value: pilgrimStats?.femaleCount || 0, fill: '#EC4899' }
   ];
 
   const occupancyOverview = [
-    { name: t('dashboard.charts.occupancy'), value: hallStats.occupancyRate, fill: '#10B981' }
+    { name: t('dashboard.charts.occupancy'), value: hallStats?.occupancyRate || 0, fill: '#10B981' }
   ];
 
   const COLORS = {
@@ -145,7 +145,7 @@ export function Charts({ pilgrimStats, hallStats, locale }: ChartsProps) {
         {/* Occupancy Rate Overview */}
         <ChartCard
           title={t('dashboard.charts.overallOccupancyRate')}
-          subtitle={`${hallStats.totalOccupied}/${hallStats.totalBeds} ${t('dashboard.charts.bedsOccupied')}`}
+          subtitle={`${hallStats?.totalOccupied || 0}/${hallStats?.totalBeds || 0} ${t('dashboard.charts.bedsOccupied')}`}
         >
           <div className="flex items-center justify-center h-[250px]">
             <div className="relative">
@@ -162,14 +162,14 @@ export function Charts({ pilgrimStats, hallStats, locale }: ChartsProps) {
                   <RadialBar
                     dataKey="value"
                     cornerRadius={10}
-                    fill={hallStats.occupancyRate > 90 ? '#EF4444' : hallStats.occupancyRate > 75 ? '#F59E0B' : '#10B981'}
+                    fill={(hallStats?.occupancyRate || 0) > 90 ? '#EF4444' : (hallStats?.occupancyRate || 0) > 75 ? '#F59E0B' : '#10B981'}
                     background={{ fill: '#F3F4F6' }}
                   />
                 </RadialBarChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <span className="text-4xl font-bold text-gray-900">
-                  {hallStats.occupancyRate.toFixed(0)}%
+                  {(hallStats?.occupancyRate || 0).toFixed(0)}%
                 </span>
                 <span className="text-sm text-gray-500">
                   {t('dashboard.charts.occupancy')}

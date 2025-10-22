@@ -127,6 +127,7 @@ export interface CreatePilgrimDto {
   passportNumber?: string;
   firstName: string;
   lastName: string;
+  birthDate?: Date;
   age: number;
   gender: Gender;
   nationality: string;

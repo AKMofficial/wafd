@@ -86,84 +86,84 @@ export function StatisticsCards({ pilgrimStats, hallStats, isLoading, locale }: 
   const cards = [
     {
       title: t('dashboard.stats.totalPilgrims'),
-      value: pilgrimStats.total,
+      value: pilgrimStats?.total || 0,
       icon: Users,
       color: 'text-blue-600 bg-blue-100',
       trend: { value: 5.2, isPositive: true }
     },
     {
       title: t('dashboard.stats.arrived'),
-      value: pilgrimStats.arrived,
+      value: pilgrimStats?.arrived || 0,
       icon: UserCheck,
       color: 'text-green-600 bg-green-100',
-      subtitle: `${((pilgrimStats.arrived / pilgrimStats.total) * 100).toFixed(1)}% ${t('dashboard.stats.ofTotal')}`
+      subtitle: `${(((pilgrimStats?.arrived || 0) / (pilgrimStats?.total || 1)) * 100).toFixed(1)}% ${t('dashboard.stats.ofTotal')}`
     },
     {
       title: t('dashboard.stats.expected'),
-      value: pilgrimStats.expected,
+      value: pilgrimStats?.expected || 0,
       icon: Clock,
       color: 'text-yellow-600 bg-yellow-100',
       subtitle: t('dashboard.stats.within48Hours')
     },
     {
       title: t('dashboard.stats.specialNeeds'),
-      value: pilgrimStats.specialNeeds,
+      value: pilgrimStats?.specialNeeds || 0,
       icon: Accessibility,
       color: 'text-purple-600 bg-purple-100',
-      subtitle: `${((pilgrimStats.specialNeeds / pilgrimStats.total) * 100).toFixed(1)}% ${t('dashboard.stats.ofTotal')}`
+      subtitle: `${(((pilgrimStats?.specialNeeds || 0) / (pilgrimStats?.total || 1)) * 100).toFixed(1)}% ${t('dashboard.stats.ofTotal')}`
     },
     {
       title: t('dashboard.stats.departed'),
-      value: pilgrimStats.departed,
+      value: pilgrimStats?.departed || 0,
       icon: CalendarClock,
       color: 'text-indigo-600 bg-indigo-100'
     },
     {
       title: t('dashboard.stats.noShow'),
-      value: pilgrimStats.noShow,
+      value: pilgrimStats?.noShow || 0,
       icon: UserX,
       color: 'text-red-600 bg-red-100',
-      trend: pilgrimStats.noShow > 5 ? { value: 2.1, isPositive: false } : undefined
+      trend: (pilgrimStats?.noShow || 0) > 5 ? { value: 2.1, isPositive: false } : undefined
     },
     {
       title: t('dashboard.stats.totalHalls'),
-      value: hallStats.totalHalls,
+      value: hallStats?.totalHalls || 0,
       icon: Building,
       color: 'text-emerald-600 bg-emerald-100'
     },
     {
       title: t('dashboard.stats.totalBeds'),
-      value: hallStats.totalBeds,
+      value: hallStats?.totalBeds || 0,
       icon: Bed,
       color: 'text-teal-600 bg-teal-100'
     },
     {
       title: t('dashboard.stats.occupiedBeds'),
-      value: hallStats.totalOccupied,
+      value: hallStats?.totalOccupied || 0,
       icon: Home,
       color: 'text-orange-600 bg-orange-100',
-      subtitle: `${hallStats.totalBeds - hallStats.totalOccupied} ${t('dashboard.stats.available')}`
+      subtitle: `${(hallStats?.totalBeds || 0) - (hallStats?.totalOccupied || 0)} ${t('dashboard.stats.available')}`
     },
     {
       title: t('dashboard.stats.occupancyRate'),
-      value: `${hallStats.occupancyRate.toFixed(1)}%`,
+      value: `${(hallStats?.occupancyRate || 0).toFixed(1)}%`,
       icon: TrendingUp,
-      color: hallStats.occupancyRate > 90 ? 'text-red-600 bg-red-100' : 'text-rose-600 bg-rose-100',
-      trend: hallStats.occupancyRate > 75 ? { value: hallStats.occupancyRate - 75, isPositive: true } : undefined
+      color: (hallStats?.occupancyRate || 0) > 90 ? 'text-red-600 bg-red-100' : 'text-rose-600 bg-rose-100',
+      trend: (hallStats?.occupancyRate || 0) > 75 ? { value: (hallStats?.occupancyRate || 0) - 75, isPositive: true } : undefined
     },
     {
       title: t('dashboard.stats.maleHalls'),
-      value: hallStats.maleHalls.total,
+      value: hallStats?.maleHalls?.total || 0,
       icon: Building,
       color: 'text-sky-600 bg-sky-100',
-      subtitle: `${hallStats.maleHalls.occupied}/${hallStats.maleHalls.beds} ${t('dashboard.stats.occupied')}`
+      subtitle: `${hallStats?.maleHalls?.occupied || 0}/${hallStats?.maleHalls?.beds || 0} ${t('dashboard.stats.occupied')}`
     },
     {
       title: t('dashboard.stats.femaleHalls'),
-      value: hallStats.femaleHalls.total,
+      value: hallStats?.femaleHalls?.total || 0,
       icon: Building,
       color: 'text-pink-600 bg-pink-100',
-      subtitle: `${hallStats.femaleHalls.occupied}/${hallStats.femaleHalls.beds} ${t('dashboard.stats.occupied')}`
+      subtitle: `${hallStats?.femaleHalls?.occupied || 0}/${hallStats?.femaleHalls?.beds || 0} ${t('dashboard.stats.occupied')}`
     }
   ];
 
