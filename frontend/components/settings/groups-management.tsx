@@ -102,7 +102,7 @@ export function GroupsManagement() {
     if (!token) return;
 
     loadGroups();
-    // eslint-disable-next-line react-hooks-exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleAdd = async () => {

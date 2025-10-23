@@ -46,7 +46,7 @@ export function PilgrimsFilters({
     if (!token) return;
 
     fetchHalls();
-    // eslint-disable-next-line react-hooks-exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -87,7 +87,7 @@ export function PilgrimsFilters({
       nextFilters.search = debouncedSearch;
     }
     onFiltersChange(nextFilters);
-    // eslint-disable-next-line react-hooks-exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearch]);
 
   const handleSearchChange = (value: string) => {
