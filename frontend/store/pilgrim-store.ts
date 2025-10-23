@@ -405,6 +405,7 @@ export const usePilgrimStore = create<PilgrimState>()(
               nationality: data.nationality ?? '',
               age: data.age ?? 0,
               gender: data.gender ?? 'male',
+              groupId: data.groupId ?? '',
             })
           );
         } catch (error) {
@@ -560,6 +561,7 @@ export const usePilgrimStore = create<PilgrimState>()(
                 hasSpecialNeeds,
                 specialNeedsType,
                 notes,
+                groupId: '',
               };
 
               await pilgrimAPI.create(newPilgrim);
