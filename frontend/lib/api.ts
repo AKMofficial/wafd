@@ -1,4 +1,4 @@
-﻿import { transformPilgrimToBackend } from './transformers/pilgrim';
+import { transformPilgrimToBackend } from './transformers/pilgrim';
 import { transformHallToBackend } from './transformers/hall';
 
 type QueryParams = Record<string, string | number | boolean | undefined>;
@@ -188,6 +188,21 @@ export const bedAPI = {
   }),
 };
 
+// Booking API
+export const bookingAPI = {
+  getAll: () => fetchAPI('/booking/get/all'),
+  create: (userEmail: string, data: any) => fetchAPI(`/booking/add/${userEmail}`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  updateBed: (bedId: number, userEmail: string) => fetchAPI(`/booking/update-bed/${bedId}/${userEmail}`, {
+    method: 'PUT',
+  }),
+  delete: (id: number) => fetchAPI(`/booking/delete/${id}`, {
+    method: 'DELETE',
+  }),
+};
+
 // User API (matches backend /api/v1/user endpoints)
 export const userAPI = {
   getAll: () => fetchAPI('/user/get/all'),
@@ -206,5 +221,13 @@ export const userAPI = {
   changePassword: (id: string, data: unknown) => fetchAPI(`/user/change-password/${id}`, {
     method: 'PUT',
     body: JSON.stringify(data),
+  }),
+};
+
+// Auth API
+export const authAPI = {
+  login: (email: string, password: string) => fetchAPI('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
   }),
 };

@@ -164,6 +164,7 @@ const generateBedNumber = (hallCode: string, index: number, config = DEFAULT_NUM
   return `${config.prefix ?? ''}${hallCode}${config.separator}${padded}${config.suffix ?? ''}`;
 };
 
+
 export const useHallStore = create<HallState>()(
   devtools((set, get) => {
     const recomputeVisibleHalls = (allHalls: Hall[]): PaginatedHallsResponse<Hall> => {
@@ -348,6 +349,8 @@ export const useHallStore = create<HallState>()(
           await hallAPI.delete(parseInt(id, 10));
           await get().fetchHalls();
           set({ isLoading: false });
+          // Refresh the list
+          await get().fetchHalls();
           return true;
         } catch (error) {
           console.error('Failed to delete hall:', error);

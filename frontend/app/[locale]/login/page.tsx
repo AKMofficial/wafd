@@ -8,8 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+import { authAPI } from '@/lib/api';
 
 export default function LoginPage() {
   const t = useTranslations();
@@ -39,34 +38,18 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      const data = await authAPI.login(email, password);
 
-      if (!response.ok) {
-        if (response.status === 401 || response.status === 403) {
-          setError(t('auth.invalidCredentials'));
-        } else {
-          setError(t('auth.networkError'));
-        }
+      if (!data.success) {
+        setError(t('auth.invalidCredentials'));
         setIsLoading(false);
         return;
       }
 
-      const data = await response.json();
-
-      localStorage.setItem('accessToken', data.accessToken);
-      localStorage.setItem('refreshToken', data.refreshToken);
+      // Store user info in localStorage
       localStorage.setItem('user', JSON.stringify({
-        id: data.userId,
-        name: data.userName,
-        email: data.userEmail,
-        phone: data.userPhone,
-        role: data.userRole,
+        name: data.name,
+        email: data.email,
       }));
 
       router.push(`/${locale}`);

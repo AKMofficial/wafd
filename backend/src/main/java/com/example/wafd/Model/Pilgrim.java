@@ -36,7 +36,7 @@ public class Pilgrim {
     @NotEmpty(message = "Nationality is required")
     @Pattern(regexp = "^[A-Za-z]{2}$", message = "Nationality must be 2 characters")
 */
-    @Column(columnDefinition = "varchar(2) not null")
+    @Column(columnDefinition = "varchar(255) not null")
     private String nationality;
 
 

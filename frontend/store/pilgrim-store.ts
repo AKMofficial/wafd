@@ -406,6 +406,8 @@ export const usePilgrimStore = create<PilgrimState>()(
           await pilgrimAPI.delete(parseInt(id, 10));
           await get().fetchPilgrims();
           set({ isLoading: false });
+          // Refresh the list
+          await get().fetchPilgrims();
           return true;
         } catch (error) {
           console.error('Failed to delete pilgrim:', error);
