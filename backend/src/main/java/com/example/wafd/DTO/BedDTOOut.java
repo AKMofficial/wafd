@@ -32,16 +32,13 @@ public class BedDTOOut {
         if (bed.getTent() != null) {
             dto.setHallId(String.valueOf(bed.getTent().getId()));
 
-            // Extract hall code from location
-            String location = bed.getTent().getLocation();
-            if (location != null && location.contains(" - ")) {
-                String[] parts = location.split(" - ", 2);
-                dto.setHallCode(parts[1]);
-                dto.setNumber(parts[1] + "-" + bed.getId());
-            } else {
-                dto.setHallCode("T" + bed.getTent().getId());
-                dto.setNumber("T" + bed.getTent().getId() + "-" + bed.getId());
-            }
+            // Use the actual code field from tent
+            String hallCode = bed.getTent().getCode() != null
+                ? bed.getTent().getCode()
+                : "H" + bed.getTent().getId();
+
+            dto.setHallCode(hallCode);
+            dto.setNumber(hallCode + "-" + bed.getId());
         } else {
             dto.setHallId("");
             dto.setHallCode("");
@@ -51,11 +48,13 @@ public class BedDTOOut {
         // Convert backend status to frontend status
         String backendStatus = bed.getStatus() != null ? bed.getStatus() : "Available";
         String frontendStatus = switch (backendStatus) {
-            case "Available" -> "available";
-            case "Booked" -> "reserved";
+            case "Available" -> "vacant";
+            case "Booked" -> "occupied";
+            case "Reserved" -> "reserved";
+            case "Maintenance" -> "maintenance";
             case "Checked_in" -> "occupied";
-            case "Checked_out" -> "available";
-            default -> "available";
+            case "Checked_out" -> "vacant";
+            default -> "vacant";
         };
         dto.setStatus(frontendStatus);
 

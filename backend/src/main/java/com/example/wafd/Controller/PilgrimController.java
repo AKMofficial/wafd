@@ -55,9 +55,9 @@ public class PilgrimController {
         return ResponseEntity.ok(pilgrimService.getPilgrimById(id));
     }
 
-    @PutMapping("/assign/pilgrim/{pilgrimId}/agency/{agencyId}")
-    public ResponseEntity<?> addPilgrimToAgency(@PathVariable Integer pilgrimId, @PathVariable Integer agencyId){
-        pilgrimService.addPilgrimToAgency(pilgrimId, agencyId);
-        return ResponseEntity.ok(new ApiResponse("Pilgrim assigned to agency successfully"));
+    @PutMapping("/assign/pilgrim/{pilgrimId}/group/{groupId}")
+    public ResponseEntity<?> addPilgrimToGroup(@PathVariable Integer pilgrimId, @PathVariable Integer groupId){
+        pilgrimService.addPilgrimToGroup(pilgrimId, groupId);
+        return ResponseEntity.ok(new ApiResponse("Pilgrim assigned to group successfully"));
     }
 }

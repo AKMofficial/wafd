@@ -6,8 +6,10 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -17,50 +19,50 @@ import java.time.LocalDate;
 public class Pilgrim {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(columnDefinition = "varchar(50) unique")
-    private String registration_number;
+    @Column(name = "registration_number", columnDefinition = "varchar(50) unique")
+    private String registrationNumber;
 
-    @Column(columnDefinition = "varchar(20) unique")
-    private String national_id;
+    @Column(name = "national_id", columnDefinition = "varchar(50) unique")
+    private String nationalId;
 
-/*
-    @NotEmpty(message = "Passport number is required")
-    @Pattern(regexp = "^\\d{8}$", message = "Passport number must be 8 digits")
-*/
-    @Column(columnDefinition = "varchar(8) not null")
-    private String passport_number;
+    @Column(name = "passport_number", columnDefinition = "varchar(50)")
+    private String passportNumber;
 
-/*
-    @NotEmpty(message = "Nationality is required")
-    @Pattern(regexp = "^[A-Za-z]{2}$", message = "Nationality must be 2 characters")
-*/
-    @Column(columnDefinition = "varchar(255) not null")
+    @Column(name = "first_name", columnDefinition = "varchar(100) not null")
+    private String firstName;
+
+    @Column(name = "last_name", columnDefinition = "varchar(100) not null")
+    private String lastName;
+
+    @Column(name = "gender", columnDefinition = "varchar(10) not null")
+    private String gender; // male | female
+
+    @Column(name = "age", columnDefinition = "int not null")
+    private Integer age;
+
+    @Column(name = "nationality", columnDefinition = "varchar(255) not null")
     private String nationality;
 
+    @Column(name = "phone_number", columnDefinition = "varchar(50) not null")
+    private String phoneNumber;
 
+    @Column(name = "has_special_needs")
+    private Boolean hasSpecialNeeds;
 
-/*
-    @NotNull(message = "Date of birth is required")
-    @Past
-*/
-    @Column(columnDefinition = "date not null")
-    private LocalDate date_of_birth;
+    @Column(name = "special_needs_type", columnDefinition = "varchar(100)")
+    private String specialNeedsType;
 
-/*
-    @NotEmpty(message = "Gender is required")
-    @Pattern(regexp = "^([MF])$", message = "Gender must be Male or Female")
-*/
-    @Column(columnDefinition = "varchar(1) not null")
-    private String gender;
+    @Column(name = "special_needs_notes", columnDefinition = "text")
+    private String specialNeedsNotes;
 
-/*
-    @NotEmpty(message = "Status is required")
-    @Pattern(regexp = "^(Registered|Booked|Arrived|Departed|Cancelled)$", message = "Status must be Registered, Booked, Arrived, Departed or Cancelled")
-*/
-    @Column(columnDefinition = "varchar(10) not null")
-    private String status;
+    @Column(name = "notes", columnDefinition = "text")
+    private String notes;
+
+    @Column(name = "status", columnDefinition = "varchar(20) not null")
+    private String status; // expected | arrived | departed | no_show
 
     @ManyToOne
     @JsonIgnore
@@ -69,12 +71,11 @@ public class Pilgrim {
     @OneToOne(mappedBy = "pilgrim", cascade = CascadeType.ALL)
     private Booking booking;
 
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
 
-    @OneToOne
-    @MapsId
-    @JsonIgnore
-    private User user;
-
-
-
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 }

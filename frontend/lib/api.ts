@@ -21,21 +21,38 @@ interface ApiError {
   errors?: Record<string, string[]>;
 }
 
-async function fetchAPI(endpoint: string, options?: RequestInit) {
+interface ApiRequestOptions extends RequestInit {
+  skipAuthHandling?: boolean;
+}
+
+async function fetchAPI(endpoint: string, options?: ApiRequestOptions) {
   const url = `${API_BASE_URL}${endpoint}`;
   const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+  const { skipAuthHandling, ...fetchOptions } = options ?? {};
 
   const response = await fetch(url, {
     headers: {
       'Content-Type': 'application/json',
       ...(token && { Authorization: `Bearer ${token}` }),
-      ...options?.headers,
+      ...fetchOptions.headers,
     },
     credentials: 'include',
-    ...options,
+    ...fetchOptions,
   });
 
   if (response.status === 401) {
+    const isLoginRequest = endpoint === '/auth/login';
+    if (skipAuthHandling || isLoginRequest) {
+      let errorMessage = 'Unauthorized';
+      try {
+        const error: ApiError = await response.json();
+        errorMessage = error.message || errorMessage;
+      } catch {
+        // swallow parsing errors, keep default message
+      }
+      throw new Error(errorMessage);
+    }
+
     const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
     if (refreshToken) {
       const refreshResponse = await fetch(`${API_BASE_URL}/auth/refresh`, {
@@ -54,10 +71,10 @@ async function fetchAPI(endpoint: string, options?: RequestInit) {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${data.accessToken}`,
-            ...options?.headers,
+            ...fetchOptions.headers,
           },
           credentials: 'include',
-          ...options,
+          ...fetchOptions,
         });
 
         if (!retryResponse.ok) {
@@ -108,15 +125,33 @@ async function fetchAPI(endpoint: string, options?: RequestInit) {
   }
 }
 
-// Agency API (matches backend /api/v1/agency endpoints)
-export const agencyAPI = {
+type GroupPayload = {
+  name: string;
+  code?: string;
+  country?: string;
+  status?: string;
+  maxPilgrim?: number;
+  notes?: string;
+  managerName: string;
+  managerEmail: string;
+  managerPhone: string;
+  managerPassword?: string;
+};
+
+// Group API (backed by /api/v1/agency endpoints)
+export const groupAPI = {
   getAll: () => fetchAPI('/agency/get/all'),
   getById: (id: number) => fetchAPI(`/agency/get/${id}`),
-  create: (data: unknown) => fetchAPI('/agency/add', {
+  create: (data: GroupPayload) => fetchAPI('/agency/add', {
     method: 'POST',
-    body: JSON.stringify(data),
+    body: JSON.stringify({
+      ...data,
+      country: data.country ?? 'SA',
+      status: data.status ?? 'Registered',
+      maxPilgrim: data.maxPilgrim,
+    }),
   }),
-  update: (id: number, data: unknown) => fetchAPI(`/agency/update/${id}`, {
+  update: (id: number, data: GroupPayload) => fetchAPI(`/agency/update/${id}`, {
     method: 'PUT',
     body: JSON.stringify(data),
   }),
@@ -125,6 +160,7 @@ export const agencyAPI = {
   }),
   getPilgrims: (id: number) => fetchAPI(`/agency/get/${id}/pilgrims`),
 };
+
 
 // Pilgrim API (matches backend /api/v1/pilgrim endpoints)
 export const pilgrimAPI = {
@@ -149,8 +185,8 @@ export const pilgrimAPI = {
   delete: (id: number) => fetchAPI(`/pilgrim/delete/${id}`, {
     method: 'DELETE',
   }),
-  assignToAgency: (pilgrimId: number, agencyId: number) =>
-    fetchAPI(`/pilgrim/assign/pilgrim/${pilgrimId}/agency/${agencyId}`, {
+  assignToGroup: (pilgrimId: number, groupId: number) =>
+    fetchAPI(`/pilgrim/assign/pilgrim/${pilgrimId}/group/${groupId}`, {
       method: 'PUT',
     }),
   getStats: () => fetchAPI('/pilgrim/stats'),
@@ -185,6 +221,10 @@ export const bedAPI = {
   }),
   vacateBed: (bedId: number) => fetchAPI(`/bed/vacate/${bedId}`, {
     method: 'PUT',
+  }),
+  updateBedStatus: (bedId: number, status: string) => fetchAPI(`/bed/status/${bedId}`, {
+    method: 'PUT',
+    body: JSON.stringify({ status }),
   }),
 };
 

@@ -9,22 +9,18 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class PilgrimDTOIn {
 
-    // User fields (optional - will be generated if not provided)
-    private String name;
-    private String email;
-    private String phone;
-    private String password;
-
-    // Pilgrim fields from frontend
     private String nationalId;
     private String passportNumber;
     private String firstName;
     private String lastName;
     private Integer age;
-    private String gender; // "male" or "female" from frontend
+    private String gender; // "male" or "female"
     private String nationality;
     private String phoneNumber;
     private Boolean hasSpecialNeeds;
     private String specialNeedsType;
+    private String specialNeedsNotes;
     private String notes;
+    private String status; // optional override
+    private Integer groupId;
 }

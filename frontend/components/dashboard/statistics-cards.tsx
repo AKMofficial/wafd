@@ -88,8 +88,7 @@ export function StatisticsCards({ pilgrimStats, hallStats, isLoading, locale }: 
       title: t('dashboard.stats.totalPilgrims'),
       value: pilgrimStats?.total || 0,
       icon: Users,
-      color: 'text-blue-600 bg-blue-100',
-      trend: { value: 5.2, isPositive: true }
+      color: 'text-blue-600 bg-blue-100'
     },
     {
       title: t('dashboard.stats.arrived'),
@@ -103,7 +102,7 @@ export function StatisticsCards({ pilgrimStats, hallStats, isLoading, locale }: 
       value: pilgrimStats?.expected || 0,
       icon: Clock,
       color: 'text-yellow-600 bg-yellow-100',
-      subtitle: t('dashboard.stats.within48Hours')
+      subtitle: `${(((pilgrimStats?.expected || 0) / (pilgrimStats?.total || 1)) * 100).toFixed(1)}% ${t('dashboard.stats.ofTotal')}`
     },
     {
       title: t('dashboard.stats.specialNeeds'),
@@ -122,8 +121,7 @@ export function StatisticsCards({ pilgrimStats, hallStats, isLoading, locale }: 
       title: t('dashboard.stats.noShow'),
       value: pilgrimStats?.noShow || 0,
       icon: UserX,
-      color: 'text-red-600 bg-red-100',
-      trend: (pilgrimStats?.noShow || 0) > 5 ? { value: 2.1, isPositive: false } : undefined
+      color: 'text-red-600 bg-red-100'
     },
     {
       title: t('dashboard.stats.totalHalls'),
@@ -153,14 +151,14 @@ export function StatisticsCards({ pilgrimStats, hallStats, isLoading, locale }: 
     },
     {
       title: t('dashboard.stats.maleHalls'),
-      value: hallStats?.maleHalls?.total || 0,
+      value: hallStats?.maleHalls?.count || 0,
       icon: Building,
       color: 'text-sky-600 bg-sky-100',
       subtitle: `${hallStats?.maleHalls?.occupied || 0}/${hallStats?.maleHalls?.beds || 0} ${t('dashboard.stats.occupied')}`
     },
     {
       title: t('dashboard.stats.femaleHalls'),
-      value: hallStats?.femaleHalls?.total || 0,
+      value: hallStats?.femaleHalls?.count || 0,
       icon: Building,
       color: 'text-pink-600 bg-pink-100',
       subtitle: `${hallStats?.femaleHalls?.occupied || 0}/${hallStats?.femaleHalls?.beds || 0} ${t('dashboard.stats.occupied')}`

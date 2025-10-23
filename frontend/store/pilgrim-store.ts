@@ -341,7 +341,15 @@ export const usePilgrimStore = create<PilgrimState>()(
       fetchPilgrimById: async (id) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await pilgrimAPI.getById(parseInt(id, 10));
+          const numericId = /^\d+$/.test(id) ? parseInt(id, 10) : null;
+
+          if (numericId === null) {
+            const fallback = get().allPilgrims.find((p) => p.id === id) || null;
+            set({ selectedPilgrim: fallback, isLoading: false });
+            return fallback;
+          }
+
+          const response = await pilgrimAPI.getById(numericId);
           const pilgrim = response ? transformPilgrimFromBackend(response) : null;
           set({ selectedPilgrim: pilgrim, isLoading: false });
           return pilgrim;
@@ -356,15 +364,21 @@ export const usePilgrimStore = create<PilgrimState>()(
       createPilgrim: async (data) => {
         set({ isLoading: true, error: null });
         try {
-          await pilgrimAPI.create(data);
+          const response = await pilgrimAPI.create(data);
+          const createdId = response?.id != null ? response.id.toString() : undefined;
+
           await get().fetchPilgrims();
-          const created = get().allPilgrims.find(
-            (p) =>
-              p.nationalId === data.nationalId ||
-              (data.passportNumber && p.passportNumber === data.passportNumber),
-          );
+
+          const created = createdId
+            ? get().allPilgrims.find((p) => p.id === createdId)
+            : get().allPilgrims.find(
+                (p) =>
+                  p.nationalId === data.nationalId ||
+                  (data.passportNumber && p.passportNumber === data.passportNumber),
+              );
+
           set({ isLoading: false });
-          return created ?? buildFallbackPilgrim(data);
+          return created ?? buildFallbackPilgrim({ ...data, id: createdId });
         } catch (error) {
           console.error('Failed to create pilgrim:', error);
           set({ error: 'errors.failedToAddPilgrim', isLoading: false });

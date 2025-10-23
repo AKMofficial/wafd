@@ -11,7 +11,6 @@
     "dashboard": "لوحة التحكم",
     "pilgrims": "الحجاج",
     "halls": "القاعات",
-    "reports": "التقارير",
     "settings": "الإعدادات"
   },
   "common": {
@@ -88,7 +87,24 @@
       "enterLeaderName": "أدخل اسم مسؤول المجموعة",
       "enterNotes": "أدخل أي ملاحظات",
       "searchPlaceholder": "البحث باسم المجموعة أو المسؤول...",
-      "noGroups": "لا توجد مجموعات"
+      "noGroups": "لا توجد مجموعات",
+      "leaderEmail": "البريد الإلكتروني للمسؤول",
+      "leaderPassword": "كلمة مرور المسؤول",
+      "leaderPasswordOptional": "كلمة مرور المسؤول (اختياري)",
+      "leavePasswordBlank": "اتركه فارغًا للحفاظ على كلمة المرور الحالية",
+      "loadError": "فشل تحميل المجموعات. يرجى المحاولة مرة أخرى.",
+      "saveError": "فشل حفظ بيانات المجموعة. يرجى المحاولة مرة أخرى.",
+      "deleteError": "فشل حذف المجموعة. يرجى المحاولة مرة أخرى.",
+      "createdAt": "تاريخ الإنشاء",
+      "saveChanges": "حفظ التغييرات",
+      "loading": "جارٍ تحميل المجموعات...",
+      "maxPilgrim": "الحد الأقصى للحجاج",
+      "validation": {
+        "requiredFields": "يرجى تعبئة جميع الحقول المطلوبة.",
+        "maxPilgrimRequired": "يجب أن يكون الحد الأقصى للحجاج رقمًا موجبًا (1 أو أكثر)"
+      },
+      "enterLeaderEmail": "أدخل بريد المسؤول",
+      "enterLeaderPhone": "أدخل رقم جوال المسؤول"
     },
     "accounts": {
       "title": "إدارة الحسابات",
@@ -253,7 +269,7 @@
       "search": "بحث",
       "selectGroup": "اختر المجموعة",
       "selectHall": "اختر القاعة",
-      "searchGroups": "البحث في المجموعات...",
+      "searchGroups": "ابحث عن المجموعات",
       "searchHalls": "البحث في القاعات...",
       "noResults": "لا توجد نتائج"
     },
@@ -324,7 +340,7 @@
       "searchNationalities": "البحث في الجنسيات...",
       "noResultsFound": "لا توجد نتائج",
       "selectGroup": "اختر المجموعة",
-      "searchGroups": "البحث في المجموعات...",
+      "searchGroups": "ابحث عن المجموعات",
       "selectDisabilityType": "اختر نوع الإعاقة",
       "enterAge": "أدخل العمر",
       "additionalNotes": "أي ملاحظات إضافية...",
@@ -347,7 +363,8 @@
       "ageRequired": "العمر مطلوب",
       "ageMustBeNumber": "يجب أن يكون العمر رقم صحيح",
       "nationalityRequired": "الجنسية مطلوبة",
-      "phoneRequired": "رقم الهاتف مطلوب"
+      "phoneRequired": "رقم الهاتف مطلوب",
+      "groupRequired": "الرجاء اختيار المجموعة"
     },
     "table": {
       "registrationNumber": "رقم التسجيل",
@@ -403,6 +420,7 @@
     "occupied": "مشغول",
     "reserved": "محجوز",
     "maintenance": "صيانة",
+    "bedStatusLabel": "الحالة",
     "bedStatus": {
       "vacant": "شاغر",
       "occupied": "مشغول",
@@ -498,7 +516,17 @@
       "viewPilgrimDetails": "عرض تفاصيل الحاج",
       "close": "إغلاق",
       "maintenanceNotes": "ملاحظات الصيانة",
-      "confirmVacate": "هل أنت متأكد من إخلاء هذا السرير؟"
+      "confirmVacate": "هل أنت متأكد من إخلاء هذا السرير؟",
+      "enterPilgrimId": "أدخل رقم الحاج",
+      "assignmentFailed": "فشل تخصيص السرير. يرجى المحاولة مرة أخرى."
+    },
+    "assignDialog": {
+      "title": "تخصيص حاج للسرير",
+      "description": "ابحث واختر الحاج الذي تريد تخصيصه للسرير",
+      "searchPlaceholder": "ابحث بالاسم، رقم الجواز، رقم التسجيل، الهوية، أو رقم الهاتف...",
+      "foundResults": "تم العثور على {count} حاج",
+      "noPilgrims": "لا يوجد حجاج متاحين للتخصيص",
+      "assign": "تخصيص"
     },
     "bedGrid": {
       "bed": "سرير",
@@ -540,22 +568,6 @@
       "full": "ممتلئة",
       "nearlyFull": "شبه ممتلئة",
       "availableStatus": "متاحة"
-    }
-  },
-  "reports": {
-    "title": "التقارير",
-    "subtitle": "إنشاء وعرض تقارير النظام",
-    "occupancyReport": {
-      "title": "تقرير الإشغال",
-      "description": "عرض حالة إشغال القاعات والأسرّة"
-    },
-    "vacancyReport": {
-      "title": "تقرير الشواغر",
-      "description": "عرض الأسرّة الشاغرة المتاحة"
-    },
-    "attendanceReport": {
-      "title": "تقرير الحضور",
-      "description": "متابعة حضور وغياب الحجاج"
     }
   },
   "errors": {

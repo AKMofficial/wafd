@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -14,7 +15,6 @@ public class BookingService {
 
     private final BookingRepository bookingRepository;
     private final PilgrimRepository pilgrimRepository;
-    private final UserRepository userRepository;
     private final AgencyRepository agencyRepository;
     private final BedRepository bedRepository;
 
@@ -22,11 +22,13 @@ public class BookingService {
         return bookingRepository.findAll();
     }
 
-    public void addBooking(String user_email){
-        User user = userRepository.findUserByEmail(user_email);
-        Pilgrim pilgrim = pilgrimRepository.findPilgrimById(user.getPilgrim().getId());
+    public void addBooking(String pilgrimIdentifier){
+        Pilgrim pilgrim = resolvePilgrim(pilgrimIdentifier);
         if (pilgrim == null){
             throw new ApiException("Pilgrim not found");
+        }
+        if (pilgrim.getAgency() == null) {
+            throw new ApiException("Pilgrim is not assigned to a group");
         }
         Agency agency = agencyRepository.findAgencyById(pilgrim.getAgency().getId());
         if (agency == null){
@@ -49,11 +51,13 @@ public class BookingService {
         throw new ApiException("All Tents are full");
     }
 
-    public void updateBookedBed(Integer bed_id, String user_email){
-        User user = userRepository.findUserByEmail(user_email);
-        Pilgrim pilgrim = pilgrimRepository.findPilgrimById(user.getPilgrim().getId());
+    public void updateBookedBed(Integer bed_id, String pilgrimIdentifier){
+        Pilgrim pilgrim = resolvePilgrim(pilgrimIdentifier);
         if (pilgrim == null){
             throw new ApiException("Pilgrim not found");
+        }
+        if (pilgrim.getAgency() == null) {
+            throw new ApiException("Pilgrim is not assigned to a group");
         }
         Bed bed = bedRepository.findBedById(bed_id);
         if (bed == null){
@@ -74,5 +78,29 @@ public class BookingService {
             throw new ApiException("Booking not found");
         }
         bookingRepository.delete(booking);
+    }
+
+    private Pilgrim resolvePilgrim(String identifier) {
+        if (identifier == null) {
+            return null;
+        }
+
+        // Try by numeric id
+        try {
+            int id = Integer.parseInt(identifier);
+            Pilgrim pilgrim = pilgrimRepository.findPilgrimById(id);
+            if (pilgrim != null) {
+                return pilgrim;
+            }
+        } catch (NumberFormatException ignored) {
+        }
+
+        Optional<Pilgrim> byNationalId = pilgrimRepository.findByNationalId(identifier);
+        if (byNationalId.isPresent()) {
+            return byNationalId.get();
+        }
+
+        Optional<Pilgrim> byRegistrationNumber = pilgrimRepository.findByRegistrationNumber(identifier);
+        return byRegistrationNumber.orElse(null);
     }
 }

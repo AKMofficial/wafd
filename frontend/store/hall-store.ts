@@ -18,6 +18,7 @@ import { hallAPI, bedAPI } from '@/lib/api';
 import {
   transformHallsFromBackend,
   transformHallFromBackend,
+  mapBedStatusToBackend,
 } from '@/lib/transformers/hall';
 
 interface HallPaginationParams {
@@ -360,68 +361,73 @@ export const useHallStore = create<HallState>()(
       },
 
       assignBed: async ({ pilgrimId, bedId }) => {
-        try {
-          await bedAPI.assignBed(parseInt(pilgrimId, 10), parseInt(bedId, 10));
-        } catch (error) {
-          console.warn('Backend bed assignment failed, falling back to local update.', error);
+        await bedAPI.assignBed(parseInt(pilgrimId, 10), parseInt(bedId, 10));
+
+        const selectedHall = get().selectedHall;
+        if (selectedHall) {
+          await get().fetchHallById(selectedHall.id);
         }
 
-        const halls = [...get().allHalls];
+        await get().fetchHalls();
+
+        const halls = get().allHalls;
         let assignedBed: Bed | null = null;
 
         halls.forEach((hall) => {
-          hall.beds = hall.beds.map((bed) => {
-            if (bed.id === bedId) {
-              assignedBed = {
-                ...bed,
-                status: 'occupied',
-                pilgrimId,
-                lastAssignedAt: new Date(),
-              };
-              return assignedBed;
-            }
-            return bed;
-          });
+          const bed = hall.beds.find((b) => b.id === bedId);
+          if (bed) {
+            assignedBed = bed;
+          }
         });
 
         if (!assignedBed) {
-          throw new Error('errors.bedNotFound');
+          assignedBed = {
+            id: bedId,
+            number: bedId,
+            hallId: '',
+            hallCode: '',
+            status: 'occupied',
+            pilgrimId,
+            isSpecialNeeds: false,
+            lastAssignedAt: new Date(),
+          };
         }
 
-        recomputeVisibleHalls(halls);
         return assignedBed;
       },
 
       vacateBed: async (bedId) => {
-        try {
-          await bedAPI.vacateBed(parseInt(bedId, 10));
-        } catch (error) {
-          console.warn('Backend bed vacate failed, falling back to local update.', error);
+        await bedAPI.vacateBed(parseInt(bedId, 10));
+
+        const selectedHall = get().selectedHall;
+        if (selectedHall) {
+          await get().fetchHallById(selectedHall.id);
         }
 
-        const halls = [...get().allHalls];
+        await get().fetchHalls();
+
+        const halls = get().allHalls;
         let vacatedBed: Bed | null = null;
 
         halls.forEach((hall) => {
-          hall.beds = hall.beds.map((bed) => {
-            if (bed.id === bedId) {
-              vacatedBed = {
-                ...bed,
-                status: 'vacant',
-                pilgrimId: undefined,
-                lastVacatedAt: new Date(),
-              };
-              return vacatedBed;
-            }
-            return bed;
-          });
+          const bed = hall.beds.find((b) => b.id === bedId);
+          if (bed) {
+            vacatedBed = bed;
+          }
         });
 
         if (!vacatedBed) {
-          throw new Error('errors.bedNotFound');
+          vacatedBed = {
+            id: bedId,
+            number: bedId,
+            hallId: '',
+            hallCode: '',
+            status: 'vacant',
+            isSpecialNeeds: false,
+            lastVacatedAt: new Date(),
+          };
         }
 
-        recomputeVisibleHalls(halls);
         return vacatedBed;
       },
 
@@ -440,11 +446,17 @@ export const useHallStore = create<HallState>()(
       },
 
       updateBedStatus: async (bedId, status, notes) => {
-        const halls = [...get().allHalls];
+        try {
+          await bedAPI.updateBedStatus(parseInt(bedId, 10), mapBedStatusToBackend(status));
+        } catch (error) {
+          console.warn('Backend bed status update failed, falling back to local update.', error);
+        }
+
+        const selectedHall = get().selectedHall;
         let updated: Bed | null = null;
 
-        halls.forEach((hall) => {
-          hall.beds = hall.beds.map((bed) => {
+        if (selectedHall) {
+          const updatedBeds = selectedHall.beds.map((bed) => {
             if (bed.id === bedId) {
               updated = {
                 ...bed,
@@ -455,13 +467,45 @@ export const useHallStore = create<HallState>()(
             }
             return bed;
           });
-        });
+
+          const updatedSelectedHall = {
+            ...selectedHall,
+            beds: updatedBeds,
+          };
+          set({ selectedHall: updatedSelectedHall });
+
+          const halls = get().allHalls.map((hall) => {
+            if (hall.id === selectedHall.id) {
+              return updatedSelectedHall;
+            }
+            return hall;
+          });
+
+          recomputeVisibleHalls(halls);
+        } else {
+          const halls = [...get().allHalls];
+
+          halls.forEach((hall) => {
+            hall.beds = hall.beds.map((bed) => {
+              if (bed.id === bedId) {
+                updated = {
+                  ...bed,
+                  status,
+                  maintenanceNotes: notes,
+                };
+                return updated;
+              }
+              return bed;
+            });
+          });
+
+          recomputeVisibleHalls(halls);
+        }
 
         if (!updated) {
           throw new Error('errors.bedNotFound');
         }
 
-        recomputeVisibleHalls(halls);
         return updated;
       },
 
@@ -547,13 +591,17 @@ export const useHallStore = create<HallState>()(
       },
 
       getAvailableBeds: (hallId, filters) => {
-        const hall = get().allHalls.find((h) => h.id === hallId);
+        let hall = get().allHalls.find((h) => h.id === hallId);
+        if (!hall) {
+          const selectedHall = get().selectedHall;
+          hall = selectedHall?.id === hallId ? selectedHall : undefined;
+        }
         if (!hall) {
           return [];
         }
 
         return applyBedFilters(
-          hall.beds.filter((bed) => bed.status === 'vacant'),
+          hall.beds,
           filters ?? get().bedFilters,
         );
       },

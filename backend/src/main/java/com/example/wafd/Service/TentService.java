@@ -3,6 +3,7 @@ package com.example.wafd.Service;
 import com.example.wafd.Api.ApiException;
 import com.example.wafd.DTO.TentDTOIn;
 import com.example.wafd.DTO.TentDTOOut;
+import com.example.wafd.Model.Bed;
 import com.example.wafd.Model.Tent;
 import com.example.wafd.Repository.TentRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,7 @@ import java.util.stream.Collectors;
 public class TentService {
 
     private final TentRepository tentRepository;
+    private final BedService bedService;
 
     public List<TentDTOOut> findAllTents(){
         return tentRepository.findAll().stream()
@@ -35,21 +37,25 @@ public class TentService {
         // Map DTO to Tent entity
         Tent tent = new Tent();
 
-        // Build location from name and code if not provided
-        String location;
-        if (tentDTO.getLocation() != null && !tentDTO.getLocation().isEmpty()) {
-            location = tentDTO.getLocation();
-        } else if (tentDTO.getName() != null && tentDTO.getCode() != null) {
-            location = tentDTO.getName() + " - " + tentDTO.getCode();
-        } else if (tentDTO.getName() != null) {
-            location = tentDTO.getName();
-        } else {
-            location = "Tent " + System.currentTimeMillis();
-        }
-
-        tent.setLocation(location);
+        tent.setName(tentDTO.getName());
+        tent.setCode(tentDTO.getCode());
+        tent.setType(tentDTO.getType());
+        tent.setLocation(tentDTO.getLocation() != null && !tentDTO.getLocation().isEmpty()
+            ? tentDTO.getLocation()
+            : tentDTO.getName());
         tent.setCapacity(tentDTO.getCapacity());
+
         tentRepository.save(tent);
+
+        // Create beds based on capacity
+        if (tentDTO.getCapacity() != null && tentDTO.getCapacity() > 0) {
+            for (int i = 0; i < tentDTO.getCapacity(); i++) {
+                Bed bed = new Bed();
+                bed.setTent(tent);
+                bed.setStatus("Available");
+                bedService.addBed(bed);
+            }
+        }
     }
 
     public void updateTent(TentDTOIn tentDTO, Integer id){
@@ -58,21 +64,44 @@ public class TentService {
             throw new ApiException("Tent not found");
         }
 
-        // Build location from name and code if not provided
-        String location;
-        if (tentDTO.getLocation() != null && !tentDTO.getLocation().isEmpty()) {
-            location = tentDTO.getLocation();
-        } else if (tentDTO.getName() != null && tentDTO.getCode() != null) {
-            location = tentDTO.getName() + " - " + tentDTO.getCode();
-        } else if (tentDTO.getName() != null) {
-            location = tentDTO.getName();
-        } else {
-            location = tentToUpdate.getLocation(); // Keep existing location
-        }
+        // Store old capacity for bed adjustment
+        Integer oldCapacity = tentToUpdate.getCapacity();
+        Integer newCapacity = tentDTO.getCapacity();
 
-        tentToUpdate.setLocation(location);
-        tentToUpdate.setCapacity(tentDTO.getCapacity());
+        tentToUpdate.setName(tentDTO.getName());
+        tentToUpdate.setCode(tentDTO.getCode());
+        tentToUpdate.setType(tentDTO.getType());
+        tentToUpdate.setLocation(tentDTO.getLocation() != null && !tentDTO.getLocation().isEmpty()
+            ? tentDTO.getLocation()
+            : tentDTO.getName());
+        tentToUpdate.setCapacity(newCapacity);
+
         tentRepository.save(tentToUpdate);
+
+        // Handle capacity changes
+        if (newCapacity != null && oldCapacity != null && !newCapacity.equals(oldCapacity)) {
+            if (newCapacity > oldCapacity) {
+                // Create additional beds
+                int bedsToCreate = newCapacity - oldCapacity;
+                for (int i = 0; i < bedsToCreate; i++) {
+                    Bed bed = new Bed();
+                    bed.setTent(tentToUpdate);
+                    bed.setStatus("Available");
+                    bedService.addBed(bed);
+                }
+            } else if (newCapacity < oldCapacity) {
+                // Delete excess beds (only Available ones)
+                int bedsToRemove = oldCapacity - newCapacity;
+                List<Bed> availableBeds = tentToUpdate.getBeds().stream()
+                    .filter(bed -> "Available".equals(bed.getStatus()))
+                    .limit(bedsToRemove)
+                    .collect(Collectors.toList());
+
+                for (Bed bed : availableBeds) {
+                    bedService.deleteBed(bed.getId());
+                }
+            }
+        }
     }
     
     public void deleteTent(Integer id){

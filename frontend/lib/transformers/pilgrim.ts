@@ -1,15 +1,26 @@
-import { Pilgrim, PilgrimStatus, Gender } from '@/types/pilgrim';
+import { Pilgrim, PilgrimStatus, Gender, SpecialNeedsType } from '@/types/pilgrim';
 
-// Backend data structure
 interface BackendPilgrim {
   id: number;
-  registration_number?: string;
-  national_id?: string;
-  passport_number?: string;
+  registrationNumber?: string;
+  nationalId?: string;
+  passportNumber?: string;
+  firstName?: string;
+  lastName?: string;
+  fullName?: string;
+  age?: number;
+  gender?: string;
   nationality?: string;
-  date_of_birth?: string;
-  gender?: string; // M or F
-  status?: string; // Registered, Booked, Arrived, Departed, Cancelled
+  phoneNumber?: string;
+  status?: string;
+  hasSpecialNeeds?: boolean;
+  specialNeedsType?: string;
+  specialNeedsNotes?: string;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  agencyId?: number;
+  agencyName?: string;
   agency?: {
     id: number;
     name: string;
@@ -30,144 +41,110 @@ interface BackendPilgrim {
       };
     };
   };
-  user?: {
-    id: number;
-    name: string;
-    email: string;
-    Phone: string;  // Capital P as per backend
-    role: string;
-  };
 }
 
-// Transform backend status to frontend status
-function mapStatus(backendStatus?: string): PilgrimStatus {
-  const statusMap: Record<string, PilgrimStatus> = {
-    'Registered': 'expected',
-    'Booked': 'expected',
-    'Arrived': 'arrived',
-    'Departed': 'departed',
-    'Cancelled': 'no_show',
-  };
-  return statusMap[backendStatus || 'Registered'] || 'expected';
-}
-
-// Transform backend gender to frontend gender
-function mapGender(backendGender?: string): Gender {
-  return backendGender === 'F' ? 'female' : 'male';
-}
-
-// Split full name into first and last name
-function splitName(fullName?: string): { firstName: string; lastName: string } {
-  if (!fullName) return { firstName: '', lastName: '' };
-  const parts = fullName.trim().split(' ');
-  const firstName = parts[0] || '';
-  const lastName = parts.slice(1).join(' ') || '';
-  return { firstName, lastName };
-}
-
-// Calculate age from birth date
-function calculateAge(birthDate?: string): number {
-  if (!birthDate) return 0;
-  const birth = new Date(birthDate);
-  const today = new Date();
-  let age = today.getFullYear() - birth.getFullYear();
-  const monthDiff = today.getMonth() - birth.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-    age--;
+function mapStatus(status?: string): PilgrimStatus {
+  if (!status) return 'expected';
+  switch (status.toLowerCase()) {
+    case 'arrived':
+      return 'arrived';
+    case 'departed':
+      return 'departed';
+    case 'no_show':
+    case 'no-show':
+    case 'cancelled':
+      return 'no_show';
+    default:
+      return 'expected';
   }
-  return age;
+}
+
+function mapGender(gender?: string): Gender {
+  if (!gender) return 'male';
+  const value = gender.toLowerCase();
+  if (value === 'female' || value === 'f') {
+    return 'female';
+  }
+  return 'male';
+}
+
+function deriveNames(firstName?: string, lastName?: string, fullName?: string) {
+  if (firstName || lastName) {
+    return {
+      firstName: firstName || '',
+      lastName: lastName || '',
+      fullName: `${firstName || ''} ${lastName || ''}`.trim(),
+    };
+  }
+
+  if (fullName) {
+    const parts = fullName.trim().split(' ');
+    return {
+      firstName: parts[0] || '',
+      lastName: parts.slice(1).join(' ') || '',
+      fullName,
+    };
+  }
+
+  return { firstName: '', lastName: '', fullName: '' };
 }
 
 // Transform backend pilgrim data to frontend format
 export function transformPilgrimFromBackend(beData: BackendPilgrim): Pilgrim {
-  const { firstName, lastName } = splitName(beData.user?.name);
-  const fullName = beData.user?.name || '';
+  const names = deriveNames(beData.firstName, beData.lastName, beData.fullName);
+  const createdAt = beData.createdAt ? new Date(beData.createdAt) : new Date();
+  const updatedAt = beData.updatedAt ? new Date(beData.updatedAt) : createdAt;
 
   return {
     id: beData.id?.toString() || '',
-    registrationNumber: beData.registration_number || '',
-    nationalId: beData.national_id || beData.passport_number || '',
-    passportNumber: beData.passport_number,
-    firstName,
-    lastName,
-    fullName,
-    birthDate: beData.date_of_birth ? new Date(beData.date_of_birth) : new Date(),
-    age: calculateAge(beData.date_of_birth),
+    registrationNumber: beData.registrationNumber || '',
+    nationalId: beData.nationalId || beData.passportNumber || '',
+    passportNumber: beData.passportNumber,
+    firstName: names.firstName,
+    lastName: names.lastName,
+    fullName: names.fullName,
+    birthDate: createdAt, // no birth date tracked; use createdAt as stable Date instance
+    age: typeof beData.age === 'number' ? beData.age : 0,
     gender: mapGender(beData.gender),
     nationality: beData.nationality || '',
-    phoneNumber: beData.user?.Phone || '',
-    hasSpecialNeeds: false,
+    phoneNumber: beData.phoneNumber || '',
+    hasSpecialNeeds: Boolean(beData.hasSpecialNeeds),
+    specialNeedsType: beData.specialNeedsType as SpecialNeedsType | undefined,
+    specialNeedsNotes: beData.specialNeedsNotes || undefined,
     status: mapStatus(beData.status),
     assignedBed: beData.booking?.bed?.id?.toString(),
     assignedHall: beData.booking?.bed?.tent?.code || beData.booking?.bed?.tent?.id?.toString(),
-    groupId: beData.agency?.id?.toString(),
-    groupName: beData.agency?.name,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    groupId: (beData.agencyId ?? beData.agency?.id)?.toString(),
+    groupName: beData.agencyName || beData.agency?.name,
+    notes: beData.notes || undefined,
+    createdAt,
+    updatedAt,
   };
 }
 
-// Transform frontend data to backend format for creating/updating
 export function transformPilgrimToBackend(feData: Partial<Pilgrim>) {
-  // Combine first and last name
-  const name = feData.firstName && feData.lastName
-    ? `${feData.firstName} ${feData.lastName}`.trim()
-    : feData.fullName || '';
-
-  // Map gender
-  const gender = feData.gender === 'female' ? 'F' : 'M';
-
-  // Format date
-  const dateOfBirth = feData.birthDate instanceof Date
-    ? feData.birthDate.toISOString().split('T')[0]
-    : feData.birthDate;
-
-  // Ensure phone has country code format
-  let phone = feData.phoneNumber || '';
-  if (phone && !phone.startsWith('+')) {
-    phone = '+966' + phone.replace(/^0+/, ''); // Default to Saudi Arabia country code
-  }
-  if (!phone) {
-    phone = '+966500000000'; // Default valid phone number
-  }
-
-  // Ensure passport number is 8 digits
-  let passportNumber = (feData.passportNumber || feData.nationalId || '').replace(/\D/g, '');
-  if (passportNumber.length < 8) {
-    passportNumber = passportNumber.padStart(8, '0');
-  } else if (passportNumber.length > 8) {
-    passportNumber = passportNumber.substring(0, 8);
-  }
-
-  // Ensure nationality is 2 characters (ISO country code)
-  let nationality = feData.nationality || '';
-  nationality = nationality.trim().toUpperCase();
-  if (nationality.length !== 2 || !/^[A-Z]{2}$/.test(nationality)) {
-    nationality = 'SA'; // Default to Saudi Arabia
-  }
-
-  // Ensure dateOfBirth is provided and in the past
-  let finalDateOfBirth = dateOfBirth;
-  if (!finalDateOfBirth) {
-    // Default to 30 years ago
-    const thirtyYearsAgo = new Date();
-    thirtyYearsAgo.setFullYear(thirtyYearsAgo.getFullYear() - 30);
-    finalDateOfBirth = thirtyYearsAgo.toISOString().split('T')[0];
-  }
+  const firstName = feData.firstName || feData.fullName?.split(' ')[0] || '';
+  const lastName = feData.lastName || feData.fullName?.split(' ').slice(1).join(' ') || '';
+  const groupId = feData.groupId ? Number(feData.groupId) : undefined;
 
   return {
-    name,
-    email: `${feData.nationalId || feData.passportNumber}@temp.com`, // Temporary email if not provided
-    phone,
-    password: 'TempPass123!', // Default password for new users
-    passportNumber,
-    nationality,
-    dateOfBirth: finalDateOfBirth,
-    gender,
+    nationalId: feData.nationalId,
+    passportNumber: feData.passportNumber,
+    firstName,
+    lastName,
+    age: feData.age,
+    gender: feData.gender,
+    nationality: feData.nationality,
+    phoneNumber: feData.phoneNumber,
+    hasSpecialNeeds: feData.hasSpecialNeeds,
+    specialNeedsType: feData.specialNeedsType,
+    specialNeedsNotes: feData.specialNeedsNotes,
+    notes: feData.notes,
+    status: feData.status,
+    groupId,
   };
 }
 
-// Transform array of backend pilgrims
 export function transformPilgrimsFromBackend(bePilgrims: BackendPilgrim[]): Pilgrim[] {
   return bePilgrims.map(transformPilgrimFromBackend);
 }

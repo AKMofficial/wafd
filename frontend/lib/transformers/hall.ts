@@ -37,14 +37,22 @@ interface BackendBed {
 
 // Map backend bed status to frontend format
 function mapBedStatus(beStatus?: string): BedStatus {
-  const statusMap: Record<string, BedStatus> = {
-    'Available': 'vacant',
-    'Booked': 'occupied',
-    'Reserved': 'reserved',
-    'Checked_in': 'occupied',
-    'Checked_out': 'vacant',
+  // Backend (BedDTOOut) already converts to lowercase: vacant, occupied, reserved, maintenance
+  // Just validate and return as-is
+  const status = beStatus?.toLowerCase() || 'vacant';
+  const validStatuses: BedStatus[] = ['vacant', 'occupied', 'reserved', 'maintenance'];
+  return validStatuses.includes(status as BedStatus) ? (status as BedStatus) : 'vacant';
+}
+
+// Map frontend bed status to backend format
+export function mapBedStatusToBackend(feStatus: BedStatus): string {
+  const statusMap: Record<BedStatus, string> = {
+    'vacant': 'Available',
+    'occupied': 'Booked',
+    'reserved': 'Reserved',
+    'maintenance': 'Maintenance',
   };
-  return statusMap[beStatus || 'Available'] || 'vacant';
+  return statusMap[feStatus] || 'Available';
 }
 
 // Transform backend bed to frontend format
@@ -63,7 +71,8 @@ function transformBedFromBackend(beData: BackendBed): Bed {
 
 // Transform backend tent data to frontend hall format
 export function transformHallFromBackend(beData: BackendTent): Hall {
-  const beds = beData.beds?.map(transformBedFromBackend) || [];
+  const beds = (beData.beds?.map(transformBedFromBackend) || [])
+    .sort((a, b) => parseInt(a.id) - parseInt(b.id));
   const occupiedBeds = beds.filter(bed => bed.status === 'occupied').length;
   const availableBeds = beds.filter(bed => bed.status === 'vacant').length;
   const specialNeedsBeds = beds.filter(bed => bed.isSpecialNeeds && bed.status === 'occupied').length;

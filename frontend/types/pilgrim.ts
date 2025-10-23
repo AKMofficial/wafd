@@ -135,7 +135,7 @@ export interface CreatePilgrimDto {
   hasSpecialNeeds?: boolean;
   specialNeedsType?: SpecialNeedsType;
   specialNeedsNotes?: string;
-  groupId?: string;
+  groupId: string;
   notes?: string;
 }
 

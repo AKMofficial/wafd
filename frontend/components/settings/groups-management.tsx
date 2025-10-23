@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslations } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,61 +18,31 @@ import {
   Plus,
   Edit,
   Trash2,
-  Users,
   Search,
   AlertCircle,
-  Users2,
-  User,
-  Phone,
-  FileText,
-  Settings2
+  Users2
 } from 'lucide-react';
+import { groupAPI } from '@/lib/api';
+import { format } from 'date-fns';
 
 interface Group {
   id: string;
   name: string;
   code: string;
   leader: string;
+  leaderEmail: string;
   leaderPhone: string;
+  maxPilgrim: number;
   pilgrimsCount: number;
   notes?: string;
-  createdAt: Date;
+  createdAt?: Date;
 }
 
 export function GroupsManagement() {
   const t = useTranslations();
-  const [groups, setGroups] = useState<Group[]>([
-    {
-      id: '1',
-      name: 'مجموعة الرحمة',
-      code: 'GRP-001',
-      leader: 'محمد أحمد',
-      leaderPhone: '+966501234567',
-      pilgrimsCount: 45,
-      notes: 'مجموعة من منطقة الرياض',
-      createdAt: new Date('2024-01-01'),
-    },
-    {
-      id: '2',
-      name: 'مجموعة البركة',
-      code: 'GRP-002',
-      leader: 'عبدالله محمد',
-      leaderPhone: '+966507654321',
-      pilgrimsCount: 32,
-      notes: 'مجموعة من منطقة جدة',
-      createdAt: new Date('2024-01-05'),
-    },
-    {
-      id: '3',
-      name: 'مجموعة النور',
-      code: 'GRP-003',
-      leader: 'فاطمة علي',
-      leaderPhone: '+966509876543',
-      pilgrimsCount: 28,
-      notes: 'مجموعة نسائية',
-      createdAt: new Date('2024-01-10'),
-    },
-  ]);
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -84,56 +54,129 @@ export function GroupsManagement() {
     name: '',
     code: '',
     leader: '',
+    leaderEmail: '',
     leaderPhone: '',
+    leaderPassword: '',
+    maxPilgrim: 50,
     notes: '',
   });
 
   const filteredGroups = groups.filter(group =>
     group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     group.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    group.leader.toLowerCase().includes(searchQuery.toLowerCase())
+    group.leader.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    group.leaderEmail.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleAdd = () => {
-    const newGroup: Group = {
-      id: (groups.length + 1).toString(),
-      name: formData.name,
-      code: formData.code || `GRP-${String(groups.length + 1).padStart(3, '0')}`,
-      leader: formData.leader,
-      leaderPhone: formData.leaderPhone,
-      pilgrimsCount: 0,
-      notes: formData.notes,
-      createdAt: new Date(),
-    };
-    setGroups([...groups, newGroup]);
-    setShowAddDialog(false);
-    resetForm();
-  };
-
-  const handleEdit = () => {
-    if (selectedGroup) {
-      setGroups(groups.map(grp =>
-        grp.id === selectedGroup.id
-          ? { ...grp, ...formData }
-          : grp
-      ));
-      setShowEditDialog(false);
-      setSelectedGroup(null);
-      resetForm();
+  const loadGroups = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await groupAPI.getAll();
+      const data: Group[] = Array.isArray(response)
+        ? response.map((item: any) => ({
+            id: String(item.id),
+            name: item.name,
+            code: item.code || '',
+            leader: item.managerName || '',
+            leaderEmail: item.managerEmail || '',
+            leaderPhone: item.managerPhone || '',
+            maxPilgrim: item.maxPilgrim ?? 50,
+            pilgrimsCount: item.pilgrimsCount ?? 0,
+            notes: item.notes ?? '',
+            createdAt: item.createdAt ? new Date(item.createdAt) : undefined,
+          }))
+        : [];
+      setGroups(data);
+    } catch (err) {
+      console.error('Failed to load groups', err);
+      setError(t('settings.groups.loadError'));
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleDelete = () => {
-    if (selectedGroup) {
-      if (selectedGroup.pilgrimsCount > 0) {
-        alert(t('settings.groups.cannotDelete'));
-        setShowDeleteConfirm(false);
-        return;
-      }
-      setGroups(groups.filter(grp => grp.id !== selectedGroup.id));
+  useEffect(() => {
+    loadGroups();
+    // eslint-disable-next-line react-hooks-exhaustive-deps
+  }, []);
+
+  const handleAdd = async () => {
+    if (!formData.name || !formData.code || !formData.leader || !formData.leaderEmail || !formData.leaderPhone || !formData.leaderPassword) {
+      alert(t('settings.groups.validation.requiredFields'));
+      return;
+    }
+    if (!formData.maxPilgrim || formData.maxPilgrim < 1) {
+      alert(t('settings.groups.validation.maxPilgrimRequired'));
+      return;
+    }
+    try {
+      await groupAPI.create({
+        name: formData.name,
+        code: formData.code,
+        managerName: formData.leader,
+        managerEmail: formData.leaderEmail,
+        managerPhone: formData.leaderPhone,
+        managerPassword: formData.leaderPassword,
+        maxPilgrim: formData.maxPilgrim,
+        notes: formData.notes,
+      });
+      setShowAddDialog(false);
+      resetForm();
+      await loadGroups();
+    } catch (err) {
+      console.error('Failed to create group', err);
+      alert(t('settings.groups.saveError'));
+    }
+  };
+
+  const handleEdit = async () => {
+    if (!selectedGroup) return;
+    if (!formData.name || !formData.code || !formData.leader || !formData.leaderEmail || !formData.leaderPhone) {
+      alert(t('settings.groups.validation.requiredFields'));
+      return;
+    }
+    if (!formData.maxPilgrim || formData.maxPilgrim < 1) {
+      alert(t('settings.groups.validation.maxPilgrimRequired'));
+      return;
+    }
+    try {
+      await groupAPI.update(Number(selectedGroup.id), {
+        name: formData.name,
+        code: formData.code,
+        managerName: formData.leader,
+        managerEmail: formData.leaderEmail,
+        managerPhone: formData.leaderPhone,
+        managerPassword: formData.leaderPassword || undefined,
+        maxPilgrim: formData.maxPilgrim,
+        notes: formData.notes,
+      });
+      setShowEditDialog(false);
+      setSelectedGroup(null);
+      resetForm();
+      await loadGroups();
+    } catch (err) {
+      console.error('Failed to update group', err);
+      alert(t('settings.groups.saveError'));
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selectedGroup) return;
+    if (selectedGroup.pilgrimsCount > 0) {
+      alert(t('settings.groups.cannotDelete'));
+      setShowDeleteConfirm(false);
+      return;
+    }
+    try {
+      await groupAPI.delete(Number(selectedGroup.id));
       setShowDeleteConfirm(false);
       setShowEditDialog(false);
       setSelectedGroup(null);
+      await loadGroups();
+    } catch (err) {
+      console.error('Failed to delete group', err);
+      alert(t('settings.groups.deleteError'));
     }
   };
 
@@ -146,7 +189,10 @@ export function GroupsManagement() {
       name: '',
       code: '',
       leader: '',
+      leaderEmail: '',
       leaderPhone: '',
+      leaderPassword: '',
+      maxPilgrim: 50,
       notes: '',
     });
   };
@@ -157,7 +203,10 @@ export function GroupsManagement() {
       name: group.name,
       code: group.code,
       leader: group.leader,
+      leaderEmail: group.leaderEmail,
       leaderPhone: group.leaderPhone,
+      leaderPassword: '',
+      maxPilgrim: group.maxPilgrim,
       notes: group.notes || '',
     });
     setShowEditDialog(true);
@@ -192,79 +241,46 @@ export function GroupsManagement() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>
-                <div className="flex items-center gap-2">
-                  <Users2 className="h-4 w-4" />
-                  <span>{t('settings.groups.groupName')}</span>
-                </div>
-              </TableHead>
-              <TableHead className="text-center">
-                <div className="flex items-center justify-center gap-2">
-                  <User className="h-4 w-4" />
-                  <span>{t('settings.groups.leader')}</span>
-                </div>
-              </TableHead>
-              <TableHead className="text-center">
-                <div className="flex items-center justify-center gap-2">
-                  <Phone className="h-4 w-4" />
-                  <span>{t('settings.groups.phone')}</span>
-                </div>
-              </TableHead>
-              <TableHead className="text-center">
-                <div className="flex items-center justify-center gap-2">
-                  <Users className="h-4 w-4" />
-                  <span>{t('settings.groups.pilgrimsCount')}</span>
-                </div>
-              </TableHead>
-              <TableHead className="text-center">
-                <div className="flex items-center justify-center gap-2">
-                  <FileText className="h-4 w-4" />
-                  <span>{t('settings.groups.notes')}</span>
-                </div>
-              </TableHead>
-              <TableHead className="text-center">
-                <div className="flex items-center justify-center gap-2">
-                  <Settings2 className="h-4 w-4" />
-                  <span>{t('common.actions')}</span>
-                </div>
-              </TableHead>
+              <TableHead>{t('settings.groups.groupName')}</TableHead>
+              <TableHead>{t('settings.groups.groupCode')}</TableHead>
+              <TableHead>{t('settings.groups.leader')}</TableHead>
+              <TableHead>{t('settings.groups.leaderEmail')}</TableHead>
+              <TableHead>{t('settings.groups.leaderPhone')}</TableHead>
+              <TableHead className="text-center">{t('settings.groups.pilgrimsCount')}</TableHead>
+              <TableHead>{t('settings.groups.notes')}</TableHead>
+              <TableHead>{t('settings.groups.createdAt')}</TableHead>
+              <TableHead className="text-right">{t('common.actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredGroups.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-gray-500 py-8">
+                <TableCell colSpan={9} className="text-center text-gray-500 py-8">
                   {t('settings.groups.noGroups')}
                 </TableCell>
               </TableRow>
             ) : (
               filteredGroups.map((group) => (
                 <TableRow key={group.id} className="hover:bg-gray-50">
-                  <TableCell className="font-medium">{group.name}</TableCell>
-                  <TableCell className="text-center">{group.leader}</TableCell>
+                  <TableCell className="font-medium">{group.name || '-'}</TableCell>
+                  <TableCell>{group.code || '-'}</TableCell>
+                  <TableCell>{group.leader || '-'}</TableCell>
+                  <TableCell>{group.leaderEmail || '-'}</TableCell>
+                  <TableCell dir="ltr">{group.leaderPhone || '-'}</TableCell>
                   <TableCell className="text-center">
-                    <span className="text-sm" dir="ltr">{group.leaderPhone}</span>
+                    <Badge variant="secondary">{group.pilgrimsCount}</Badge>
                   </TableCell>
-                  <TableCell className="text-center">
-                    <Badge variant="outline" className="text-xs">
-                      <Users className="h-3 w-3 ml-1" />
-                      {group.pilgrimsCount}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-center text-sm text-gray-600">
-                    {group.notes || '-'}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <div className="flex justify-center gap-1">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openEditDialog(group)}
-                      >
-                        <Edit className="h-4 w-4 ml-1" />
-                        {t('common.edit')}
-                      </Button>
-                    </div>
+                  <TableCell>{group.notes || '-'}</TableCell>
+                  <TableCell>{group.createdAt ? format(group.createdAt, 'yyyy-MM-dd') : '-'}</TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => openEditDialog(group)}
+                    >
+                      <Edit className="h-4 w-4 mr-1" />
+                      {t('common.edit')}
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))
@@ -273,74 +289,49 @@ export function GroupsManagement() {
         </Table>
       </div>
 
+      {isLoading && (
+        <div className="border rounded-lg p-6 text-center text-sm text-gray-500">
+          {t('settings.groups.loading')}
+        </div>
+      )}
+
       {/* Mobile View */}
-      <div className="md:hidden rounded-lg border overflow-x-auto">
-        <Table className="min-w-[400px]">
-          <TableHeader>
-            <TableRow>
-              <TableHead className="text-xs px-2 py-2">
-                <div className="flex items-center gap-1">
-                  <Users2 className="h-3 w-3 flex-shrink-0" />
-                  <span className="whitespace-nowrap">{t('settings.groups.groupName')}</span>
-                </div>
-              </TableHead>
-              <TableHead className="text-center text-xs px-2 py-2">
-                <div className="flex items-center justify-center gap-1">
-                  <User className="h-3 w-3 flex-shrink-0" />
-                  <span className="whitespace-nowrap">{t('settings.groups.leader')}</span>
-                </div>
-              </TableHead>
-              <TableHead className="text-center text-xs px-2 py-2">
-                <div className="flex items-center justify-center gap-1">
-                  <Users className="h-3 w-3 flex-shrink-0" />
-                  <span className="whitespace-nowrap">{t('settings.groups.pilgrims')}</span>
-                </div>
-              </TableHead>
-              <TableHead className="text-center text-xs px-2 py-2">
-                <div className="flex items-center justify-center gap-1">
-                  <Settings2 className="h-3 w-3 flex-shrink-0" />
-                  <span className="whitespace-nowrap">{t('common.edit')}</span>
-                </div>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredGroups.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={4} className="text-center text-gray-500 py-8 text-xs">
-                  {t('settings.groups.noGroups')}
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredGroups.map((group) => (
-                <TableRow key={group.id} className="hover:bg-gray-50">
-                  <TableCell className="text-xs px-2 py-2 min-w-[120px]">
-                    <span className="truncate max-w-[150px] block font-medium">{group.name}</span>
-                  </TableCell>
-                  <TableCell className="text-center text-xs px-2 py-2">
-                    <span className="truncate max-w-[100px] block">{group.leader}</span>
-                  </TableCell>
-                  <TableCell className="text-center px-2 py-2">
-                    <Badge variant="outline" className="text-[10px] px-1.5 py-0.5 whitespace-nowrap">
-                      <Users className="h-3 w-3 ml-1" />
-                      {group.pilgrimsCount}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-center px-2 py-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-7 w-7 p-0"
-                      onClick={() => openEditDialog(group)}
-                    >
-                      <Edit className="h-3 w-3" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+      <div className="md:hidden space-y-3">
+        {filteredGroups.length === 0 && (
+          <div className="border rounded-lg p-4 text-sm text-gray-500 text-center">
+            {t('settings.groups.noGroups')}
+          </div>
+        )}
+
+        {filteredGroups.map((group) => (
+          <div key={group.id} className="border rounded-lg p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold">{group.name || '-'}</p>
+                <p className="text-xs text-gray-500">{group.code || '-'}</p>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => openEditDialog(group)}>
+                <Edit className="h-4 w-4 mr-1" />
+                {t('common.edit')}
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
+              <span className="font-medium">{t('settings.groups.leader')}</span>
+              <span>{group.leader || '-'}</span>
+              <span className="font-medium">{t('settings.groups.leaderEmail')}</span>
+              <span>{group.leaderEmail || '-'}</span>
+              <span className="font-medium">{t('settings.groups.leaderPhone')}</span>
+              <span dir="ltr">{group.leaderPhone || '-'}</span>
+              <span className="font-medium">{t('settings.groups.pilgrimsCount')}</span>
+              <span>{group.pilgrimsCount}</span>
+              <span className="font-medium">{t('settings.groups.notes')}</span>
+              <span>{group.notes || '-'}</span>
+              <span className="font-medium">{t('settings.groups.createdAt')}</span>
+              <span>{group.createdAt ? format(group.createdAt, 'yyyy-MM-dd') : '-'}</span>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Add Group Dialog */}
@@ -358,30 +349,68 @@ export function GroupsManagement() {
             <DialogTitle>{t('settings.groups.addNewGroup')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">{t('settings.groups.groupName')}</label>
-              <Input
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder={t('settings.groups.enterGroupName')}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">{t('settings.groups.leaderName')}</label>
-              <Input
-                value={formData.leader}
-                onChange={(e) => setFormData({ ...formData, leader: e.target.value })}
-                placeholder={t('settings.groups.enterLeaderName')}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">{t('settings.groups.leaderPhone')}</label>
-              <Input
-                value={formData.leaderPhone}
-                onChange={(e) => setFormData({ ...formData, leaderPhone: e.target.value })}
-                placeholder="+966 5X XXX XXXX"
-                dir="ltr"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">{t('settings.groups.groupName')}</label>
+                <Input
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder={t('settings.groups.enterGroupName')}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">{t('settings.groups.groupCode')}</label>
+                <Input
+                  value={formData.code}
+                  onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                  placeholder="GRP-001"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">{t('settings.groups.leaderName')}</label>
+                <Input
+                  value={formData.leader}
+                  onChange={(e) => setFormData({ ...formData, leader: e.target.value })}
+                  placeholder={t('settings.groups.enterLeaderName')}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">{t('settings.groups.leaderEmail')}</label>
+                <Input
+                  value={formData.leaderEmail}
+                  onChange={(e) => setFormData({ ...formData, leaderEmail: e.target.value })}
+                  placeholder="leader@example.com"
+                  type="email"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">{t('settings.groups.leaderPhone')}</label>
+                <Input
+                  value={formData.leaderPhone}
+                  onChange={(e) => setFormData({ ...formData, leaderPhone: e.target.value })}
+                  placeholder="+9665XXXXXXXX"
+                  dir="ltr"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">{t('settings.groups.leaderPassword')}</label>
+                <Input
+                  value={formData.leaderPassword}
+                  onChange={(e) => setFormData({ ...formData, leaderPassword: e.target.value })}
+                  placeholder="********"
+                  type="password"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">{t('settings.groups.maxPilgrim')}</label>
+                <Input
+                  value={formData.maxPilgrim}
+                  onChange={(e) => setFormData({ ...formData, maxPilgrim: Number(e.target.value) || 0 })}
+                  placeholder="50"
+                  type="number"
+                  min="1"
+                />
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">{t('settings.groups.notes')} ({t('settings.groups.optional')})</label>
@@ -423,30 +452,68 @@ export function GroupsManagement() {
             <DialogTitle>{t('settings.groups.editGroup')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">{t('settings.groups.groupName')}</label>
-              <Input
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder={t('settings.groups.enterGroupName')}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">{t('settings.groups.leaderName')}</label>
-              <Input
-                value={formData.leader}
-                onChange={(e) => setFormData({ ...formData, leader: e.target.value })}
-                placeholder={t('settings.groups.enterLeaderName')}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">{t('settings.groups.leaderPhone')}</label>
-              <Input
-                value={formData.leaderPhone}
-                onChange={(e) => setFormData({ ...formData, leaderPhone: e.target.value })}
-                placeholder="+966 5X XXX XXXX"
-                dir="ltr"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">{t('settings.groups.groupName')}</label>
+                <Input
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder={t('settings.groups.enterGroupName')}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">{t('settings.groups.groupCode')}</label>
+                <Input
+                  value={formData.code}
+                  onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                  placeholder="GRP-001"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">{t('settings.groups.leaderName')}</label>
+                <Input
+                  value={formData.leader}
+                  onChange={(e) => setFormData({ ...formData, leader: e.target.value })}
+                  placeholder={t('settings.groups.enterLeaderName')}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">{t('settings.groups.leaderEmail')}</label>
+                <Input
+                  value={formData.leaderEmail}
+                  onChange={(e) => setFormData({ ...formData, leaderEmail: e.target.value })}
+                  placeholder="leader@example.com"
+                  type="email"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">{t('settings.groups.leaderPhone')}</label>
+                <Input
+                  value={formData.leaderPhone}
+                  onChange={(e) => setFormData({ ...formData, leaderPhone: e.target.value })}
+                  placeholder="+9665XXXXXXXX"
+                  dir="ltr"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">{t('settings.groups.leaderPasswordOptional')}</label>
+                <Input
+                  value={formData.leaderPassword}
+                  onChange={(e) => setFormData({ ...formData, leaderPassword: e.target.value })}
+                  placeholder={t('settings.groups.leavePasswordBlank')}
+                  type="password"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">{t('settings.groups.maxPilgrim')}</label>
+                <Input
+                  value={formData.maxPilgrim}
+                  onChange={(e) => setFormData({ ...formData, maxPilgrim: Number(e.target.value) || 0 })}
+                  placeholder="50"
+                  type="number"
+                  min="1"
+                />
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">{t('settings.groups.notes')}</label>
@@ -475,7 +542,7 @@ export function GroupsManagement() {
                   {t('common.cancel')}
                 </Button>
                 <Button onClick={handleEdit}>
-                  {t('common.saveChanges')}
+                  {t('settings.groups.saveChanges')}
                 </Button>
               </div>
             </DialogFooter>

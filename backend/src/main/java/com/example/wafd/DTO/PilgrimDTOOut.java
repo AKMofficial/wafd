@@ -5,14 +5,13 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
-import java.time.Period;
+import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class PilgrimDTOOut {
-    private String id;
+    private Integer id;
     private String registrationNumber;
     private String nationalId;
     private String passportNumber;
@@ -20,54 +19,64 @@ public class PilgrimDTOOut {
     private String lastName;
     private String fullName;
     private Integer age;
-    private String gender; // "male" or "female"
+    private String gender; // male | female
     private String nationality;
     private String phoneNumber;
-    private String status; // convert from backend status
+    private String status; // expected | arrived | departed | no_show
     private Boolean hasSpecialNeeds;
+    private String specialNeedsType;
+    private String specialNeedsNotes;
     private String notes;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private Integer groupId;
+    private String groupName;
 
     public static PilgrimDTOOut fromEntity(Pilgrim pilgrim) {
         PilgrimDTOOut dto = new PilgrimDTOOut();
-        dto.setId(String.valueOf(pilgrim.getId()));
-        dto.setRegistrationNumber("REG-" + pilgrim.getId());
-        dto.setNationalId(pilgrim.getId() != null ? String.valueOf(pilgrim.getId()) : "");
-        dto.setPassportNumber(pilgrim.getPassport_number());
-
-        // Split name from User
-        String fullName = pilgrim.getUser() != null ? pilgrim.getUser().getName() : "Unknown";
-        dto.setFullName(fullName);
-        String[] nameParts = fullName.split(" ", 2);
-        dto.setFirstName(nameParts.length > 0 ? nameParts[0] : fullName);
-        dto.setLastName(nameParts.length > 1 ? nameParts[1] : "");
-
-        // Calculate age from date of birth
-        if (pilgrim.getDate_of_birth() != null) {
-            dto.setAge(Period.between(pilgrim.getDate_of_birth(), LocalDate.now()).getYears());
+        dto.setId(pilgrim.getId());
+        dto.setRegistrationNumber(pilgrim.getRegistrationNumber());
+        dto.setNationalId(pilgrim.getNationalId());
+        dto.setPassportNumber(pilgrim.getPassportNumber());
+        String firstName = pilgrim.getFirstName() != null ? pilgrim.getFirstName() : "";
+        String lastName = pilgrim.getLastName() != null ? pilgrim.getLastName() : "";
+        dto.setFirstName(firstName);
+        dto.setLastName(lastName);
+        dto.setFullName(String.format("%s %s", firstName, lastName).trim());
+        Integer pilgrimAge = pilgrim.getAge();
+        dto.setAge(pilgrimAge != null ? pilgrimAge : Integer.valueOf(0));
+        String gender = pilgrim.getGender();
+        if (gender != null) {
+            gender = gender.equalsIgnoreCase("female") || gender.equalsIgnoreCase("f") ? "female" : "male";
         } else {
-            dto.setAge(0);
+            gender = "male";
         }
-
-        // Convert gender M/F to male/female
-        dto.setGender("M".equals(pilgrim.getGender()) ? "male" : "female");
+        dto.setGender(gender);
 
         dto.setNationality(pilgrim.getNationality());
-        dto.setPhoneNumber(pilgrim.getUser() != null ? pilgrim.getUser().getPhone() : "");
-
-        // Convert status - map "Registered" to "expected"
-        String backendStatus = pilgrim.getStatus() != null ? pilgrim.getStatus() : "Registered";
-        String frontendStatus = switch (backendStatus.toLowerCase()) {
-            case "registered" -> "expected";
-            case "arrived" -> "arrived";
-            case "departed" -> "departed";
-            case "cancelled" -> "no_show";
-            default -> "expected";
-        };
-        dto.setStatus(frontendStatus);
-
-        dto.setHasSpecialNeeds(false);
-        dto.setNotes("");
-
+        dto.setPhoneNumber(pilgrim.getPhoneNumber() != null ? pilgrim.getPhoneNumber() : "");
+        String status = pilgrim.getStatus();
+        if (status != null) {
+            switch (status.toLowerCase()) {
+                case "arrived" -> status = "arrived";
+                case "departed" -> status = "departed";
+                case "no_show", "no-show", "cancelled" -> status = "no_show";
+                default -> status = "expected";
+            }
+        } else {
+            status = "expected";
+        }
+        dto.setStatus(status);
+        dto.setHasSpecialNeeds(Boolean.TRUE.equals(pilgrim.getHasSpecialNeeds()));
+        dto.setSpecialNeedsType(pilgrim.getSpecialNeedsType());
+        dto.setSpecialNeedsNotes(pilgrim.getSpecialNeedsNotes());
+        dto.setNotes(pilgrim.getNotes());
+        dto.setCreatedAt(pilgrim.getCreatedAt());
+        dto.setUpdatedAt(pilgrim.getUpdatedAt());
+        if (pilgrim.getAgency() != null) {
+            dto.setGroupId(pilgrim.getAgency().getId());
+            dto.setGroupName(pilgrim.getAgency().getName());
+        }
         return dto;
     }
 }

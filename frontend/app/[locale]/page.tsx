@@ -6,7 +6,6 @@ import { usePilgrimStore } from '@/store/pilgrim-store';
 import { useHallStore } from '@/store/hall-store';
 import { StatisticsCards } from '@/components/dashboard/statistics-cards';
 import { Charts } from '@/components/dashboard/charts';
-import { QuickActions } from '@/components/dashboard/quick-actions';
 
 export default function Home() {
   const t = useTranslations();
@@ -49,16 +48,13 @@ export default function Home() {
     <main className="p-4 sm:p-6">
       <div>
         <div className="max-w-[1600px] mx-auto">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2">
-                {t('nav.dashboard')}
-              </h1>
-              <p className="text-gray-600">
-                {`${t('app.welcome')} - ${new Date().toLocaleDateString(locale === 'ar' ? 'ar-SA' : 'en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`}
-              </p>
-            </div>
-            <QuickActions locale={locale} />
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">
+              {t('nav.dashboard')}
+            </h1>
+            <p className="text-gray-600">
+              {`${t('app.welcome')} - ${new Date().toLocaleDateString(locale === 'ar' ? 'ar-SA' : 'en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`}
+            </p>
           </div>
           
           <div className="space-y-8">

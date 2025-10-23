@@ -11,7 +11,6 @@
     "dashboard": "Dashboard",
     "pilgrims": "Pilgrims",
     "halls": "Halls",
-    "reports": "Reports",
     "settings": "Settings"
   },
   "common": {
@@ -88,7 +87,24 @@
       "enterLeaderName": "Enter group leader name",
       "enterNotes": "Enter any notes",
       "searchPlaceholder": "Search by group name or leader...",
-      "noGroups": "No groups found"
+      "noGroups": "No groups found",
+      "leaderEmail": "Leader Email",
+      "leaderPassword": "Leader Password",
+      "leaderPasswordOptional": "Leader Password (optional)",
+      "leavePasswordBlank": "Leave blank to keep current password",
+      "loadError": "Failed to load groups. Please try again.",
+      "saveError": "Failed to save group. Please try again.",
+      "deleteError": "Failed to delete group. Please try again.",
+      "createdAt": "Created At",
+      "saveChanges": "Save Changes",
+      "loading": "Loading groups...",
+      "maxPilgrim": "Max Pilgrims",
+      "validation": {
+        "requiredFields": "Please fill all required fields.",
+        "maxPilgrimRequired": "Max pilgrims must be a positive number (1 or more)"
+      },
+      "enterLeaderEmail": "Enter leader email",
+      "enterLeaderPhone": "Enter leader phone"
     },
     "accounts": {
       "title": "Accounts Management",
@@ -251,9 +267,9 @@
       "no": "No",
       "activeFilters": "Active filters:",
       "search": "Search",
-      "selectGroup": "Select Group",
+      "selectGroup": "Select group",
       "selectHall": "Select Hall",
-      "searchGroups": "Search groups...",
+      "searchGroups": "Search groups",
       "searchHalls": "Search halls...",
       "noResults": "No results found"
     },
@@ -323,8 +339,8 @@
       "selectNationality": "Select Nationality",
       "searchNationalities": "Search nationalities...",
       "noResultsFound": "No results found",
-      "selectGroup": "Select Group",
-      "searchGroups": "Search groups...",
+      "selectGroup": "Select group",
+      "searchGroups": "Search groups",
       "selectDisabilityType": "Select disability type",
       "enterAge": "Enter age",
       "additionalNotes": "Any additional notes...",
@@ -347,7 +363,8 @@
       "ageRequired": "Age is required",
       "ageMustBeNumber": "Age must be a valid number",
       "nationalityRequired": "Nationality is required",
-      "phoneRequired": "Phone number is required"
+      "phoneRequired": "Phone number is required",
+      "groupRequired": "Group is required"
     },
     "table": {
       "registrationNumber": "Registration Number",
@@ -403,6 +420,7 @@
     "occupied": "Occupied",
     "reserved": "Reserved",
     "maintenance": "Maintenance",
+    "bedStatusLabel": "Status",
     "bedStatus": {
       "vacant": "Vacant",
       "occupied": "Occupied",
@@ -498,7 +516,17 @@
       "viewPilgrimDetails": "View Pilgrim Details",
       "close": "Close",
       "maintenanceNotes": "Maintenance Notes",
-      "confirmVacate": "Are you sure you want to vacate this bed?"
+      "confirmVacate": "Are you sure you want to vacate this bed?",
+      "enterPilgrimId": "Enter Pilgrim ID",
+      "assignmentFailed": "Failed to assign bed. Please try again."
+    },
+    "assignDialog": {
+      "title": "Assign Pilgrim to Bed",
+      "description": "Search and select the pilgrim you want to assign to this bed",
+      "searchPlaceholder": "Search by name, passport, registration number, ID, or phone...",
+      "foundResults": "Found {count} pilgrims",
+      "noPilgrims": "No pilgrims available for assignment",
+      "assign": "Assign"
     },
     "bedGrid": {
       "bed": "Bed",
@@ -540,22 +568,6 @@
       "full": "Full",
       "nearlyFull": "Nearly Full",
       "availableStatus": "Available"
-    }
-  },
-  "reports": {
-    "title": "Reports",
-    "subtitle": "Generate and view system reports",
-    "occupancyReport": {
-      "title": "Occupancy Report",
-      "description": "View halls and beds occupancy status"
-    },
-    "vacancyReport": {
-      "title": "Vacancy Report",
-      "description": "View available vacant beds"
-    },
-    "attendanceReport": {
-      "title": "Attendance Report",
-      "description": "Track pilgrim attendance and absences"
     }
   },
   "errors": {

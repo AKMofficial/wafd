@@ -1,7 +1,7 @@
 package com.example.wafd.Controller;
 
 import com.example.wafd.Api.ApiResponse;
-import com.example.wafd.Model.Agency;
+import com.example.wafd.DTO.AgencyDTO;
 import com.example.wafd.Service.AgencyService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,11 +23,7 @@ public class AgencyController {
 
     @GetMapping("/get/{id}")
     public ResponseEntity<?> findAgencyById(@PathVariable Integer id){
-        Agency agency = agencyService.findAgencyById(id);
-        if (agency == null){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse("Agency not found"));
-        }
-        return ResponseEntity.ok(agency);
+        return ResponseEntity.ok(agencyService.findAgencyById(id));
     }
 
     @GetMapping("/get/{id}/pilgrims")
@@ -36,20 +32,18 @@ public class AgencyController {
     }
 
     @PostMapping("/add")
-    public ResponseEntity<?> addAgency(@RequestBody @Valid Agency agency){
-        agencyService.addAgency(agency);
-        return ResponseEntity.status(HttpStatus.CREATED.value()).body(new ApiResponse("Agency added successfully"));
+    public ResponseEntity<?> addAgency(@RequestBody @Valid AgencyDTO agency){
+        return ResponseEntity.status(HttpStatus.CREATED.value()).body(agencyService.addAgency(agency));
     }
-    
+
     @PutMapping("/update/{id}")
-    public ResponseEntity<?> updateAgency(@RequestBody @Valid Agency agency, @PathVariable Integer id){
-        agencyService.updateAgency(agency, id);
-        return ResponseEntity.ok(new ApiResponse("Agency updated successfully"));
+    public ResponseEntity<?> updateAgency(@RequestBody @Valid AgencyDTO agency, @PathVariable Integer id){
+        return ResponseEntity.ok(agencyService.updateAgency(agency, id));
     }
-    
+
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<?> deleteAgency(@PathVariable Integer id){
         agencyService.deleteAgency(id);
-        return ResponseEntity.ok(new ApiResponse("Agency deleted successfully"));
+        return ResponseEntity.ok(new ApiResponse("Group deleted successfully"));
     }
 }

@@ -33,23 +33,11 @@ public class TentDTOOut {
         TentDTOOut dto = new TentDTOOut();
         dto.setId(String.valueOf(tent.getId()));
 
-        // Extract name and code from location if not available
-        String location = tent.getLocation() != null ? tent.getLocation() : "Unknown Location";
-        dto.setLocation(location);
-
-        // Parse location to get name and code (format: "Name - Code")
-        if (location.contains(" - ")) {
-            String[] parts = location.split(" - ", 2);
-            dto.setName(parts[0]);
-            dto.setCode(parts[1]);
-        } else {
-            dto.setName(location);
-            dto.setCode("T" + tent.getId());
-        }
-
-        // Set type based on name or default to male
-        String tentType = location.toLowerCase().contains("female") || location.toLowerCase().contains("women") ? "female" : "male";
-        dto.setType(tentType);
+        // Use the actual fields from the tent entity
+        dto.setName(tent.getName() != null ? tent.getName() : "Hall " + tent.getId());
+        dto.setCode(tent.getCode() != null ? tent.getCode() : "H" + tent.getId());
+        dto.setType(tent.getType() != null ? tent.getType() : "male");
+        dto.setLocation(tent.getLocation() != null ? tent.getLocation() : tent.getName());
 
         dto.setCapacity(tent.getCapacity());
 
@@ -62,7 +50,8 @@ public class TentDTOOut {
             for (var bed : tent.getBeds()) {
                 BedDTOOut bedDTO = BedDTOOut.fromEntity(bed);
                 bedDTOs.add(bedDTO);
-                if ("occupied".equals(bedDTO.getStatus())) {
+                String status = bedDTO.getStatus();
+                if ("occupied".equals(status)) {
                     occupied++;
                     if (bedDTO.getIsSpecialNeeds()) {
                         specialNeeds++;
@@ -82,7 +71,7 @@ public class TentDTOOut {
         // Set numbering config based on type
         BedNumberingConfig config = new BedNumberingConfig();
         config.setSeparator("-");
-        if ("female".equals(tentType)) {
+        if ("female".equals(dto.getType())) {
             config.setPrefix("");
             config.setStartNumber(1);
             config.setPadding(3);

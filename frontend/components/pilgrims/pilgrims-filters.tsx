@@ -11,7 +11,7 @@ import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Badge } from '@/components/ui/badge';
 import { Search, Filter, X, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { mockGroups } from '@/lib/mock-data';
+import { groupAPI } from '@/lib/api';
 import { useHallStore } from '@/store/hall-store';
 
 interface PilgrimsFiltersProps {
@@ -31,6 +31,8 @@ export function PilgrimsFilters({
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [searchValue, setSearchValue] = useState(filters.search ?? '');
   const debouncedSearch = useDebounce(searchValue, 300);
+  const [groupOptions, setGroupOptions] = useState<{ value: string; label: string }[]>([]);
+  const [isLoadingGroups, setIsLoadingGroups] = useState(false);
 
   const { halls, fetchHalls } = useHallStore();
 
@@ -41,6 +43,31 @@ export function PilgrimsFilters({
   useEffect(() => {
     fetchHalls();
     // eslint-disable-next-line react-hooks-exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    const loadGroups = async () => {
+      try {
+        setIsLoadingGroups(true);
+        const response = await groupAPI.getAll();
+        if (!mounted) return;
+        const groups = Array.isArray(response) ? response : [];
+        setGroupOptions(groups.map((group: any) => ({ value: String(group.id), label: group.name })));
+      } catch (error) {
+        console.error('Failed to load groups', error);
+      } finally {
+        if (mounted) {
+          setIsLoadingGroups(false);
+        }
+      }
+    };
+
+    loadGroups();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -229,14 +256,13 @@ export function PilgrimsFilters({
                     onFiltersChange({ ...filters, group: value });
                   }
                 }}
-                options={mockGroups.map(group => ({
-                  value: group.id,
-                  label: group.name
-                }))}
-                placeholder={t('pilgrims.filters.selectGroup')}
-                searchPlaceholder={t('pilgrims.filters.searchGroups')}
-                noResultsText={t('pilgrims.filters.noResults')}
+                options={groupOptions}
+                placeholder={t('pilgrims.form.selectGroup')}
+                searchPlaceholder={t('pilgrims.form.searchGroups')}
+                noResultsText={t('pilgrims.form.noResultsFound')}
                 isRTL={isRTL}
+                clearable
+                disabled={isLoadingGroups}
               />
             </div>
 

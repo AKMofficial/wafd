@@ -8,6 +8,8 @@ import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -27,6 +29,20 @@ public class ControllerAdvise {
     public ResponseEntity<?> ApiException(ApiException apiException){
         String message = apiException.getMessage();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse(message));
+    }
+
+    // Authentication failure
+    @ExceptionHandler(value = BadCredentialsException.class)
+    public ResponseEntity<ApiResponse> handleBadCredentials(BadCredentialsException exception) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new ApiResponse("Invalid email or password"));
+    }
+
+    // Fallback for any other authentication issues
+    @ExceptionHandler(value = AuthenticationException.class)
+    public ResponseEntity<ApiResponse> handleAuthenticationException(AuthenticationException exception) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new ApiResponse("Authentication failed: " + exception.getMessage()));
     }
 
     // SQL Constraint Ex:(Duplicate) Exception

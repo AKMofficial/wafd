@@ -30,4 +30,13 @@ public class BedService {
         }
         bedRepository.delete(bedToDelete);
     }
+
+    public void updateBedStatus(Integer id, String status){
+        Bed bed = bedRepository.findBedById(id);
+        if (bed == null){
+            throw new ApiException("Bed not found");
+        }
+        bed.setStatus(status);
+        bedRepository.save(bed);
+    }
 }

@@ -40,22 +40,28 @@ export default function LoginPage() {
     try {
       const data = await authAPI.login(email, password);
 
-      if (!data.success) {
-        setError(t('auth.invalidCredentials'));
-        setIsLoading(false);
+      if (!data || !data.accessToken || !data.refreshToken) {
+        setError(t('auth.loginError'));
         return;
       }
 
-      // Store user info in localStorage
+      // Persist tokens and basic user info for subsequent requests
+      localStorage.setItem('accessToken', data.accessToken);
+      localStorage.setItem('refreshToken', data.refreshToken);
       localStorage.setItem('user', JSON.stringify({
-        name: data.name,
-        email: data.email,
+        id: data.userId,
+        name: data.userName,
+        email: data.userEmail,
+        phone: data.userPhone,
+        role: data.userRole,
       }));
 
       router.push(`/${locale}`);
     } catch (err) {
       console.error('Login error:', err);
-      setError(t('auth.loginError'));
+      const message = err instanceof Error ? err.message : t('auth.loginError');
+      setError(message || t('auth.loginError'));
+    } finally {
       setIsLoading(false);
     }
   };

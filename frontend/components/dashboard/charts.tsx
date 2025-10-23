@@ -114,14 +114,14 @@ export function Charts({ pilgrimStats, hallStats, locale }: ChartsProps) {
     { age: '60+', male: 30, female: 35, total: 65 },
   ];
 
-  const hallsOccupancyData = [
-    { name: t('dashboard.charts.halls.hallA'), pilgrims: 48, capacity: 50, occupancy: 96 },
-    { name: t('dashboard.charts.halls.hallB'), pilgrims: 45, capacity: 50, occupancy: 90 },
-    { name: t('dashboard.charts.halls.hallC'), pilgrims: 42, capacity: 50, occupancy: 84 },
-    { name: t('dashboard.charts.halls.hallD'), pilgrims: 38, capacity: 50, occupancy: 76 },
-    { name: t('dashboard.charts.halls.hallE'), pilgrims: 35, capacity: 50, occupancy: 70 },
-    { name: t('dashboard.charts.halls.hallF'), pilgrims: 32, capacity: 50, occupancy: 64 },
-  ].sort((a, b) => b.occupancy - a.occupancy);
+  const hallsOccupancyData = Object.entries(hallStats?.byHall || {})
+    .map(([id, hall]: [string, any]) => ({
+      name: hall.name,
+      pilgrims: hall.occupancy,
+      capacity: hall.capacity,
+      occupancy: hall.rate
+    }))
+    .sort((a, b) => b.occupancy - a.occupancy);
 
   const genderDistribution = [
     { name: t('dashboard.charts.male'), value: pilgrimStats?.maleCount || 0, fill: '#3B82F6' },
@@ -185,8 +185,13 @@ export function Charts({ pilgrimStats, hallStats, locale }: ChartsProps) {
           subtitle={t('dashboard.charts.occupancyByHall')}
         >
           <div className="space-y-3">
-            {hallsOccupancyData.map((hall, index) => (
-              <div key={index} className="space-y-1.5">
+            {hallsOccupancyData.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <p>{t('halls.messages.notFound')}</p>
+              </div>
+            ) : (
+              hallsOccupancyData.map((hall, index) => (
+                <div key={index} className="space-y-1.5">
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-medium text-gray-700">{hall.name}</span>
                   <div className="flex items-center gap-2">
@@ -198,7 +203,7 @@ export function Charts({ pilgrimStats, hallStats, locale }: ChartsProps) {
                       hall.occupancy > 75 ? 'text-amber-600' :
                       'text-green-600'
                     }`}>
-                      {hall.occupancy}%
+                      {hall.occupancy.toFixed(0)}%
                     </span>
                   </div>
                 </div>
@@ -213,7 +218,8 @@ export function Charts({ pilgrimStats, hallStats, locale }: ChartsProps) {
                   />
                 </div>
               </div>
-            ))}
+              ))
+            )}
           </div>
         </ChartCard>
       </div>

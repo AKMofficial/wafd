@@ -145,7 +145,7 @@ export function BedDetailsDialog({
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">
-                  {t('halls.bedStatus')}
+                  {t('halls.bedStatusLabel')}
                 </span>
                 <Badge className={cn("gap-1", statusConfig.color)}>
                   {statusConfig.title}

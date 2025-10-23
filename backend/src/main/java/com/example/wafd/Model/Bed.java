@@ -22,8 +22,8 @@ public class Bed {
     private Integer id;
 
     @NotEmpty(message = "Status is required")
-    @Pattern(regexp = "^(Available|Booked|Checked_in|Checked_out)$", message = "Status must be Booked, Checked_in, or Checked_out")
-    @Column(columnDefinition = "varchar(15) not null")
+    @Pattern(regexp = "^(Available|Booked|Checked_in|Checked_out|Reserved|Maintenance)$", message = "Status must be Available, Booked, Checked_in, Checked_out, Reserved, or Maintenance")
+    @Column(columnDefinition = "varchar(20) not null")
     private String status;
 
     @ManyToOne

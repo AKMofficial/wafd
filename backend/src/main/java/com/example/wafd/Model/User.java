@@ -1,5 +1,7 @@
 package com.example.wafd.Model;
 
+import com.example.wafd.Model.Agency;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
@@ -21,6 +23,7 @@ import java.util.Collections;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
+@Table(name = "users")
 public class User implements UserDetails {
 
     @Id
@@ -45,11 +48,12 @@ public class User implements UserDetails {
     @NotEmpty(message = "Password is required")
     @Column(columnDefinition = "varchar(255) not null")
     private String password;
-    @Pattern(regexp = "^(Admin|Pilgrim|Supervisor)$",message = "Role must be Admin, Pilgrim or Supervisor")
+    @Pattern(regexp = "^(Admin|Supervisor)$",message = "Role must be Admin or Supervisor")
     private String role;
 
-    @OneToOne(cascade = CascadeType.ALL, mappedBy = "user")
-    private Pilgrim pilgrim;
+    @OneToOne(mappedBy = "manager")
+    @JsonIgnore
+    private Agency managedAgency;
 
     @CreationTimestamp
     @Column(updatable = false)

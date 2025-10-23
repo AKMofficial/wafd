@@ -1,5 +1,6 @@
 package com.example.wafd.Model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -50,6 +51,14 @@ public class Agency {
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "agency")
     private Set<Tent> tents;
+
+    @OneToOne
+    @JoinColumn(name = "manager_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "FK_agency_manager"))
+    @JsonIgnore
+    private User manager;
+
+    @Column(columnDefinition = "text")
+    private String notes;
 
     @CreationTimestamp
     @Column(updatable = false)

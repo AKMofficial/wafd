@@ -8,6 +8,7 @@ import { usePilgrimStore } from '@/store/pilgrim-store';
 import { BedGrid } from '@/components/halls/bed-grid';
 import { BedDetailsDialog } from '@/components/halls/bed-details-dialog';
 import { HallSettingsDialog } from '@/components/halls/hall-settings-dialog';
+import { AssignPilgrimDialog } from '@/components/halls/assign-pilgrim-dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -43,6 +44,8 @@ export default function HallDetailPage() {
   const [selectedBed, setSelectedBed] = useState<BedType | null>(null);
   const [showBedDetails, setShowBedDetails] = useState(false);
   const [showHallSettings, setShowHallSettings] = useState(false);
+  const [showAssignDialog, setShowAssignDialog] = useState(false);
+  const [bedToAssign, setBedToAssign] = useState<BedType | null>(null);
   
   const {
     selectedHall,
@@ -56,10 +59,11 @@ export default function HallDetailPage() {
     updateBedStatus,
   } = useHallStore();
   
-  const { pilgrims } = usePilgrimStore();
-  
+  const { pilgrims, fetchPilgrims } = usePilgrimStore();
+
   useEffect(() => {
     fetchHallById(hallId);
+    fetchPilgrims();
   }, [hallId]);
   
   useEffect(() => {
@@ -126,15 +130,23 @@ export default function HallDetailPage() {
   };
   
   
-  const handleAssignPilgrim = (bedId: string) => {
-    // In a real app, this would open a pilgrim selection dialog
-    alert(t('halls.bedDetailsDialog.assignPilgrim'));
+  const handleOpenAssignDialog = (bed: BedType) => {
+    setBedToAssign(bed);
+    setShowAssignDialog(true);
+    setShowBedDetails(false);
+  };
+
+  const handleAssignPilgrim = async (pilgrimId: string, bedId: string) => {
+    try {
+      await assignBed({ bedId, pilgrimId });
+    } catch (error) {
+      console.error('Failed to assign bed:', error);
+    }
   };
   
   const handleVacateBed = async (bedId: string) => {
     try {
       await vacateBed(bedId);
-      await fetchHallById(hallId);
     } catch (error) {
       console.error('Failed to vacate bed:', error);
     }
@@ -143,7 +155,6 @@ export default function HallDetailPage() {
   const handleChangeBedStatus = async (bedId: string, status: BedStatus) => {
     try {
       await updateBedStatus(bedId, status);
-      await fetchHallById(hallId);
     } catch (error) {
       console.error('Failed to update bed status:', error);
     }
@@ -314,11 +325,22 @@ export default function HallDetailPage() {
             setShowBedDetails(false);
             setSelectedBed(null);
           }}
-          onAssignPilgrim={handleAssignPilgrim}
+          onAssignPilgrim={(bedId) => handleOpenAssignDialog(selectedBed!)}
           onVacateBed={handleVacateBed}
           onChangeBedStatus={handleChangeBedStatus}
         />
-        
+
+        <AssignPilgrimDialog
+          bed={bedToAssign}
+          pilgrims={pilgrims}
+          isOpen={showAssignDialog}
+          onClose={() => {
+            setShowAssignDialog(false);
+            setBedToAssign(null);
+          }}
+          onAssign={handleAssignPilgrim}
+        />
+
         <HallSettingsDialog
           hall={selectedHall}
           isOpen={showHallSettings}

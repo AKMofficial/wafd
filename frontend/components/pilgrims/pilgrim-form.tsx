@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -17,7 +17,7 @@ import { CreatePilgrimDto, UpdatePilgrimDto, Pilgrim } from '@/types/pilgrim';
 import { CalendarIcon, Loader2 } from 'lucide-react';
 import { formatDateAsHijri } from '@/lib/hijri-date';
 import { getNationalityOptions } from '@/lib/nationalities';
-import { mockGroups } from '@/lib/mock-data';
+import { groupAPI } from '@/lib/api';
 
 type PilgrimFormData = {
   nationalId: string;
@@ -30,7 +30,7 @@ type PilgrimFormData = {
   phoneNumber: string;
   specialNeedsType?: string;
   specialNeedsNotes?: string;
-  groupId?: string;
+  groupId: string;
   notes?: string;
 };
 
@@ -62,7 +62,7 @@ export function PilgrimForm({ pilgrim, onSubmit, onCancel, isLoading = false }: 
     phoneNumber: z.string().min(10, t('pilgrims.validation.phoneRequired')),
     specialNeedsType: z.string().optional(),
     specialNeedsNotes: z.string().optional(),
-    groupId: z.string().optional(),
+    groupId: z.string().min(1, t('pilgrims.validation.groupRequired')),
     notes: z.string().optional(),
   }), [t]);
 
@@ -88,19 +88,53 @@ export function PilgrimForm({ pilgrim, onSubmit, onCancel, isLoading = false }: 
       groupId: pilgrim.groupId || '',
       notes: pilgrim.notes || '',
     } : {
+      groupId: '',
       gender: 'male' as const,
       nationality: 'السعودية',
     },
   });
 
+  const [groupOptions, setGroupOptions] = useState<{ value: string; label: string }[]>(
+    pilgrim?.groupId && pilgrim?.groupName
+      ? [{ value: pilgrim.groupId, label: pilgrim.groupName }]
+      : []
+  );
+  const [isLoadingGroups, setIsLoadingGroups] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadGroups = async () => {
+      try {
+        setIsLoadingGroups(true);
+        const response = await groupAPI.getAll();
+        const agencies = Array.isArray(response) ? response : [];
+        if (!isMounted) return;
+        const options = agencies.map((agency: any) => ({
+          value: String(agency.id),
+          label: agency.name,
+        }));
+        if (pilgrim?.groupId && pilgrim?.groupName && !options.some((opt) => opt.value === pilgrim.groupId)) {
+          options.push({ value: pilgrim.groupId, label: pilgrim.groupName });
+        }
+        setGroupOptions(options);
+      } catch (error) {
+        console.error('Failed to load groups', error);
+      } finally {
+        if (isMounted) {
+          setIsLoadingGroups(false);
+        }
+      }
+    };
+
+    loadGroups();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [pilgrim?.groupId, pilgrim?.groupName]);
+
   // Get nationality options from the comprehensive list
   const nationalityOptions = getNationalityOptions();
-
-  // Get group options from mock data
-  const groupOptions = mockGroups.map(group => ({
-    value: group.id,
-    label: group.name
-  }));
 
   const onFormSubmit = async (data: PilgrimFormData) => {
     const formData: any = {
@@ -109,11 +143,19 @@ export function PilgrimForm({ pilgrim, onSubmit, onCancel, isLoading = false }: 
       hasSpecialNeeds: !!data.specialNeedsType && data.specialNeedsType !== '' && data.specialNeedsType !== '__placeholder__', // Set based on whether disability type is selected
     };
 
+    if (!formData.passportNumber) {
+      delete formData.passportNumber;
+    }
+
     // Clean up empty values and placeholder
     if (!formData.specialNeedsType || formData.specialNeedsType === '' || formData.specialNeedsType === '__placeholder__') {
       delete formData.specialNeedsType;
       delete formData.specialNeedsNotes;
       formData.hasSpecialNeeds = false;
+    }
+
+    if (!formData.notes) {
+      delete formData.notes;
     }
 
     await onSubmit(formData);
@@ -188,18 +230,22 @@ export function PilgrimForm({ pilgrim, onSubmit, onCancel, isLoading = false }: 
 
           <div className="space-y-2">
             <Label htmlFor="groupId">
-              {t('pilgrims.form.group')}
+              {t('pilgrims.form.group')} *
             </Label>
             <SearchableSelect
               value={watch('groupId') || ''}
-              onValueChange={(value) => setValue('groupId', value)}
+              onValueChange={(value) => setValue('groupId', value, { shouldValidate: true })}
               options={groupOptions}
               placeholder={t('pilgrims.form.selectGroup')}
               searchPlaceholder={t('pilgrims.form.searchGroups')}
               noResultsText={t('pilgrims.form.noResultsFound')}
-              clearable={true}
+              clearable={false}
               isRTL={isRTL}
+              disabled={isLoadingGroups}
             />
+            {errors.groupId && (
+              <p className="text-sm text-red-500">{errors.groupId.message}</p>
+            )}
           </div>
 
           <div className="space-y-2">

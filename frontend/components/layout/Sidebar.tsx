@@ -6,10 +6,9 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from '@/lib/i18n';
 import { useSidebar } from '@/lib/sidebar-context';
 import { cn } from '@/lib/utils';
-import { 
+import {
   PilgrimIcon,
   HallIcon,
-  ReportIcon,
 } from '@/components/icons';
 import { 
   ChevronLeft,
@@ -38,7 +37,6 @@ const Sidebar = () => {
     { icon: LayoutDashboard, label: t('nav.dashboard'), href: `/${locale}` },
     { icon: PilgrimIcon, label: t('nav.pilgrims'), href: `/${locale}/pilgrims` },
     { icon: HallIcon, label: t('nav.halls'), href: `/${locale}/halls` },
-    { icon: ReportIcon, label: t('nav.reports'), href: `/${locale}/reports` },
     { icon: Settings, label: t('nav.settings'), href: `/${locale}/settings` },
   ];
 
