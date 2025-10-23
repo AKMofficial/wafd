@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from '@/lib/i18n';
+import { useAuth } from '@/lib/auth';
 import { useHallStore } from '@/store/hall-store';
 import { HallsTable } from '@/components/halls/halls-table';
 import { CreateHallDialog } from '@/components/halls/create-hall-dialog';
@@ -16,8 +18,10 @@ import { Hall } from '@/types/hall';
 export default function HallsPage() {
   const t = useTranslations();
   const locale = useLocale();
+  const router = useRouter();
   const isRTL = locale === 'ar';
-  
+  const { canAddHall } = useAuth();
+
   const [mounted, setMounted] = useState(false);
   const [showCreateHall, setShowCreateHall] = useState(false);
   const [filters, setFilters] = useState<HallFilters>({});
@@ -44,15 +48,26 @@ export default function HallsPage() {
   };
   
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        router.push(`/${locale}/login`);
+        return;
+      }
+    }
     setMounted(true);
     loadHalls();
-  }, []);
+  }, [router, locale]);
   
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const token = localStorage.getItem('accessToken');
+    if (!token) return;
+
     const debounceTimer = setTimeout(() => {
       loadHalls();
     }, 300);
-    
+
     return () => clearTimeout(debounceTimer);
   }, [filters, pagination]);
   
@@ -112,10 +127,12 @@ export default function HallsPage() {
                 {t('halls.subtitle')}
               </p>
             </div>
-            <Button className="w-full sm:w-auto" onClick={handleAddNewHall}>
-              <Plus className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
-              {t('halls.addNew')}
-            </Button>
+            {canAddHall() && (
+              <Button className="w-full sm:w-auto" onClick={handleAddNewHall}>
+                <Plus className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
+                {t('halls.addNew')}
+              </Button>
+            )}
           </div>
         </div>
         

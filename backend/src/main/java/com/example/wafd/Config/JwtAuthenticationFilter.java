@@ -59,8 +59,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         } catch (io.jsonwebtoken.ExpiredJwtException e) {
             logger.debug("JWT token expired", e);
-        } catch (Exception e) {
-            logger.error("JWT authentication error", e);
+        } catch (io.jsonwebtoken.MalformedJwtException e) {
+            logger.error("Malformed JWT token", e);
+        } catch (io.jsonwebtoken.security.SignatureException e) {
+            logger.error("Invalid JWT signature", e);
+        } catch (IllegalArgumentException e) {
+            logger.error("Illegal argument in JWT processing", e);
         }
 
         filterChain.doFilter(request, response);

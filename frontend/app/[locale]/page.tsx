@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from '@/lib/i18n';
+import { useAuth } from '@/lib/auth';
 import { usePilgrimStore } from '@/store/pilgrim-store';
 import { useHallStore } from '@/store/hall-store';
 import { StatisticsCards } from '@/components/dashboard/statistics-cards';
@@ -10,11 +12,39 @@ import { Charts } from '@/components/dashboard/charts';
 export default function Home() {
   const t = useTranslations();
   const locale = useLocale();
+  const router = useRouter();
+  const { user } = useAuth();
   const [isMounted, setIsMounted] = useState(false);
-  
+
   const { getStatistics: getPilgrimStats, fetchPilgrims } = usePilgrimStore();
   const { getStatistics: getHallStats, fetchHalls } = useHallStore();
-  
+
+  // Check authentication
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        router.replace(`/${locale}/login`);
+        return;
+      }
+    }
+  }, [router, locale]);
+
+  // Redirect supervisors immediately
+  useEffect(() => {
+    if (user && user.role === 'Supervisor') {
+      router.replace(`/${locale}/pilgrims`);
+    }
+  }, [user, router, locale]);
+
+  useEffect(() => {
+    if (user && user.role === 'Admin') {
+      setIsMounted(true);
+      fetchPilgrims();
+      fetchHalls();
+    }
+  }, [user]);
+
   const pilgrimStats = isMounted ? getPilgrimStats() : {
     total: 0,
     arrived: 0,
@@ -28,7 +58,7 @@ export default function Home() {
     byNationality: {},
     byAgeGroup: {}
   };
-  
+
   const hallStats = isMounted ? getHallStats() : {
     totalHalls: 0,
     totalBeds: 0,
@@ -37,12 +67,11 @@ export default function Home() {
     maleHalls: { total: 0, beds: 0, occupied: 0 },
     femaleHalls: { total: 0, beds: 0, occupied: 0 }
   };
-  
-  useEffect(() => {
-    setIsMounted(true);
-    fetchPilgrims();
-    fetchHalls();
-  }, []);
+
+  // Don't render anything for supervisors
+  if (user && user.role === 'Supervisor') {
+    return null;
+  }
   
   return (
     <main className="p-4 sm:p-6">

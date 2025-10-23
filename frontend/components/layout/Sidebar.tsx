@@ -6,11 +6,12 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from '@/lib/i18n';
 import { useSidebar } from '@/lib/sidebar-context';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/lib/auth';
 import {
   PilgrimIcon,
   HallIcon,
 } from '@/components/icons';
-import { 
+import {
   ChevronLeft,
   ChevronRight,
   Menu,
@@ -32,13 +33,18 @@ const Sidebar = () => {
   const locale = useLocale();
   const isRtl = locale === 'ar';
   const router = useRouter();
+  const { user, isAdmin } = useAuth();
 
-  const navItems = [
-    { icon: LayoutDashboard, label: t('nav.dashboard'), href: `/${locale}` },
-    { icon: PilgrimIcon, label: t('nav.pilgrims'), href: `/${locale}/pilgrims` },
-    { icon: HallIcon, label: t('nav.halls'), href: `/${locale}/halls` },
-    { icon: Settings, label: t('nav.settings'), href: `/${locale}/settings` },
+  const allNavItems = [
+    { icon: LayoutDashboard, label: t('nav.dashboard'), href: `/${locale}`, roles: ['Admin'] },
+    { icon: PilgrimIcon, label: t('nav.pilgrims'), href: `/${locale}/pilgrims`, roles: ['Admin', 'Supervisor'] },
+    { icon: HallIcon, label: t('nav.halls'), href: `/${locale}/halls`, roles: ['Admin', 'Supervisor'] },
+    { icon: Settings, label: t('nav.settings'), href: `/${locale}/settings`, roles: ['Admin'] },
   ];
+
+  const navItems = allNavItems.filter(item =>
+    !user || !item.roles || item.roles.includes(user.role)
+  );
 
   const isActiveRoute = (href: string) => {
     if (href === `/${locale}`) {
@@ -194,9 +200,9 @@ const Sidebar = () => {
                 {!isCollapsed && (
                   <div className="text-right rtl:text-left">
                     <p className="text-sm font-medium">
-                      {t('settings.accounts.roles.admin')}
+                      {user?.role === 'Admin' ? t('settings.accounts.roles.admin') : t('settings.accounts.roles.supervisor')}
                     </p>
-                    <p className="text-xs text-muted-foreground">admin@wafd.sa</p>
+                    <p className="text-xs text-muted-foreground">{user?.email || 'user@wafd.sa'}</p>
                   </div>
                 )}
               </div>
@@ -215,7 +221,10 @@ const Sidebar = () => {
               )}>
                 <button
                   onClick={() => {
-                    setShowUserMenu(false);
+                    localStorage.removeItem('accessToken');
+                    localStorage.removeItem('refreshToken');
+                    localStorage.removeItem('user');
+                    router.push(`/${locale}/login`);
                   }}
                   className="w-full text-right rtl:text-left px-4 py-2 text-sm hover:bg-muted transition-colors flex items-center gap-2 text-error-600"
                 >

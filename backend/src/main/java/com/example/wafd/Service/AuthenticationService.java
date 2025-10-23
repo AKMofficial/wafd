@@ -37,6 +37,11 @@ public class AuthenticationService {
         String accessToken = jwtService.generateToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
 
+        Integer agencyId = null;
+        if (user.getManagedAgency() != null) {
+            agencyId = user.getManagedAgency().getId();
+        }
+
         return new AuthenticationResponse(
                 accessToken,
                 refreshToken,
@@ -46,7 +51,8 @@ public class AuthenticationService {
                 user.getName(),
                 user.getEmail(),
                 user.getPhone(),
-                user.getRole()
+                user.getRole(),
+                agencyId
         );
     }
 
@@ -63,6 +69,11 @@ public class AuthenticationService {
 
         String accessToken = jwtService.generateToken(user);
 
+        Integer agencyId = null;
+        if (user.getManagedAgency() != null) {
+            agencyId = user.getManagedAgency().getId();
+        }
+
         return new AuthenticationResponse(
                 accessToken,
                 refreshTokenDTOIn.getRefreshToken(),
@@ -72,7 +83,8 @@ public class AuthenticationService {
                 user.getName(),
                 user.getEmail(),
                 user.getPhone(),
-                user.getRole()
+                user.getRole(),
+                agencyId
         );
     }
 

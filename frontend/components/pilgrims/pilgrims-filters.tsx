@@ -41,11 +41,19 @@ export function PilgrimsFilters({
   }, [filters.search]);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const token = localStorage.getItem('accessToken');
+    if (!token) return;
+
     fetchHalls();
     // eslint-disable-next-line react-hooks-exhaustive-deps
   }, []);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const token = localStorage.getItem('accessToken');
+    if (!token) return;
+
     let mounted = true;
     const loadGroups = async () => {
       try {

@@ -54,6 +54,7 @@ export default function LoginPage() {
         email: data.userEmail,
         phone: data.userPhone,
         role: data.userRole,
+        agencyId: data.agencyId || null,
       }));
 
       router.push(`/${locale}`);

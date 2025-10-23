@@ -97,6 +97,10 @@ export function GroupsManagement() {
   };
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const token = localStorage.getItem('accessToken');
+    if (!token) return;
+
     loadGroups();
     // eslint-disable-next-line react-hooks-exhaustive-deps
   }, []);

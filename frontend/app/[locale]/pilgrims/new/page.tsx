@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from '@/lib/i18n';
 import { usePilgrimStore } from '@/store/pilgrim-store';
@@ -18,6 +18,15 @@ export default function NewPilgrimPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { createPilgrim } = usePilgrimStore();
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        router.push(`/${locale}/login`);
+      }
+    }
+  }, [router, locale]);
 
   const handleSubmit = async (data: CreatePilgrimDto | UpdatePilgrimDto) => {
     setIsSubmitting(true);

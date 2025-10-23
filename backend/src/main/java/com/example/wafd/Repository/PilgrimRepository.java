@@ -64,5 +64,14 @@ public interface PilgrimRepository extends JpaRepository<Pilgrim, Integer> {
            "WHERE p.agency.id = :agencyId")
     List<Pilgrim> findByAgencyId(@Param("agencyId") Integer agencyId);
 
+    // Find pilgrims by agency with pagination
+    @Query(value = "SELECT DISTINCT p FROM Pilgrim p " +
+                   "LEFT JOIN FETCH p.agency a " +
+                   "LEFT JOIN FETCH p.booking b " +
+                   "LEFT JOIN FETCH b.bed bed " +
+                   "WHERE p.agency.id = :agencyId",
+           countQuery = "SELECT COUNT(DISTINCT p) FROM Pilgrim p WHERE p.agency.id = :agencyId")
+    Page<Pilgrim> findByAgencyIdWithDetails(@Param("agencyId") Integer agencyId, Pageable pageable);
+
     long countByAgencyId(Integer agencyId);
 }

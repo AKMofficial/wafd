@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from '@/lib/i18n';
+import { useAuth } from '@/lib/auth';
 import { useHallStore } from '@/store/hall-store';
 import { usePilgrimStore } from '@/store/pilgrim-store';
 import { BedGrid } from '@/components/halls/bed-grid';
@@ -36,7 +37,8 @@ export default function HallDetailPage() {
   const t = useTranslations();
   const locale = useLocale();
   const isRTL = locale === 'ar';
-  
+  const { canEditHall } = useAuth();
+
   const hallId = params.id as string;
   
   const [searchQuery, setSearchQuery] = useState('');
@@ -62,9 +64,16 @@ export default function HallDetailPage() {
   const { pilgrims, fetchPilgrims } = usePilgrimStore();
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        router.push(`/${locale}/login`);
+        return;
+      }
+    }
     fetchHallById(hallId);
     fetchPilgrims();
-  }, [hallId]);
+  }, [hallId, router, locale]);
   
   useEffect(() => {
     const filters = {
@@ -203,12 +212,14 @@ export default function HallDetailPage() {
               </p>
             </div>
             
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setShowHallSettings(true)}>
-                <Settings className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
-                {t('halls.settingsDialog.title')}
-              </Button>
-            </div>
+            {canEditHall() && (
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setShowHallSettings(true)}>
+                  <Settings className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
+                  {t('halls.settingsDialog.title')}
+                </Button>
+              </div>
+            )}
           </div>
         </div>
         

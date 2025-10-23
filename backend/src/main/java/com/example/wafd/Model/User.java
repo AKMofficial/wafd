@@ -1,6 +1,5 @@
 package com.example.wafd.Model;
 
-import com.example.wafd.Model.Agency;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;

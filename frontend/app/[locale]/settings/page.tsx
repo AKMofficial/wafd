@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from '@/lib/i18n';
+import { useAuth } from '@/lib/auth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AccountsManagement } from '@/components/settings/accounts-management';
 import { GroupsManagement } from '@/components/settings/groups-management';
@@ -10,7 +12,28 @@ import { Users2, UserCog } from 'lucide-react';
 export default function SettingsPage() {
   const t = useTranslations();
   const locale = useLocale();
+  const router = useRouter();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('groups');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        router.replace(`/${locale}/login`);
+        return;
+      }
+    }
+    // Redirect non-admins to pilgrims page
+    if (user && user.role !== 'Admin') {
+      router.replace(`/${locale}/pilgrims`);
+    }
+  }, [user, router, locale]);
+
+  // Don't render anything for non-admins
+  if (user && user.role !== 'Admin') {
+    return null;
+  }
 
   return (
     <main className="p-4 sm:p-6">

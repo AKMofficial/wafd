@@ -26,15 +26,34 @@ public class PilgrimService {
     private final PilgrimRepository pilgrimRepository;
     private final AgencyRepository agencyRepository;
     private final RegistrationNumberGenerator registrationNumberGenerator;
+    private final AuthenticationService authenticationService;
 
     @Cacheable("pilgrims")
     public List<PilgrimDTOOut> getAllPilgrims() {
-        return pilgrimRepository.findAllWithDetails().stream()
+        var currentUser = authenticationService.getCurrentUser();
+        List<Pilgrim> pilgrims;
+
+        if ("Supervisor".equals(currentUser.getRole()) && currentUser.getManagedAgency() != null) {
+            Integer agencyId = currentUser.getManagedAgency().getId();
+            pilgrims = pilgrimRepository.findByAgencyId(agencyId);
+        } else {
+            pilgrims = pilgrimRepository.findAllWithDetails();
+        }
+
+        return pilgrims.stream()
                 .map(PilgrimDTOOut::fromEntity)
                 .collect(Collectors.toList());
     }
 
     public Page<PilgrimDTOOut> getAllPilgrims(Pageable pageable) {
+        var currentUser = authenticationService.getCurrentUser();
+
+        if ("Supervisor".equals(currentUser.getRole()) && currentUser.getManagedAgency() != null) {
+            Integer agencyId = currentUser.getManagedAgency().getId();
+            return pilgrimRepository.findByAgencyIdWithDetails(agencyId, pageable)
+                    .map(PilgrimDTOOut::fromEntity);
+        }
+
         return pilgrimRepository.findAllWithDetails(pageable)
                 .map(PilgrimDTOOut::fromEntity);
     }
@@ -42,6 +61,7 @@ public class PilgrimService {
     @CacheEvict(value = "pilgrims", allEntries = true)
     public PilgrimDTOOut addPilgrim(PilgrimDTOIn pilgrimDTOIn) {
         String registrationNumber = registrationNumberGenerator.generate();
+        var currentUser = authenticationService.getCurrentUser();
 
         Pilgrim pilgrim = new Pilgrim();
         pilgrim.setRegistrationNumber(registrationNumber);
@@ -51,7 +71,7 @@ public class PilgrimService {
         pilgrim.setLastName(Objects.requireNonNullElse(pilgrimDTOIn.getLastName(), ""));
         pilgrim.setGender(normalizeGender(pilgrimDTOIn.getGender()));
         Integer age = pilgrimDTOIn.getAge();
-        pilgrim.setAge(age != null ? age : Integer.valueOf(0));
+        pilgrim.setAge(age != null ? age : 0);
         pilgrim.setNationality(Objects.requireNonNullElse(pilgrimDTOIn.getNationality(), ""));
         pilgrim.setPhoneNumber(Objects.requireNonNullElse(pilgrimDTOIn.getPhoneNumber(), ""));
         pilgrim.setHasSpecialNeeds(Boolean.TRUE.equals(pilgrimDTOIn.getHasSpecialNeeds()));
@@ -60,7 +80,12 @@ public class PilgrimService {
         pilgrim.setNotes(pilgrimDTOIn.getNotes());
         pilgrim.setStatus(normalizeStatus(pilgrimDTOIn.getStatus()));
 
-        pilgrim.setAgency(resolveGroup(pilgrimDTOIn.getGroupId()));
+        // Supervisors can only add pilgrims to their own agency
+        if ("Supervisor".equals(currentUser.getRole()) && currentUser.getManagedAgency() != null) {
+            pilgrim.setAgency(currentUser.getManagedAgency());
+        } else {
+            pilgrim.setAgency(resolveGroup(pilgrimDTOIn.getGroupId()));
+        }
 
         Pilgrim savedPilgrim = pilgrimRepository.save(pilgrim);
         return PilgrimDTOOut.fromEntity(savedPilgrim);
@@ -87,6 +112,11 @@ public class PilgrimService {
 
     @CacheEvict(value = "pilgrims", allEntries = true)
     public void updatePilgrim(Integer id, PilgrimDTOIn pilgrimDTOIn) {
+        var currentUser = authenticationService.getCurrentUser();
+        if ("Supervisor".equals(currentUser.getRole())) {
+            throw new ApiException("Supervisors are not allowed to edit pilgrims");
+        }
+
         Pilgrim pilgrim = pilgrimRepository.findPilgrimById(id);
         if (pilgrim == null) {
             throw new ApiException("Pilgrim not found");
@@ -141,6 +171,11 @@ public class PilgrimService {
 
     @CacheEvict(value = "pilgrims", allEntries = true)
     public void deletePilgrim(Integer id) {
+        var currentUser = authenticationService.getCurrentUser();
+        if ("Supervisor".equals(currentUser.getRole())) {
+            throw new ApiException("Supervisors are not allowed to delete pilgrims");
+        }
+
         Pilgrim pilgrim = pilgrimRepository.findPilgrimById(id);
         if (pilgrim == null) {
             throw new ApiException("Pilgrim not found");
@@ -171,21 +206,13 @@ public class PilgrimService {
         if (status == null) {
             return "expected";
         }
-        switch (status.toLowerCase()) {
-            case "registered":
-            case "expected":
-                return "expected";
-            case "arrived":
-                return "arrived";
-            case "departed":
-                return "departed";
-            case "no_show":
-            case "no-show":
-            case "cancelled":
-                return "no_show";
-            default:
-                return "expected";
-        }
+        return switch (status.toLowerCase()) {
+            case "registered", "expected" -> "expected";
+            case "arrived" -> "arrived";
+            case "departed" -> "departed";
+            case "no_show", "no-show", "cancelled" -> "no_show";
+            default -> "expected";
+        };
     }
 
     private String resolveNationalId(PilgrimDTOIn pilgrimDTOIn, String fallback) {

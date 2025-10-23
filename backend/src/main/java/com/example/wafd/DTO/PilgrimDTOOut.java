@@ -44,7 +44,7 @@ public class PilgrimDTOOut {
         dto.setLastName(lastName);
         dto.setFullName(String.format("%s %s", firstName, lastName).trim());
         Integer pilgrimAge = pilgrim.getAge();
-        dto.setAge(pilgrimAge != null ? pilgrimAge : Integer.valueOf(0));
+        dto.setAge(pilgrimAge != null ? pilgrimAge : 0);
         String gender = pilgrim.getGender();
         if (gender != null) {
             gender = gender.equalsIgnoreCase("female") || gender.equalsIgnoreCase("f") ? "female" : "male";

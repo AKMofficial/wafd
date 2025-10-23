@@ -18,22 +18,54 @@ public class TentService {
 
     private final TentRepository tentRepository;
     private final BedService bedService;
+    private final AuthenticationService authenticationService;
 
     public List<TentDTOOut> findAllTents(){
-        return tentRepository.findAll().stream()
+        var currentUser = authenticationService.getCurrentUser();
+        List<Tent> tents;
+
+        if ("Supervisor".equals(currentUser.getRole()) && currentUser.getManagedAgency() != null) {
+            Integer agencyId = currentUser.getManagedAgency().getId();
+            tents = tentRepository.findTentsWithPilgrimsFromAgency(agencyId);
+        } else {
+            tents = tentRepository.findAll();
+        }
+
+        return tents.stream()
             .map(TentDTOOut::fromEntity)
             .collect(Collectors.toList());
     }
 
     public TentDTOOut findTentById(Integer id){
+        var currentUser = authenticationService.getCurrentUser();
         Tent tent = tentRepository.findTentById(id);
         if (tent == null){
             throw new ApiException("Tent not found");
         }
+
+        // Supervisors can only view tents with their pilgrims
+        if ("Supervisor".equals(currentUser.getRole()) && currentUser.getManagedAgency() != null) {
+            Integer agencyId = currentUser.getManagedAgency().getId();
+            boolean hasPilgrimsFromAgency = tent.getBeds().stream()
+                .anyMatch(bed -> bed.getBooking() != null &&
+                         bed.getBooking().getPilgrim() != null &&
+                         bed.getBooking().getPilgrim().getAgency() != null &&
+                         bed.getBooking().getPilgrim().getAgency().getId().equals(agencyId));
+
+            if (!hasPilgrimsFromAgency) {
+                throw new ApiException("Access denied: This tent does not have pilgrims from your group");
+            }
+        }
+
         return TentDTOOut.fromEntity(tent);
     }
 
     public void addTent(TentDTOIn tentDTO){
+        var currentUser = authenticationService.getCurrentUser();
+        if ("Supervisor".equals(currentUser.getRole())) {
+            throw new ApiException("Supervisors are not allowed to add tents");
+        }
+
         // Map DTO to Tent entity
         Tent tent = new Tent();
 
@@ -59,6 +91,11 @@ public class TentService {
     }
 
     public void updateTent(TentDTOIn tentDTO, Integer id){
+        var currentUser = authenticationService.getCurrentUser();
+        if ("Supervisor".equals(currentUser.getRole())) {
+            throw new ApiException("Supervisors are not allowed to edit tents");
+        }
+
         Tent tentToUpdate = tentRepository.findTentById(id);
         if (tentToUpdate == null){
             throw new ApiException("Tent not found");
@@ -105,6 +142,11 @@ public class TentService {
     }
     
     public void deleteTent(Integer id){
+        var currentUser = authenticationService.getCurrentUser();
+        if ("Supervisor".equals(currentUser.getRole())) {
+            throw new ApiException("Supervisors are not allowed to delete tents");
+        }
+
         Tent tentToDelete = tentRepository.findTentById(id);
         if (tentToDelete == null){
             throw new ApiException("Tent not found");

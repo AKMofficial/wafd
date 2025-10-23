@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from '@/lib/i18n';
 import { usePilgrimStore } from '@/store/pilgrim-store';
 import { useHallStore } from '@/store/hall-store';
+import { useAuth } from '@/lib/auth';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -52,17 +53,25 @@ export default function PilgrimDetailPage() {
   const t = useTranslations();
   const locale = useLocale();
   const isRTL = locale === 'ar';
-  
+  const { canEdit, canDelete } = useAuth();
+
   const { selectedPilgrim, fetchPilgrimById, isLoading, markArrival, deletePilgrim } = usePilgrimStore();
   const [isMarkingArrival, setIsMarkingArrival] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        router.push(`/${locale}/login`);
+        return;
+      }
+    }
     if (params.id) {
       fetchPilgrimById(params.id as string);
     }
-  }, [params.id]);
+  }, [params.id, router, locale]);
 
   const handleBack = () => {
     router.push(`/${locale}/pilgrims`);
@@ -417,24 +426,28 @@ export default function PilgrimDetailPage() {
                 </Button>
               )}
 
-              <Button
-                variant="outline"
-                onClick={handleEdit}
-                className="flex-1 sm:flex-none"
-              >
-                <Edit className="h-4 w-4 me-2" />
-                {t('pilgrims.detail.edit')}
-              </Button>
+              {canEdit() && (
+                <Button
+                  variant="outline"
+                  onClick={handleEdit}
+                  className="flex-1 sm:flex-none"
+                >
+                  <Edit className="h-4 w-4 me-2" />
+                  {t('pilgrims.detail.edit')}
+                </Button>
+              )}
 
-              <Button
-                variant="outline"
-                className="flex-1 sm:flex-none text-red-600 hover:text-red-700"
-                onClick={() => setShowDeleteDialog(true)}
-                disabled={isDeleting}
-              >
-                <Trash className="h-4 w-4 me-2" />
-                {t('pilgrims.detail.delete')}
-              </Button>
+              {canDelete() && (
+                <Button
+                  variant="outline"
+                  className="flex-1 sm:flex-none text-red-600 hover:text-red-700"
+                  onClick={() => setShowDeleteDialog(true)}
+                  disabled={isDeleting}
+                >
+                  <Trash className="h-4 w-4 me-2" />
+                  {t('pilgrims.detail.delete')}
+                </Button>
+              )}
             </div>
           </div>
         </Card>

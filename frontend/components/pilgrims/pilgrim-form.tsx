@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useTranslations, useLocale } from '@/lib/i18n';
+import { useAuth } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -46,6 +47,7 @@ export function PilgrimForm({ pilgrim, onSubmit, onCancel, isLoading = false }: 
   const locale = useLocale();
   const isRTL = locale === 'ar';
   const isEdit = !!pilgrim;
+  const { user, isSupervisor } = useAuth();
 
   // Create schema with translated messages
   const pilgrimSchema = useMemo(() => z.object({
@@ -88,7 +90,7 @@ export function PilgrimForm({ pilgrim, onSubmit, onCancel, isLoading = false }: 
       groupId: pilgrim.groupId || '',
       notes: pilgrim.notes || '',
     } : {
-      groupId: '',
+      groupId: isSupervisor() && user?.agencyId ? String(user.agencyId) : '',
       gender: 'male' as const,
       nationality: 'السعودية',
     },
@@ -102,6 +104,10 @@ export function PilgrimForm({ pilgrim, onSubmit, onCancel, isLoading = false }: 
   const [isLoadingGroups, setIsLoadingGroups] = useState(false);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const token = localStorage.getItem('accessToken');
+    if (!token) return;
+
     let isMounted = true;
     const loadGroups = async () => {
       try {
@@ -241,7 +247,7 @@ export function PilgrimForm({ pilgrim, onSubmit, onCancel, isLoading = false }: 
               noResultsText={t('pilgrims.form.noResultsFound')}
               clearable={false}
               isRTL={isRTL}
-              disabled={isLoadingGroups}
+              disabled={isLoadingGroups || isSupervisor()}
             />
             {errors.groupId && (
               <p className="text-sm text-red-500">{errors.groupId.message}</p>

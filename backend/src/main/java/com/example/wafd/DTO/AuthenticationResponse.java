@@ -15,4 +15,5 @@ public class AuthenticationResponse {
     private String userEmail;
     private String userPhone;
     private String userRole;
+    private Integer agencyId;
 }

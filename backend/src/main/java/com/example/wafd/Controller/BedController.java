@@ -46,13 +46,13 @@ public class BedController {
             return ResponseEntity.badRequest().body(new ApiResponse("pilgrimId and bedId are required"));
         }
 
-        Bed bed = bedAssignmentService.assignBed(pilgrimId, bedId);
+        bedAssignmentService.assignBed(pilgrimId, bedId);
         return ResponseEntity.ok(new ApiResponse("Bed assigned successfully"));
     }
 
     @PutMapping("/vacate/{bedId}")
     public ResponseEntity<?> vacateBed(@PathVariable Integer bedId){
-        Bed bed = bedAssignmentService.vacateBed(bedId);
+        bedAssignmentService.vacateBed(bedId);
         return ResponseEntity.ok(new ApiResponse("Bed vacated successfully"));
     }
 

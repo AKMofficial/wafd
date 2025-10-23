@@ -58,6 +58,10 @@ export function AccountsManagement() {
   });
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const token = localStorage.getItem('accessToken');
+    if (!token) return;
+
     fetchUsers();
   }, [fetchUsers]);
 

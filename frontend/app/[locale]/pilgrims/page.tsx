@@ -4,18 +4,19 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from '@/lib/i18n';
 import { usePilgrimStore } from '@/store/pilgrim-store';
+import { useAuth } from '@/lib/auth';
 import { PilgrimsTable } from '@/components/pilgrims/pilgrims-table';
 import { PilgrimsFilters } from '@/components/pilgrims/pilgrims-filters';
 import { Pagination } from '@/components/ui/pagination';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { 
-  Plus, 
-  Upload, 
-  Users, 
-  UserCheck, 
-  Clock, 
+import {
+  Plus,
+  Upload,
+  Users,
+  UserCheck,
+  Clock,
   AlertCircle,
   Accessibility,
   FileSpreadsheet,
@@ -28,6 +29,7 @@ export default function PilgrimsPage() {
   const t = useTranslations();
   const locale = useLocale();
   const router = useRouter();
+  const { canEdit, canDelete, isAdmin } = useAuth();
   const [paginatedData, setPaginatedData] = useState<any>(null);
   const [showImportDialog, setShowImportDialog] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
@@ -61,6 +63,13 @@ export default function PilgrimsPage() {
   };
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        router.push(`/${locale}/login`);
+        return;
+      }
+    }
     setIsMounted(true);
     loadPilgrims();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -133,14 +142,16 @@ export default function PilgrimsPage() {
                 <Plus className="h-4 w-4 me-2" />
                 {t('pilgrims.addPilgrim')}
               </Button>
-              <Button
-                variant="outline"
-                className="flex-1 sm:flex-none"
-                onClick={() => setShowImportDialog(true)}
-              >
-                <Upload className="h-4 w-4 me-2" />
-                {t('pilgrims.import')}
-              </Button>
+              {isAdmin() && (
+                <Button
+                  variant="outline"
+                  className="flex-1 sm:flex-none"
+                  onClick={() => setShowImportDialog(true)}
+                >
+                  <Upload className="h-4 w-4 me-2" />
+                  {t('pilgrims.import')}
+                </Button>
+              )}
             </div>
           </div>
         </div>

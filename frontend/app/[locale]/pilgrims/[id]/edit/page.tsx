@@ -22,10 +22,17 @@ export default function EditPilgrimPage() {
   const { selectedPilgrim, fetchPilgrimById, updatePilgrim, isLoading } = usePilgrimStore();
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        router.push(`/${locale}/login`);
+        return;
+      }
+    }
     if (params.id) {
       fetchPilgrimById(params.id as string);
     }
-  }, [params.id]);
+  }, [params.id, router, locale]);
 
   const handleSubmit = async (data: UpdatePilgrimDto) => {
     if (!selectedPilgrim) return;

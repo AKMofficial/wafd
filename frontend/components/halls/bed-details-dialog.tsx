@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from '@/lib/i18n';
+import { useAuth } from '@/lib/auth';
 import { Bed } from '@/types/hall';
 import { Pilgrim } from '@/types/pilgrim';
 import { usePilgrimStore } from '@/store/pilgrim-store';
@@ -52,12 +53,17 @@ export function BedDetailsDialog({
   const locale = useLocale();
   const t = useTranslations();
   const isRTL = locale === 'ar';
+  const { canSetMaintenance } = useAuth();
   const [pilgrim, setPilgrim] = useState<Pilgrim | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const { fetchPilgrimById } = usePilgrimStore();
   
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const token = localStorage.getItem('accessToken');
+    if (!token) return;
+
     if (bed?.pilgrimId && bed.status === 'occupied') {
       setIsLoading(true);
       fetchPilgrimById(bed.pilgrimId).then((p) => {
@@ -259,7 +265,7 @@ export function BedDetailsDialog({
               </Button>
             )}
 
-            {(bed.status === 'vacant' || bed.status === 'reserved') && (
+            {canSetMaintenance() && (bed.status === 'vacant' || bed.status === 'reserved') && (
               <Button
                 variant="outline"
                 className="flex-1"
@@ -273,7 +279,7 @@ export function BedDetailsDialog({
               </Button>
             )}
 
-            {bed.status === 'maintenance' && (
+            {canSetMaintenance() && bed.status === 'maintenance' && (
               <Button
                 variant="outline"
                 className="flex-1"
