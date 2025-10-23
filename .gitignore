@@ -11,8 +11,8 @@ node_modules/
 .yarn/install-state.gz
 .pnp.*
 
-# Package manager lock files
-package-lock.json
+# Package manager lock files (keep package-lock.json for production deployments)
+# package-lock.json  # Commented out - needed for Railway deployment
 yarn.lock
 pnpm-lock.yaml
 
