@@ -175,6 +175,25 @@
       "occupancyByHall": "Occupancy rate by hall",
       "arrivalTrends": "Arrival Trends",
       "weeklyArrivals": "Weekly arrival patterns",
+      "weeklyOverview": "Weekly overview of pilgrim arrivals",
+      "actualArrivals": "Actual Arrivals",
+      "expectedArrivals": "Expected Arrivals",
+      "genderDistribution": "Gender Distribution",
+      "totalPilgrims": "Total Pilgrims",
+      "male": "Male",
+      "female": "Female",
+      "ageDistribution": "Age Distribution",
+      "byAgeGroup": "Distribution by age group and gender",
+      "topNationalities": "Top Nationalities",
+      "top5Countries": "Top 5 countries by pilgrim count",
+      "pilgrims": "Pilgrims",
+      "hallsComparison": "Halls Comparison",
+      "maleVsFemaleHalls": "Male vs Female halls comparison",
+      "maleHalls": "Male Halls",
+      "femaleHalls": "Female Halls",
+      "numberOfHalls": "Number of Halls",
+      "totalBeds": "Total Beds",
+      "occupiedBeds": "Occupied Beds",
       "days": {
         "sat": "Sat",
         "sun": "Sun",
@@ -191,10 +210,7 @@
         "hallD": "Hall D",
         "hallE": "Hall E",
         "hallF": "Hall F"
-      },
-      "genderDistribution": "Gender Distribution",
-      "male": "Male",
-      "female": "Female"
+      }
     }
   },
   "pilgrims": {
