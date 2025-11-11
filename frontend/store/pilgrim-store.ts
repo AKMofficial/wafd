@@ -1,5 +1,6 @@
 ﻿import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
+import * as Y from 'yjs';
 import {
   Pilgrim,
   PilgrimFilters,
@@ -27,6 +28,13 @@ interface PilgrimState {
   isLoading: boolean;
   error: string | null;
   stats: PilgrimStatistics;
+  
+  // Yjs integration
+  ydoc: Y.Doc | null;
+  ypilgrims: Y.Map<any> | null;
+  
+  // Initialize Yjs
+  initYjs: (doc: Y.Doc) => void;
 
   setPilgrims: (pilgrims: Pilgrim[]) => void;
   setSelectedPilgrim: (pilgrim: Pilgrim | null) => void;
@@ -266,9 +274,47 @@ export const usePilgrimStore = create<PilgrimState>()(
       pagination: initialPagination,
       isLoading: false,
       error: null,
+      stats: emptyStats,
+      ydoc: null,
+      ypilgrims: null,
+      
+      initYjs: (doc: Y.Doc) => {
+        const ypilgrims = doc.getMap('pilgrims');
+        
+        // Sync Yjs changes to Zustand
+        ypilgrims.observe(() => {
+          const pilgrims: Pilgrim[] = [];
+          ypilgrims.forEach((value) => {
+            try {
+              const pilgrimStr = typeof value === 'string' ? value : JSON.stringify(value);
+              pilgrims.push(JSON.parse(pilgrimStr));
+            } catch (error) {
+              console.error('[Yjs] Failed to parse pilgrim data:', error);
+            }
+          });
+          recomputeVisiblePilgrims(pilgrims);
+        });
+        
+        // Initialize Yjs with current pilgrims
+        const currentPilgrims = get().allPilgrims;
+        currentPilgrims.forEach(pilgrim => {
+          ypilgrims.set(pilgrim.id, JSON.stringify(pilgrim));
+        });
+        
+        set({ ydoc: doc, ypilgrims });
+      },
 
       setPilgrims: (pilgrims) => {
-        recomputeVisiblePilgrims(pilgrims);
+        const { ypilgrims } = get();
+        if (ypilgrims) {
+          // Update Yjs map (will trigger observe callback)
+          pilgrims.forEach(pilgrim => {
+            ypilgrims.set(pilgrim.id, JSON.stringify(pilgrim));
+          });
+        } else {
+          // Fallback to local state
+          recomputeVisiblePilgrims(pilgrims);
+        }
       },
 
       setSelectedPilgrim: (pilgrim) => set({ selectedPilgrim: pilgrim }),
@@ -377,8 +423,16 @@ export const usePilgrimStore = create<PilgrimState>()(
                   (data.passportNumber && p.passportNumber === data.passportNumber),
               );
 
+          const result = created ?? buildFallbackPilgrim({ ...data, id: createdId });
+          
+          // Sync to Yjs
+          const { ypilgrims } = get();
+          if (ypilgrims) {
+            ypilgrims.set(result.id, JSON.stringify(result));
+          }
+          
           set({ isLoading: false });
-          return created ?? buildFallbackPilgrim({ ...data, id: createdId });
+          return result;
         } catch (error) {
           console.error('Failed to create pilgrim:', error);
           set({ error: 'errors.failedToAddPilgrim', isLoading: false });
@@ -392,9 +446,8 @@ export const usePilgrimStore = create<PilgrimState>()(
           await pilgrimAPI.update(parseInt(id, 10), data);
           await get().fetchPilgrims();
           const updated = get().allPilgrims.find((p) => p.id === id) || null;
-          set({ isLoading: false });
-          return (
-            updated ??
+          
+          const result = updated ??
             buildFallbackPilgrim({
               ...data,
               id,
@@ -406,8 +459,16 @@ export const usePilgrimStore = create<PilgrimState>()(
               age: data.age ?? 0,
               gender: data.gender ?? 'male',
               groupId: data.groupId ?? '',
-            })
-          );
+            });
+          
+          // Sync to Yjs
+          const { ypilgrims } = get();
+          if (ypilgrims) {
+            ypilgrims.set(id, JSON.stringify(result));
+          }
+          
+          set({ isLoading: false });
+          return result;
         } catch (error) {
           console.error('Failed to update pilgrim:', error);
           set({ error: 'errors.failedToUpdatePilgrim', isLoading: false });
@@ -419,10 +480,15 @@ export const usePilgrimStore = create<PilgrimState>()(
         set({ isLoading: true, error: null });
         try {
           await pilgrimAPI.delete(parseInt(id, 10));
+          
+          // Remove from Yjs
+          const { ypilgrims } = get();
+          if (ypilgrims) {
+            ypilgrims.delete(id);
+          }
+          
           await get().fetchPilgrims();
           set({ isLoading: false });
-          // Refresh the list
-          await get().fetchPilgrims();
           return true;
         } catch (error) {
           console.error('Failed to delete pilgrim:', error);

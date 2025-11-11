@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
+import * as Y from 'yjs';
 import {
   Hall,
   Bed,
@@ -37,6 +38,13 @@ interface HallState {
   pagination: HallPaginationParams;
   isLoading: boolean;
   error: string | null;
+  
+  // Yjs integration
+  ydoc: Y.Doc | null;
+  yhalls: Y.Map<any> | null;
+  
+  // Initialize Yjs
+  initYjs: (doc: Y.Doc) => void;
 
   setHalls: (halls: Hall[]) => void;
   setSelectedHall: (hall: Hall | null) => void;
@@ -212,9 +220,46 @@ export const useHallStore = create<HallState>()(
       pagination: initialPagination,
       isLoading: false,
       error: null,
+      ydoc: null,
+      yhalls: null,
+      
+      initYjs: (doc: Y.Doc) => {
+        const yhalls = doc.getMap('halls');
+        
+        // Sync Yjs changes to Zustand
+        yhalls.observe(() => {
+          const halls: Hall[] = [];
+          yhalls.forEach((value) => {
+            try {
+              const hallStr = typeof value === 'string' ? value : JSON.stringify(value);
+              halls.push(JSON.parse(hallStr));
+            } catch (error) {
+              console.error('[Yjs] Failed to parse hall data:', error);
+            }
+          });
+          recomputeVisibleHalls(halls);
+        });
+        
+        // Initialize Yjs with current halls
+        const currentHalls = get().allHalls;
+        currentHalls.forEach(hall => {
+          yhalls.set(hall.id, JSON.stringify(hall));
+        });
+        
+        set({ ydoc: doc, yhalls });
+      },
 
       setHalls: (halls) => {
-        recomputeVisibleHalls(halls);
+        const { yhalls } = get();
+        if (yhalls) {
+          // Update Yjs map (will trigger observe callback)
+          halls.forEach(hall => {
+            yhalls.set(hall.id, JSON.stringify(hall));
+          });
+        } else {
+          // Fallback to local state
+          recomputeVisibleHalls(halls);
+        }
       },
 
       setSelectedHall: (hall) => set({ selectedHall: hall }),
@@ -279,7 +324,13 @@ export const useHallStore = create<HallState>()(
           await get().fetchHalls();
           const created = get().allHalls.find((h) => h.code === data.code) || null;
           set({ isLoading: false });
+          
           if (created) {
+            // Sync to Yjs
+            const { yhalls } = get();
+            if (yhalls) {
+              yhalls.set(created.id, JSON.stringify(created));
+            }
             return created;
           }
 
@@ -293,7 +344,7 @@ export const useHallStore = create<HallState>()(
             isSpecialNeeds: false,
           }));
 
-          return {
+          const tempHall: Hall = {
             id: `temp-${Date.now()}`,
             name: data.name,
             code: data.code,
@@ -308,6 +359,14 @@ export const useHallStore = create<HallState>()(
             createdAt: new Date(),
             updatedAt: new Date(),
           };
+          
+          // Sync to Yjs
+          const { yhalls } = get();
+          if (yhalls) {
+            yhalls.set(tempHall.id, JSON.stringify(tempHall));
+          }
+          
+          return tempHall;
         } catch (error) {
           console.error('Failed to create hall:', error);
           set({ error: 'errors.failedToCreateHall', isLoading: false });
@@ -322,7 +381,8 @@ export const useHallStore = create<HallState>()(
           await get().fetchHalls();
           const updated = get().allHalls.find((h) => h.id === id) || null;
           set({ isLoading: false });
-          return updated ?? {
+          
+          const result = updated ?? {
             id,
             name: data.name ?? '',
             code: data.code ?? '',
@@ -337,6 +397,14 @@ export const useHallStore = create<HallState>()(
             createdAt: new Date(),
             updatedAt: new Date(),
           };
+          
+          // Sync to Yjs
+          const { yhalls } = get();
+          if (yhalls) {
+            yhalls.set(id, JSON.stringify(result));
+          }
+          
+          return result;
         } catch (error) {
           console.error('Failed to update hall:', error);
           set({ error: 'errors.failedToUpdateHall', isLoading: false });
@@ -348,10 +416,15 @@ export const useHallStore = create<HallState>()(
         set({ isLoading: true, error: null });
         try {
           await hallAPI.delete(parseInt(id, 10));
+          
+          // Remove from Yjs
+          const { yhalls } = get();
+          if (yhalls) {
+            yhalls.delete(id);
+          }
+          
           await get().fetchHalls();
           set({ isLoading: false });
-          // Refresh the list
-          await get().fetchHalls();
           return true;
         } catch (error) {
           console.error('Failed to delete hall:', error);
