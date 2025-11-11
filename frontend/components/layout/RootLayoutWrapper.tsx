@@ -6,6 +6,7 @@ import Sidebar from './Sidebar';
 import { useLocale } from '@/lib/i18n';
 import { SidebarProvider, useSidebar } from '@/lib/sidebar-context';
 import { ToastProvider } from '@/components/ui/toast';
+import { YjsProvider } from '@/providers/yjs-provider';
 import { cn } from '@/lib/utils';
 
 interface RootLayoutWrapperProps {
@@ -48,9 +49,11 @@ const RootLayoutContent = ({ children }: RootLayoutWrapperProps) => {
 const RootLayoutWrapper = ({ children }: RootLayoutWrapperProps) => {
   return (
     <ToastProvider>
-      <SidebarProvider>
-        <RootLayoutContent>{children}</RootLayoutContent>
-      </SidebarProvider>
+      <YjsProvider>
+        <SidebarProvider>
+          <RootLayoutContent>{children}</RootLayoutContent>
+        </SidebarProvider>
+      </YjsProvider>
     </ToastProvider>
   );
 };
