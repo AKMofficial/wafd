@@ -20,24 +20,34 @@ export function useYjs({ room, enabled = true }: UseYjsOptions) {
   useEffect(() => {
     if (!enabled) return
 
-    const wsProvider = new WebsocketProvider(WS_URL, room, doc, {
-      connect: true,
-      maxBackoffTime: 2500,
-    })
+    try {
+      const wsProvider = new WebsocketProvider(WS_URL, room, doc, {
+        connect: true,
+        maxBackoffTime: 2500,
+      })
 
-    wsProvider.on('status', (event: { status: string }) => {
-      const isConnected = event.status === 'connected'
-      setConnected(isConnected)
-    })
+      wsProvider.on('status', (event: { status: string }) => {
+        const isConnected = event.status === 'connected'
+        setConnected(isConnected)
+      })
 
-    wsProvider.on('sync', (isSynced: boolean) => {
-      setSynced(isSynced)
-    })
+      wsProvider.on('sync', (isSynced: boolean) => {
+        setSynced(isSynced)
+      })
 
-    setProvider(wsProvider)
+      setProvider(wsProvider)
 
-    return () => {
-      wsProvider.destroy()
+      return () => {
+        try {
+          wsProvider.destroy()
+        } catch (error) {
+          console.error('[Yjs] Error destroying provider:', error)
+        }
+      }
+    } catch (error) {
+      console.error('[Yjs] Failed to initialize WebSocket provider:', error)
+      setConnected(false)
+      setSynced(false)
     }
   }, [room, doc, enabled])
 

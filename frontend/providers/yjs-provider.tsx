@@ -21,8 +21,12 @@ export function YjsProvider({ children, enabled = true }: YjsProviderProps) {
 
   useEffect(() => {
     if (doc && synced) {
-      initHallYjs(doc)
-      initPilgrimYjs(doc)
+      try {
+        initHallYjs(doc)
+        initPilgrimYjs(doc)
+      } catch (error) {
+        console.error('[Yjs] Failed to initialize stores:', error)
+      }
     }
   }, [doc, synced, initHallYjs, initPilgrimYjs])
 

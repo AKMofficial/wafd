@@ -231,20 +231,35 @@ export const useHallStore = create<HallState>()(
           const halls: Hall[] = [];
           yhalls.forEach((value) => {
             try {
-              const hallStr = typeof value === 'string' ? value : JSON.stringify(value);
-              halls.push(JSON.parse(hallStr));
+              if (value) {
+                const hallStr = typeof value === 'string' ? value : JSON.stringify(value);
+                const parsed = JSON.parse(hallStr);
+                if (parsed && parsed.id) {
+                  halls.push(parsed);
+                }
+              }
             } catch (error) {
               console.error('[Yjs] Failed to parse hall data:', error);
             }
           });
-          recomputeVisibleHalls(halls);
+          if (halls.length > 0) {
+            recomputeVisibleHalls(halls);
+          }
         });
         
-        // Initialize Yjs with current halls
+        // Initialize Yjs with current halls (only if we have data)
         const currentHalls = get().allHalls;
-        currentHalls.forEach(hall => {
-          yhalls.set(hall.id, JSON.stringify(hall));
-        });
+        if (currentHalls && currentHalls.length > 0) {
+          currentHalls.forEach(hall => {
+            if (hall && hall.id) {
+              try {
+                yhalls.set(hall.id, JSON.stringify(hall));
+              } catch (error) {
+                console.error('[Yjs] Failed to set hall in Yjs:', error);
+              }
+            }
+          });
+        }
         
         set({ ydoc: doc, yhalls });
       },
