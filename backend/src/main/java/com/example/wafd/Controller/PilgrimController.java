@@ -60,4 +60,9 @@ public class PilgrimController {
         pilgrimService.addPilgrimToGroup(pilgrimId, groupId);
         return ResponseEntity.ok(new ApiResponse("Pilgrim assigned to group successfully"));
     }
+
+    @GetMapping("/stats")
+    public ResponseEntity<?> getPilgrimStatistics(){
+        return ResponseEntity.ok(pilgrimService.getStatistics());
+    }
 }

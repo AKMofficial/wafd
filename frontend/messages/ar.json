@@ -175,6 +175,25 @@
       "occupancyByHall": "نسبة الإشغال حسب القاعة",
       "arrivalTrends": "اتجاهات الوصول",
       "weeklyArrivals": "أنماط الوصول الأسبوعية",
+      "weeklyOverview": "نظرة عامة أسبوعية لوصول الحجاج",
+      "actualArrivals": "الوصول الفعلي",
+      "expectedArrivals": "الوصول المتوقع",
+      "genderDistribution": "التوزيع حسب الجنس",
+      "totalPilgrims": "إجمالي الحجاج",
+      "male": "رجال",
+      "female": "نساء",
+      "ageDistribution": "التوزيع حسب الفئة العمرية",
+      "byAgeGroup": "التوزيع حسب الفئة العمرية والجنس",
+      "topNationalities": "أعلى الجنسيات",
+      "top5Countries": "أعلى 5 دول حسب عدد الحجاج",
+      "pilgrims": "الحجاج",
+      "hallsComparison": "مقارنة القاعات",
+      "maleVsFemaleHalls": "مقارنة قاعات الرجال والنساء",
+      "maleHalls": "قاعات الرجال",
+      "femaleHalls": "قاعات النساء",
+      "numberOfHalls": "عدد القاعات",
+      "totalBeds": "إجمالي الأسرة",
+      "occupiedBeds": "الأسرة المشغولة",
       "days": {
         "sat": "السبت",
         "sun": "الأحد",
@@ -191,10 +210,7 @@
         "hallD": "القاعة د",
         "hallE": "القاعة هـ",
         "hallF": "القاعة و"
-      },
-      "genderDistribution": "التوزيع حسب الجنس",
-      "male": "رجال",
-      "female": "نساء"
+      }
     }
   },
   "pilgrims": {

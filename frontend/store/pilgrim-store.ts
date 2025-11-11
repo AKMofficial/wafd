@@ -101,8 +101,6 @@ const mapStatsResponse = (payload: any): PilgrimStatistics => {
   };
 };
 
-
-
 const applyFilters = (pilgrims: Pilgrim[], filters: PilgrimFilters): Pilgrim[] => {
   let filtered = [...pilgrims];
 
@@ -448,10 +446,26 @@ export const usePilgrimStore = create<PilgrimState>()(
           
           set({ isLoading: false });
           return result;
-        } catch (error) {
+        } catch (error: any) {
           console.error('Failed to create pilgrim:', error);
-          set({ error: 'errors.failedToAddPilgrim', isLoading: false });
-          throw error;
+          
+          // Parse error message from backend
+          let errorMessage = 'errors.failedToAddPilgrim';
+          
+          if (error?.message) {
+            // Check for duplicate ID error
+            if (error.message.includes('duplicate') || error.message.includes('Duplicate') || 
+                error.message.includes('already exists') || error.message.includes('constraint')) {
+              errorMessage = 'A pilgrim with this National ID or Passport already exists. Please use a different ID.';
+            } else if (error.message.includes('validation') || error.message.includes('invalid')) {
+              errorMessage = 'Invalid data provided. Please check all required fields.';
+            } else {
+              errorMessage = error.message;
+            }
+          }
+          
+          set({ error: errorMessage, isLoading: false });
+          throw new Error(errorMessage);
         }
       },
 

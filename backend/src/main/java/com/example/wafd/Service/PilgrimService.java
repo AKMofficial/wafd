@@ -3,6 +3,7 @@ package com.example.wafd.Service;
 import com.example.wafd.Api.ApiException;
 import com.example.wafd.DTO.PilgrimDTOIn;
 import com.example.wafd.DTO.PilgrimDTOOut;
+import com.example.wafd.DTO.PilgrimStatsDTO;
 import com.example.wafd.Model.Agency;
 import com.example.wafd.Model.Pilgrim;
 import com.example.wafd.Repository.AgencyRepository;
@@ -15,7 +16,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -234,5 +237,93 @@ public class PilgrimService {
             throw new ApiException("Group not found");
         }
         return agency;
+    }
+
+    @Cacheable("pilgrimStats")
+    public PilgrimStatsDTO getStatistics() {
+        var currentUser = authenticationService.getCurrentUser();
+        List<Pilgrim> pilgrims;
+
+        // Get pilgrims based on user role
+        if ("Supervisor".equals(currentUser.getRole()) && currentUser.getManagedAgency() != null) {
+            Integer agencyId = currentUser.getManagedAgency().getId();
+            pilgrims = pilgrimRepository.findByAgencyId(agencyId);
+        } else {
+            pilgrims = pilgrimRepository.findAllWithDetails();
+        }
+
+        // Initialize counters
+        long total = pilgrims.size();
+        long arrived = 0;
+        long expected = 0;
+        long departed = 0;
+        long noShow = 0;
+        long specialNeeds = 0;
+        long maleCount = 0;
+        long femaleCount = 0;
+
+        Map<String, Long> byNationality = new HashMap<>();
+        Map<String, Long> byAgeGroup = new HashMap<>();
+
+        // Calculate statistics
+        for (Pilgrim pilgrim : pilgrims) {
+            // Count by status
+            String status = pilgrim.getStatus();
+            if ("arrived".equalsIgnoreCase(status)) arrived++;
+            else if ("expected".equalsIgnoreCase(status)) expected++;
+            else if ("departed".equalsIgnoreCase(status)) departed++;
+            else if ("no_show".equalsIgnoreCase(status)) noShow++;
+
+            // Count special needs
+            if (Boolean.TRUE.equals(pilgrim.getHasSpecialNeeds())) {
+                specialNeeds++;
+            }
+
+            // Count by gender
+            String gender = pilgrim.getGender();
+            if ("male".equalsIgnoreCase(gender)) {
+                maleCount++;
+            } else if ("female".equalsIgnoreCase(gender)) {
+                femaleCount++;
+            }
+
+            // Count by nationality
+            String nationality = pilgrim.getNationality();
+            if (nationality != null && !nationality.isBlank()) {
+                byNationality.put(nationality, byNationality.getOrDefault(nationality, 0L) + 1);
+            }
+
+            // Count by age group
+            Integer age = pilgrim.getAge();
+            if (age != null && age > 0) {
+                String ageGroup;
+                if (age < 18) ageGroup = "0-17";
+                else if (age < 30) ageGroup = "18-29";
+                else if (age < 40) ageGroup = "30-39";
+                else if (age < 50) ageGroup = "40-49";
+                else if (age < 60) ageGroup = "50-59";
+                else ageGroup = "60+";
+
+                byAgeGroup.put(ageGroup, byAgeGroup.getOrDefault(ageGroup, 0L) + 1);
+            }
+        }
+
+        // Calculate occupancy rate (you can adjust this logic based on your business requirements)
+        // For now, using arrived / total as a simple occupancy metric
+        double occupancyRate = total > 0 ? (double) arrived / total * 100 : 0.0;
+
+        return PilgrimStatsDTO.builder()
+                .total(total)
+                .arrived(arrived)
+                .expected(expected)
+                .departed(departed)
+                .noShow(noShow)
+                .specialNeeds(specialNeeds)
+                .maleCount(maleCount)
+                .femaleCount(femaleCount)
+                .occupancyRate(occupancyRate)
+                .byNationality(byNationality)
+                .byAgeGroup(byAgeGroup)
+                .build();
     }
 }
