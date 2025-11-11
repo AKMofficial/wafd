@@ -286,20 +286,35 @@ export const usePilgrimStore = create<PilgrimState>()(
           const pilgrims: Pilgrim[] = [];
           ypilgrims.forEach((value) => {
             try {
-              const pilgrimStr = typeof value === 'string' ? value : JSON.stringify(value);
-              pilgrims.push(JSON.parse(pilgrimStr));
+              if (value) {
+                const pilgrimStr = typeof value === 'string' ? value : JSON.stringify(value);
+                const parsed = JSON.parse(pilgrimStr);
+                if (parsed && parsed.id) {
+                  pilgrims.push(parsed);
+                }
+              }
             } catch (error) {
               console.error('[Yjs] Failed to parse pilgrim data:', error);
             }
           });
-          recomputeVisiblePilgrims(pilgrims);
+          if (pilgrims.length > 0) {
+            recomputeVisiblePilgrims(pilgrims);
+          }
         });
         
-        // Initialize Yjs with current pilgrims
+        // Initialize Yjs with current pilgrims (only if we have data)
         const currentPilgrims = get().allPilgrims;
-        currentPilgrims.forEach(pilgrim => {
-          ypilgrims.set(pilgrim.id, JSON.stringify(pilgrim));
-        });
+        if (currentPilgrims && currentPilgrims.length > 0) {
+          currentPilgrims.forEach(pilgrim => {
+            if (pilgrim && pilgrim.id) {
+              try {
+                ypilgrims.set(pilgrim.id, JSON.stringify(pilgrim));
+              } catch (error) {
+                console.error('[Yjs] Failed to set pilgrim in Yjs:', error);
+              }
+            }
+          });
+        }
         
         set({ ydoc: doc, ypilgrims });
       },
