@@ -239,7 +239,6 @@ public class PilgrimService {
         return agency;
     }
 
-    @Cacheable("pilgrimStats")
     public PilgrimStatsDTO getStatistics() {
         var currentUser = authenticationService.getCurrentUser();
         List<Pilgrim> pilgrims;
