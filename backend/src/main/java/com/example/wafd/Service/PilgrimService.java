@@ -263,6 +263,7 @@ public class PilgrimService {
 
         Map<String, Long> byNationality = new HashMap<>();
         Map<String, Long> byAgeGroup = new HashMap<>();
+        Map<String, Long> bySpecialNeeds = new HashMap<>();
 
         // Calculate statistics
         for (Pilgrim pilgrim : pilgrims) {
@@ -276,6 +277,11 @@ public class PilgrimService {
             // Count special needs
             if (Boolean.TRUE.equals(pilgrim.getHasSpecialNeeds())) {
                 specialNeeds++;
+                // Count by special needs type
+                String specialNeedsType = pilgrim.getSpecialNeedsType();
+                if (specialNeedsType != null && !specialNeedsType.isBlank()) {
+                    bySpecialNeeds.put(specialNeedsType, bySpecialNeeds.getOrDefault(specialNeedsType, 0L) + 1);
+                }
             }
 
             // Count by gender
@@ -323,6 +329,7 @@ public class PilgrimService {
                 .occupancyRate(occupancyRate)
                 .byNationality(byNationality)
                 .byAgeGroup(byAgeGroup)
+                .bySpecialNeeds(bySpecialNeeds)
                 .build();
     }
 }
