@@ -2,26 +2,11 @@
 
 import { Card } from '@/components/ui/card';
 import { useTranslations } from '@/lib/i18n';
-import {
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-  AreaChart,
-  Area,
-  LineChart,
-  Line,
-  RadialBarChart,
-  RadialBar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  LabelList
-} from 'recharts';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
+import { Pie, Bar, Doughnut } from 'react-chartjs-2';
+
+// Register Chart.js components
+ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
 
 interface ChartCardProps {
   title: string;
@@ -48,391 +33,265 @@ interface ChartsProps {
   locale: string;
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-100">
-        <p className="text-sm font-semibold text-gray-900 mb-2">{label}</p>
-        {payload.map((entry: any, index: number) => (
-          <p key={index} className="text-sm" style={{ color: entry.color }}>
-            {entry.name}: <span className="font-bold">{entry.value}</span>
-          </p>
-        ))}
-      </div>
-    );
-  }
-  return null;
-};
-
-const CustomPieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, name }: any) => {
-  const RADIAN = Math.PI / 180;
-  const radius = innerRadius + (outerRadius - innerRadius) * 1.2;
-  const x = cx + radius * Math.cos(-midAngle * RADIAN);
-  const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
-  return (
-    <text 
-      x={x} 
-      y={y} 
-      fill="#374151" 
-      textAnchor={x > cx ? 'start' : 'end'} 
-      dominantBaseline="central"
-      className="text-xs font-medium"
-    >
-      {name} ({(percent * 100).toFixed(0)}%)
-    </text>
-  );
-};
-
 export function Charts({ pilgrimStats, hallStats, locale }: ChartsProps) {
   const t = useTranslations();
 
-  const arrivalTrends = [
-    { day: t('dashboard.charts.days.sat'), arrivals: 45, expected: 50, difference: -5 },
-    { day: t('dashboard.charts.days.sun'), arrivals: 52, expected: 48, difference: 4 },
-    { day: t('dashboard.charts.days.mon'), arrivals: 38, expected: 42, difference: -4 },
-    { day: t('dashboard.charts.days.tue'), arrivals: 60, expected: 55, difference: 5 },
-    { day: t('dashboard.charts.days.wed'), arrivals: 48, expected: 52, difference: -4 },
-    { day: t('dashboard.charts.days.thu'), arrivals: 55, expected: 58, difference: -3 },
-    { day: t('dashboard.charts.days.fri'), arrivals: 42, expected: 45, difference: -3 },
-  ];
+  // Gender Distribution Data (Real Data from API)
+  const genderData = {
+    labels: [t('dashboard.charts.male'), t('dashboard.charts.female')],
+    datasets: [
+      {
+        label: t('dashboard.charts.pilgrims'),
+        data: [pilgrimStats?.maleCount || 0, pilgrimStats?.femaleCount || 0],
+        backgroundColor: ['#3B82F6', '#EC4899'],
+        borderColor: ['#2563EB', '#DB2777'],
+        borderWidth: 2,
+      },
+    ],
+  };
 
+  // Top Nationalities Data (Real Data from API)
   const nationalityData = Object.entries(pilgrimStats?.byNationality || {})
     .map(([country, count]) => ({
       name: country,
       value: count as number,
-      percentage: ((count as number / (pilgrimStats?.total || 1)) * 100).toFixed(1)
     }))
     .sort((a, b) => b.value - a.value)
     .slice(0, 5);
 
-  const ageGroupData = [
-    { age: '18-30', male: 25, female: 20, total: 45 },
-    { age: '31-40', male: 35, female: 30, total: 65 },
-    { age: '41-50', male: 45, female: 38, total: 83 },
-    { age: '51-60', male: 40, female: 42, total: 82 },
-    { age: '60+', male: 30, female: 35, total: 65 },
-  ];
+  const topNationalitiesData = {
+    labels: nationalityData.map(item => item.name),
+    datasets: [
+      {
+        label: t('dashboard.charts.pilgrims'),
+        data: nationalityData.map(item => item.value),
+        backgroundColor: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'],
+        borderColor: ['#2563EB', '#059669', '#D97706', '#DC2626', '#7C3AED'],
+        borderWidth: 2,
+      },
+    ],
+  };
 
-  const hallsOccupancyData = Object.entries(hallStats?.byHall || {})
+  // Halls Comparison Data (Real Data from API)
+  const hallsData = Object.entries(hallStats?.byHall || {})
     .map(([id, hall]: [string, any]) => ({
       name: hall.name,
       pilgrims: hall.occupancy,
       capacity: hall.capacity,
-      occupancy: hall.rate
     }))
-    .sort((a, b) => b.occupancy - a.occupancy);
+    .sort((a, b) => b.pilgrims - a.pilgrims)
+    .slice(0, 10);
 
-  const genderDistribution = [
-    { name: t('dashboard.charts.male'), value: pilgrimStats?.maleCount || 0, fill: '#3B82F6' },
-    { name: t('dashboard.charts.female'), value: pilgrimStats?.femaleCount || 0, fill: '#EC4899' }
-  ];
+  const hallsComparisonData = {
+    labels: hallsData.map(hall => hall.name),
+    datasets: [
+      {
+        label: t('dashboard.charts.occupied'),
+        data: hallsData.map(hall => hall.pilgrims),
+        backgroundColor: '#3B82F6',
+        borderColor: '#2563EB',
+        borderWidth: 1,
+      },
+      {
+        label: t('dashboard.charts.capacity'),
+        data: hallsData.map(hall => hall.capacity),
+        backgroundColor: '#E5E7EB',
+        borderColor: '#D1D5DB',
+        borderWidth: 1,
+      },
+    ],
+  };
 
-  const occupancyOverview = [
-    { name: t('dashboard.charts.occupancy'), value: hallStats?.occupancyRate || 0, fill: '#10B981' }
-  ];
+  // Occupancy Rate Data (Real Data from API)
+  const occupancyRate = hallStats?.occupancyRate || 0;
+  const occupancyColor = occupancyRate > 90 ? '#EF4444' : occupancyRate > 75 ? '#F59E0B' : '#10B981';
+  
+  const occupancyData = {
+    labels: [t('dashboard.charts.occupied'), t('dashboard.charts.available')],
+    datasets: [
+      {
+        label: t('dashboard.charts.beds'),
+        data: [hallStats?.totalOccupied || 0, (hallStats?.totalBeds || 0) - (hallStats?.totalOccupied || 0)],
+        backgroundColor: [occupancyColor, '#E5E7EB'],
+        borderColor: [occupancyColor, '#D1D5DB'],
+        borderWidth: 2,
+      },
+    ],
+  };
 
-  const COLORS = {
-    primary: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'],
-    secondary: ['#60A5FA', '#34D399', '#FCD34D', '#F87171', '#A78BFA'],
-    accent: '#EC4899'
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: locale === 'ar' ? ('left' as const) : ('right' as const),
+        labels: {
+          font: {
+            family: locale === 'ar' ? 'Cairo, sans-serif' : 'Inter, sans-serif',
+            size: 12,
+          },
+          padding: 15,
+          usePointStyle: true,
+        },
+      },
+      tooltip: {
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        titleColor: '#111827',
+        bodyColor: '#374151',
+        borderColor: '#E5E7EB',
+        borderWidth: 1,
+        padding: 12,
+        boxPadding: 6,
+        usePointStyle: true,
+        titleFont: {
+          size: 14,
+          weight: 'bold' as const,
+        },
+        bodyFont: {
+          size: 13,
+        },
+      },
+    },
+  };
+
+  const barOptions = {
+    ...chartOptions,
+    indexAxis: locale === 'ar' ? ('y' as const) : ('x' as const),
+    scales: {
+      x: {
+        grid: {
+          display: false,
+        },
+        ticks: {
+          font: {
+            family: locale === 'ar' ? 'Cairo, sans-serif' : 'Inter, sans-serif',
+          },
+        },
+      },
+      y: {
+        grid: {
+          color: '#F3F4F6',
+        },
+        ticks: {
+          font: {
+            family: locale === 'ar' ? 'Cairo, sans-serif' : 'Inter, sans-serif',
+          },
+        },
+      },
+    },
   };
 
   return (
-    <div className="space-y-6">
-      {/* Main Charts Grid - Row 1 */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {/* Occupancy Rate Overview */}
-        <ChartCard
-          title={t('dashboard.charts.overallOccupancyRate')}
-          subtitle={`${hallStats?.totalOccupied || 0}/${hallStats?.totalBeds || 0} ${t('dashboard.charts.bedsOccupied')}`}
-        >
-          <div className="flex items-center justify-center h-[250px]">
-            <div className="relative">
-              <ResponsiveContainer width={200} height={200}>
-                <RadialBarChart
-                  cx="50%"
-                  cy="50%"
-                  innerRadius="60%"
-                  outerRadius="90%"
-                  data={occupancyOverview}
-                  startAngle={90}
-                  endAngle={-270}
-                >
-                  <RadialBar
-                    dataKey="value"
-                    cornerRadius={10}
-                    fill={(hallStats?.occupancyRate || 0) > 90 ? '#EF4444' : (hallStats?.occupancyRate || 0) > 75 ? '#F59E0B' : '#10B981'}
-                    background={{ fill: '#F3F4F6' }}
-                  />
-                </RadialBarChart>
-              </ResponsiveContainer>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-4xl font-bold text-gray-900">
-                  {(hallStats?.occupancyRate || 0).toFixed(0)}%
-                </span>
-                <span className="text-sm text-gray-500">
-                  {t('dashboard.charts.occupancy')}
-                </span>
-              </div>
+    <div className="space-y-8">
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">
+          {t('dashboard.stats.title')}
+        </h2>
+        
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          {/* Occupancy Rate Doughnut Chart */}
+          <ChartCard
+            title={t('dashboard.charts.occupancy')}
+            subtitle={`${occupancyRate.toFixed(1)}% ${t('dashboard.charts.occupied')}`}
+          >
+            <div style={{ height: '300px' }}>
+              <Doughnut data={occupancyData} options={chartOptions} />
             </div>
-          </div>
-        </ChartCard>
+            <div className="mt-4 text-center">
+              <p className="text-sm text-gray-600">
+                {hallStats?.totalOccupied || 0} / {hallStats?.totalBeds || 0} {t('dashboard.charts.beds')}
+              </p>
+            </div>
+          </ChartCard>
 
-        {/* Gender Distribution - Pie Chart */}
-        <ChartCard
-          title={t('dashboard.charts.genderDistribution')}
-          subtitle={`${t('dashboard.charts.totalPilgrims')}: ${pilgrimStats?.total || 0}`}
-        >
-          <ResponsiveContainer width="100%" height={250}>
-            <PieChart>
-              <Pie
-                data={genderDistribution}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={CustomPieLabel}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {genderDistribution.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.fill} />
-                ))}
-              </Pie>
-              <Tooltip content={<CustomTooltip />} />
-              <Legend 
-                verticalAlign="bottom" 
-                height={36}
-                formatter={(value, entry: any) => (
-                  <span className="text-sm font-medium text-gray-700">
-                    {value}: {entry.payload.value}
-                  </span>
-                )}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-        </ChartCard>
-      </div>
+          {/* Gender Distribution Pie Chart */}
+          <ChartCard
+            title={t('dashboard.charts.genderDistribution')}
+            subtitle={t('dashboard.charts.genderBreakdown')}
+          >
+            <div style={{ height: '300px' }}>
+              <Pie data={genderData} options={chartOptions} />
+            </div>
+          </ChartCard>
 
-      {/* Row 2 - Age Distribution & Nationality */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {/* Age Group Distribution - Stacked Bar Chart */}
-        <ChartCard
-          title={t('dashboard.charts.ageDistribution')}
-          subtitle={t('dashboard.charts.byAgeGroup')}
-        >
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={ageGroupData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-              <XAxis 
-                dataKey="age" 
-                tick={{ fill: '#6B7280', fontSize: 12 }}
-                axisLine={{ stroke: '#D1D5DB' }}
+          {/* Top Nationalities Horizontal Bar Chart */}
+          <ChartCard
+            title={t('dashboard.charts.topNationalities')}
+            subtitle={t('dashboard.charts.top5Countries')}
+            className="xl:col-span-2"
+          >
+            <div style={{ height: '350px' }}>
+              <Bar 
+                data={topNationalitiesData} 
+                options={{
+                  ...barOptions,
+                  indexAxis: 'y',
+                }} 
               />
-              <YAxis 
-                tick={{ fill: '#6B7280', fontSize: 12 }}
-                axisLine={{ stroke: '#D1D5DB' }}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend 
-                wrapperStyle={{ paddingTop: '20px' }}
-                formatter={(value) => (
-                  <span className="text-sm font-medium text-gray-700">{value}</span>
-                )}
-              />
-              <Bar dataKey="male" stackId="a" fill="#3B82F6" radius={[0, 0, 0, 0]} name={t('dashboard.charts.male')} />
-              <Bar dataKey="female" stackId="a" fill="#EC4899" radius={[8, 8, 0, 0]} name={t('dashboard.charts.female')} />
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartCard>
+            </div>
+          </ChartCard>
 
-        {/* Top Nationalities - Horizontal Bar Chart */}
-        <ChartCard
-          title={t('dashboard.charts.topNationalities')}
-          subtitle={t('dashboard.charts.top5Countries')}
-        >
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart 
-              data={nationalityData} 
-              layout="vertical"
-              margin={{ top: 5, right: 30, left: 80, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-              <XAxis 
-                type="number" 
-                tick={{ fill: '#6B7280', fontSize: 12 }}
-                axisLine={{ stroke: '#D1D5DB' }}
-              />
-              <YAxis 
-                type="category" 
-                dataKey="name" 
-                tick={{ fill: '#6B7280', fontSize: 12 }}
-                axisLine={{ stroke: '#D1D5DB' }}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="value" fill="#8B5CF6" radius={[0, 8, 8, 0]} name={t('dashboard.charts.pilgrims')}>
-                <LabelList 
-                  dataKey="percentage" 
-                  position="right" 
-                  formatter={(value: any) => `${value}%`}
-                  style={{ fill: '#6B7280', fontSize: 12, fontWeight: 500 }}
-                />
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartCard>
-      </div>
+          {/* Halls Comparison Grouped Bar Chart */}
+          <ChartCard
+            title={t('dashboard.charts.hallsComparison')}
+            subtitle={t('dashboard.charts.occupancyVsCapacity')}
+            className="xl:col-span-2"
+          >
+            <div style={{ height: '400px' }}>
+              <Bar data={hallsComparisonData} options={barOptions} />
+            </div>
+          </ChartCard>
 
-      {/* Row 3 - Arrival Trends & Hall Capacity */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {/* Arrival Trends - Area Chart */}
-        <ChartCard
-          title={t('dashboard.charts.arrivalTrends')}
-          subtitle={t('dashboard.charts.weeklyOverview')}
-        >
-          <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={arrivalTrends} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id="colorArrivals" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10B981" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#10B981" stopOpacity={0.1}/>
-                </linearGradient>
-                <linearGradient id="colorExpected" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.1}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-              <XAxis 
-                dataKey="day" 
-                tick={{ fill: '#6B7280', fontSize: 12 }}
-                axisLine={{ stroke: '#D1D5DB' }}
-              />
-              <YAxis 
-                tick={{ fill: '#6B7280', fontSize: 12 }}
-                axisLine={{ stroke: '#D1D5DB' }}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend 
-                wrapperStyle={{ paddingTop: '10px' }}
-                formatter={(value) => (
-                  <span className="text-sm font-medium text-gray-700">{value}</span>
-                )}
-              />
-              <Area 
-                type="monotone" 
-                dataKey="arrivals" 
-                stroke="#10B981" 
-                fillOpacity={1} 
-                fill="url(#colorArrivals)"
-                name={t('dashboard.charts.actualArrivals')}
-              />
-              <Area 
-                type="monotone" 
-                dataKey="expected" 
-                stroke="#3B82F6" 
-                fillOpacity={1} 
-                fill="url(#colorExpected)"
-                name={t('dashboard.charts.expectedArrivals')}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </ChartCard>
+          {/* Halls Occupancy List */}
+          <ChartCard
+            title={t('dashboard.charts.hallsOccupancy')}
+            subtitle={t('dashboard.charts.byHall')}
+            className="xl:col-span-2"
+          >
+            <div className="space-y-4">
+              {Object.entries(hallStats?.byHall || {})
+                .map(([id, hall]: [string, any]) => ({
+                  id,
+                  name: hall.name,
+                  occupancy: hall.occupancy,
+                  capacity: hall.capacity,
+                  rate: hall.rate,
+                }))
+                .sort((a, b) => b.rate - a.rate)
+                .slice(0, 8)
+                .map((hall) => {
+                  const rateColor =
+                    hall.rate > 90
+                      ? 'from-red-500 to-red-600'
+                      : hall.rate > 75
+                      ? 'from-amber-500 to-amber-600'
+                      : 'from-green-500 to-green-600';
 
-        {/* Halls Occupancy - Modern List View */}
-        <ChartCard
-          title={t('dashboard.charts.hallsOccupancy')}
-          subtitle={t('dashboard.charts.occupancyByHall')}
-        >
-          <div className="space-y-3 h-[300px] overflow-y-auto pr-2">
-            {hallsOccupancyData.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <p>{t('halls.messages.notFound')}</p>
-              </div>
-            ) : (
-              hallsOccupancyData.map((hall, index) => (
-                <div key={index} className="space-y-1.5">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="font-medium text-gray-700">{hall.name}</span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-500">
-                        {hall.pilgrims}/{hall.capacity}
-                      </span>
-                      <span className={`font-semibold ${
-                        hall.occupancy > 90 ? 'text-red-600' :
-                        hall.occupancy > 75 ? 'text-amber-600' :
-                        'text-green-600'
-                      }`}>
-                        {hall.occupancy.toFixed(0)}%
-                      </span>
+                  return (
+                    <div key={hall.id} className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-gray-900">{hall.name}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-600">
+                            {hall.occupancy} / {hall.capacity}
+                          </span>
+                          <span className="text-sm font-semibold text-gray-900 min-w-[3rem] text-right">
+                            {hall.rate.toFixed(0)}%
+                          </span>
+                        </div>
+                      </div>
+                      <div className="relative h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div
+                          className={`absolute inset-y-0 ${locale === 'ar' ? 'right' : 'left'}-0 bg-gradient-to-r ${rateColor} rounded-full transition-all duration-500 ease-out`}
+                          style={{ width: `${hall.rate}%` }}
+                        />
+                      </div>
                     </div>
-                  </div>
-                  <div className="relative h-2 bg-gray-100 rounded-full overflow-hidden">
-                    <div
-                      className={`absolute inset-y-0 left-0 rounded-full transition-all duration-500 ${
-                        hall.occupancy > 90 ? 'bg-gradient-to-r from-red-500 to-red-600' :
-                        hall.occupancy > 75 ? 'bg-gradient-to-r from-amber-500 to-amber-600' :
-                        'bg-gradient-to-r from-green-500 to-green-600'
-                      }`}
-                      style={{ width: `${hall.occupancy}%` }}
-                    />
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </ChartCard>
-      </div>
-
-      {/* Row 4 - Male vs Female Halls Comparison */}
-      <div className="grid grid-cols-1 gap-6">
-        <ChartCard
-          title={t('dashboard.charts.hallsComparison')}
-          subtitle={t('dashboard.charts.maleVsFemaleHalls')}
-          className="xl:col-span-2"
-        >
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart 
-              data={[
-                {
-                  type: t('dashboard.charts.maleHalls'),
-                  halls: hallStats?.maleHalls?.total || 0,
-                  beds: hallStats?.maleHalls?.beds || 0,
-                  occupied: hallStats?.maleHalls?.occupied || 0,
-                },
-                {
-                  type: t('dashboard.charts.femaleHalls'),
-                  halls: hallStats?.femaleHalls?.total || 0,
-                  beds: hallStats?.femaleHalls?.beds || 0,
-                  occupied: hallStats?.femaleHalls?.occupied || 0,
-                }
-              ]}
-              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-              <XAxis 
-                dataKey="type" 
-                tick={{ fill: '#6B7280', fontSize: 12 }}
-                axisLine={{ stroke: '#D1D5DB' }}
-              />
-              <YAxis 
-                tick={{ fill: '#6B7280', fontSize: 12 }}
-                axisLine={{ stroke: '#D1D5DB' }}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend 
-                wrapperStyle={{ paddingTop: '20px' }}
-                formatter={(value) => (
-                  <span className="text-sm font-medium text-gray-700">{value}</span>
-                )}
-              />
-              <Bar dataKey="halls" fill="#8B5CF6" radius={[8, 8, 0, 0]} name={t('dashboard.charts.numberOfHalls')} />
-              <Bar dataKey="beds" fill="#3B82F6" radius={[8, 8, 0, 0]} name={t('dashboard.charts.totalBeds')} />
-              <Bar dataKey="occupied" fill="#10B981" radius={[8, 8, 0, 0]} name={t('dashboard.charts.occupiedBeds')} />
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartCard>
+                  );
+                })}
+            </div>
+          </ChartCard>
+        </div>
       </div>
     </div>
   );

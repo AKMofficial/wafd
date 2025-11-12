@@ -4,6 +4,7 @@ import { ReactNode, useEffect } from 'react'
 import { useYjs } from '@/hooks/use-yjs'
 import { useHallStore } from '@/store/hall-store'
 import { usePilgrimStore } from '@/store/pilgrim-store'
+import { useParams } from 'next/navigation'
 
 interface YjsProviderProps {
   children: ReactNode
@@ -15,6 +16,10 @@ export function YjsProvider({ children, enabled = true }: YjsProviderProps) {
     room: 'mawa-collaboration',
     enabled,
   })
+
+  const params = useParams()
+  const locale = (params?.locale as string) || 'en'
+  const isRTL = locale === 'ar'
 
   const initHallYjs = useHallStore((state) => state.initYjs)
   const initPilgrimYjs = usePilgrimStore((state) => state.initYjs)
@@ -36,8 +41,13 @@ export function YjsProvider({ children, enabled = true }: YjsProviderProps) {
 
   return (
     <>
-      {/* Connection status indicator */}
-      <div className="fixed bottom-4 right-4 z-50">
+      {/* Connection status indicator - positioned based on language direction */}
+      <div 
+        className="fixed top-4 z-50"
+        style={{
+          [isRTL ? 'left' : 'right']: '1rem',
+        }}
+      >
         <div
           className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium shadow-lg transition-all ${
             connected && synced
@@ -50,7 +60,7 @@ export function YjsProvider({ children, enabled = true }: YjsProviderProps) {
               connected && synced ? 'bg-green-500 animate-pulse' : 'bg-yellow-500'
             }`}
           />
-          {connected && synced ? 'Real-time sync active' : 'Connecting...'}
+          {connected && synced ? (isRTL ? 'مزامنة مباشرة نشطة' : 'Real-time sync active') : (isRTL ? 'جاري الاتصال...' : 'Connecting...')}
         </div>
       </div>
       {children}
