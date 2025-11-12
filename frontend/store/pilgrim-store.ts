@@ -79,6 +79,7 @@ const emptyStats: PilgrimStatistics = {
   occupancyRate: 0,
   byNationality: {},
   byAgeGroup: {},
+  bySpecialNeeds: {},
 };
 
 const mapStatsResponse = (payload: any): PilgrimStatistics => {
@@ -98,6 +99,7 @@ const mapStatsResponse = (payload: any): PilgrimStatistics => {
     occupancyRate: Number(payload.occupancyRate ?? 0),
     byNationality: payload.byNationality ?? {},
     byAgeGroup: payload.byAgeGroup ?? {},
+    bySpecialNeeds: payload.bySpecialNeeds ?? {},
   };
 };
 
