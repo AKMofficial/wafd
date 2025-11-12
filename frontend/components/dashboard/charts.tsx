@@ -84,10 +84,10 @@ export function Charts({ pilgrimStats, hallStats, locale }: ChartsProps) {
       {
         label: t('dashboard.charts.pilgrims'),
         data: [
-          pilgrimStats?.arrivedCount || 0,
-          pilgrimStats?.expectedCount || 0,
-          pilgrimStats?.departedCount || 0,
-          pilgrimStats?.noShowCount || 0,
+          pilgrimStats?.arrived || 0,
+          pilgrimStats?.expected || 0,
+          pilgrimStats?.departed || 0,
+          pilgrimStats?.noShow || 0,
         ],
         backgroundColor: ['#10B981', '#3B82F6', '#F59E0B', '#EF4444'],
         borderColor: ['#059669', '#2563EB', '#D97706', '#DC2626'],

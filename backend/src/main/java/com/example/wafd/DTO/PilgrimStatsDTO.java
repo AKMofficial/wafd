@@ -23,11 +23,5 @@ public class PilgrimStatsDTO {
     private Double occupancyRate;
     private Map<String, Long> byNationality;
     private Map<String, Long> byAgeGroup;
-    private Map<String, Long> bySpecialNeeds; // Added for special needs breakdown
-    
-    // Convenience getters for frontend (camelCase versions)
-    public Long getArrivedCount() { return arrived; }
-    public Long getExpectedCount() { return expected; }
-    public Long getDepartedCount() { return departed; }
-    public Long getNoShowCount() { return noShow; }
+    private Map<String, Long> bySpecialNeeds;
 }

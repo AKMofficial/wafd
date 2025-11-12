@@ -56,7 +56,8 @@ export default function Home() {
     femaleCount: 0,
     occupancyRate: 0,
     byNationality: {},
-    byAgeGroup: {}
+    byAgeGroup: {},
+    bySpecialNeeds: {}
   };
 
   const hallStats = isMounted ? getHallStats() : {

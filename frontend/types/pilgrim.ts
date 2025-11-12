@@ -120,6 +120,7 @@ export interface PilgrimStatistics {
   occupancyRate: number;
   byNationality: Record<string, number>;
   byAgeGroup: Record<string, number>;
+  bySpecialNeeds: Record<string, number>;
 }
 
 export interface CreatePilgrimDto {
