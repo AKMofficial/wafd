@@ -72,32 +72,58 @@ export function Charts({ pilgrimStats, hallStats, locale }: ChartsProps) {
     ],
   };
 
-  // Halls Comparison Data (Real Data from API)
-  const hallsData = Object.entries(hallStats?.byHall || {})
-    .map(([id, hall]: [string, any]) => ({
-      name: hall.name,
-      pilgrims: hall.occupancy,
-      capacity: hall.capacity,
-    }))
-    .sort((a, b) => b.pilgrims - a.pilgrims)
-    .slice(0, 10);
-
-  const hallsComparisonData = {
-    labels: hallsData.map(hall => hall.name),
+  // Pilgrim Status Distribution Data (Real Data from API)
+  const statusData = {
+    labels: [
+      t('dashboard.stats.arrived'),
+      t('dashboard.stats.expected'),
+      t('dashboard.stats.departed'),
+      t('dashboard.stats.noShow'),
+    ],
     datasets: [
       {
-        label: t('dashboard.charts.occupied'),
-        data: hallsData.map(hall => hall.pilgrims),
-        backgroundColor: '#3B82F6',
-        borderColor: '#2563EB',
-        borderWidth: 1,
+        label: t('dashboard.charts.pilgrims'),
+        data: [
+          pilgrimStats?.arrivedCount || 0,
+          pilgrimStats?.expectedCount || 0,
+          pilgrimStats?.departedCount || 0,
+          pilgrimStats?.noShowCount || 0,
+        ],
+        backgroundColor: ['#10B981', '#3B82F6', '#F59E0B', '#EF4444'],
+        borderColor: ['#059669', '#2563EB', '#D97706', '#DC2626'],
+        borderWidth: 2,
       },
+    ],
+  };
+
+  // Special Needs Distribution Data (Real Data from API)
+  const specialNeedsEntries = Object.entries(pilgrimStats?.bySpecialNeeds || {})
+    .filter(([_, count]) => (count as number) > 0)
+    .sort((a, b) => (b[1] as number) - (a[1] as number));
+
+  const specialNeedsData = {
+    labels: specialNeedsEntries.map(([type]) => type),
+    datasets: [
       {
-        label: t('dashboard.charts.capacity'),
-        data: hallsData.map(hall => hall.capacity),
-        backgroundColor: '#E5E7EB',
-        borderColor: '#D1D5DB',
-        borderWidth: 1,
+        label: t('dashboard.charts.pilgrims'),
+        data: specialNeedsEntries.map(([_, count]) => count as number),
+        backgroundColor: ['#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#3B82F6'],
+        borderColor: ['#7C3AED', '#DB2777', '#D97706', '#059669', '#2563EB'],
+        borderWidth: 2,
+      },
+    ],
+  };
+
+  // Male vs Female Halls Data (Real Data from API)
+  const hallsByGenderData = {
+    labels: [t('dashboard.charts.maleHalls'), t('dashboard.charts.femaleHalls')],
+    datasets: [
+      {
+        label: t('dashboard.charts.halls'),
+        data: [hallStats?.maleHalls?.count || 0, hallStats?.femaleHalls?.count || 0],
+        backgroundColor: ['#3B82F6', '#EC4899'],
+        borderColor: ['#2563EB', '#DB2777'],
+        borderWidth: 2,
       },
     ],
   };
@@ -231,14 +257,38 @@ export function Charts({ pilgrimStats, hallStats, locale }: ChartsProps) {
             </div>
           </ChartCard>
 
-          {/* Halls Comparison Grouped Bar Chart */}
+          {/* Pilgrim Status Distribution Pie Chart */}
           <ChartCard
-            title={t('dashboard.charts.hallsComparison')}
-            subtitle={t('dashboard.charts.occupancyVsCapacity')}
-            className="xl:col-span-2"
+            title={t('dashboard.charts.pilgrimStatus')}
+            subtitle={t('dashboard.charts.statusBreakdown')}
           >
-            <div style={{ height: '400px' }}>
-              <Bar data={hallsComparisonData} options={barOptions} />
+            <div style={{ height: '300px' }}>
+              <Pie data={statusData} options={chartOptions} />
+            </div>
+          </ChartCard>
+
+          {/* Special Needs Distribution Bar Chart */}
+          <ChartCard
+            title={t('dashboard.charts.specialNeeds')}
+            subtitle={t('dashboard.charts.specialNeedsBreakdown')}
+          >
+            <div style={{ height: '300px' }}>
+              <Bar data={specialNeedsData} options={barOptions} />
+            </div>
+          </ChartCard>
+
+          {/* Male vs Female Halls Doughnut Chart */}
+          <ChartCard
+            title={t('dashboard.charts.hallsByGender')}
+            subtitle={t('dashboard.charts.hallsGenderBreakdown')}
+          >
+            <div style={{ height: '300px' }}>
+              <Doughnut data={hallsByGenderData} options={chartOptions} />
+            </div>
+            <div className="mt-4 text-center">
+              <p className="text-sm text-gray-600">
+                {t('dashboard.charts.totalHalls')}: {(hallStats?.maleHalls?.count || 0) + (hallStats?.femaleHalls?.count || 0)}
+              </p>
             </div>
           </ChartCard>
 
