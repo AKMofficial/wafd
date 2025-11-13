@@ -148,6 +148,14 @@ export default function HallDetailPage() {
   const handleAssignPilgrim = async (pilgrimId: string, bedId: string) => {
     try {
       await assignBed({ bedId, pilgrimId });
+      // Refresh pilgrim data to update bed details
+      await fetchPilgrims();
+      // Refresh hall data to get updated bed information
+      await fetchHallById(hallId);
+      // Update selected bed with new pilgrim info if it's the same bed
+      if (selectedBed && selectedBed.id === bedId) {
+        setSelectedBed(prev => prev ? { ...prev, pilgrimId, status: 'occupied' } : null);
+      }
     } catch (error) {
       console.error('Failed to assign bed:', error);
     }
@@ -156,6 +164,14 @@ export default function HallDetailPage() {
   const handleVacateBed = async (bedId: string) => {
     try {
       await vacateBed(bedId);
+      // Refresh pilgrim data when a bed is vacated
+      await fetchPilgrims();
+      // Refresh hall data
+      await fetchHallById(hallId);
+      // Clear selected bed since it's no longer occupied
+      if (selectedBed && selectedBed.id === bedId) {
+        setSelectedBed(prev => prev ? { ...prev, status: 'vacant', pilgrimId: undefined } : null);
+      }
     } catch (error) {
       console.error('Failed to vacate bed:', error);
     }
@@ -164,6 +180,12 @@ export default function HallDetailPage() {
   const handleChangeBedStatus = async (bedId: string, status: BedStatus) => {
     try {
       await updateBedStatus(bedId, status);
+      // Refresh hall data to get updated bed status
+      await fetchHallById(hallId);
+      // Update selected bed status
+      if (selectedBed && selectedBed.id === bedId) {
+        setSelectedBed(prev => prev ? { ...prev, status } : null);
+      }
     } catch (error) {
       console.error('Failed to update bed status:', error);
     }
