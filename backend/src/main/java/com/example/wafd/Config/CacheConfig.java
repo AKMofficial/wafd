@@ -17,7 +17,15 @@ public class CacheConfig {
             "agencies",
             "tents",
             "beds",
-            "users"
+            "users",
+            // Search and filter results caches
+            "pilgrimSearch",
+            "agencySearch",
+            "bedSearch",
+            "tentSearch",
+            // Static data caches
+            "settings",
+            "categories"
         );
     }
 }

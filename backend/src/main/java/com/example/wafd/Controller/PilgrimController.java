@@ -5,6 +5,8 @@ import com.example.wafd.DTO.PilgrimDTOIn;
 import com.example.wafd.Service.PilgrimService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -20,6 +22,7 @@ public class PilgrimController {
     private final PilgrimService pilgrimService;
 
     @GetMapping("/get/all")
+    @Cacheable(value = "pilgrimSearch", key = "'page_' + #page + '_size_' + #size + '_sort_' + #sortBy")
     public ResponseEntity<?> findAllPilgrims(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -34,28 +37,33 @@ public class PilgrimController {
     }
 
     @PostMapping("/add")
+    @CacheEvict(value = "pilgrimSearch", allEntries = true)
     public ResponseEntity<?> addPilgrim(@RequestBody @Valid PilgrimDTOIn pilgrimDTOIn){
         return ResponseEntity.status(HttpStatus.CREATED.value()).body(pilgrimService.addPilgrim(pilgrimDTOIn));
     }
     
     @PutMapping("/update/{id}")
+    @CacheEvict(value = "pilgrimSearch", allEntries = true)
     public ResponseEntity<?> updatePilgrim(@RequestBody @Valid PilgrimDTOIn pilgrimDTOIn, @PathVariable Integer id){
         pilgrimService.updatePilgrim(id, pilgrimDTOIn);
         return ResponseEntity.ok(new ApiResponse("Pilgrim updated successfully"));
     }
     
     @DeleteMapping("/delete/{id}")
+    @CacheEvict(value = "pilgrimSearch", allEntries = true)
     public ResponseEntity<?> deletePilgrim(@PathVariable Integer id){
         pilgrimService.deletePilgrim(id);
         return ResponseEntity.ok(new ApiResponse("Pilgrim deleted successfully"));
     }
 
     @GetMapping("/get/{id}")
+    @Cacheable(value = "pilgrims", key = "#id")
     public ResponseEntity<?> getPilgrimById(@PathVariable Integer id){
         return ResponseEntity.ok(pilgrimService.getPilgrimById(id));
     }
 
     @PutMapping("/assign/pilgrim/{pilgrimId}/group/{groupId}")
+    @CacheEvict(value = {"pilgrims", "pilgrimSearch"}, allEntries = true)
     public ResponseEntity<?> addPilgrimToGroup(@PathVariable Integer pilgrimId, @PathVariable Integer groupId){
         pilgrimService.addPilgrimToGroup(pilgrimId, groupId);
         return ResponseEntity.ok(new ApiResponse("Pilgrim assigned to group successfully"));
