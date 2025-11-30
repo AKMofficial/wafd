@@ -43,6 +43,9 @@ public class Tent {
     @Column(columnDefinition = "varchar(10)")
     private String type;
 
+    @Column(columnDefinition = "text")
+    private String description;
+
     @ManyToOne
     @JsonIgnore
     private Agency agency;
