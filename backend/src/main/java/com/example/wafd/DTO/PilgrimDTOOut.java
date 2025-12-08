@@ -86,7 +86,10 @@ public class PilgrimDTOOut {
             Bed bed = pilgrim.getBooking().getBed();
             dto.setAssignedBed(String.valueOf(bed.getId()));
             if (bed.getTent() != null) {
-                dto.setAssignedHall(bed.getTent().getCode() != null ? bed.getTent().getCode() : "H" + bed.getTent().getId());
+                // Use tent name if available, otherwise use code, otherwise use ID
+                String hallName = bed.getTent().getName() != null ? bed.getTent().getName() : 
+                                 (bed.getTent().getCode() != null ? bed.getTent().getCode() : "H" + bed.getTent().getId());
+                dto.setAssignedHall(hallName);
             }
         }
         

@@ -23,7 +23,7 @@ public class BedAssignmentService {
         if (pilgrim == null) {
             throw new ApiException("Pilgrim not found");
         }
-        Bed bed = bedRepository.findBedById(bedId);
+        Bed bed = bedRepository.findBedByIdWithTent(bedId);
         if (bed == null) {
             throw new ApiException("Bed not found");
         }

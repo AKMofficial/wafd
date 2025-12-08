@@ -19,6 +19,10 @@ interface BackendPilgrim {
   notes?: string;
   createdAt?: string;
   updatedAt?: string;
+  groupId?: number;
+  groupName?: string;
+  assignedBed?: string | number;
+  assignedHall?: string;
   agencyId?: number;
   agencyName?: string;
   agency?: {
@@ -95,6 +99,29 @@ export function transformPilgrimFromBackend(beData: BackendPilgrim): Pilgrim {
   const createdAt = beData.createdAt ? new Date(beData.createdAt) : new Date();
   const updatedAt = beData.updatedAt ? new Date(beData.updatedAt) : createdAt;
 
+  // Handle both flat and nested bed/hall data from backend
+  let assignedBed: string | undefined;
+  let assignedHall: string | undefined;
+  
+  // Check for flat fields first (from new backend)
+  if (beData.assignedBed) {
+    assignedBed = beData.assignedBed?.toString();
+  }
+  if (beData.assignedHall) {
+    assignedHall = beData.assignedHall;
+  }
+  
+  // Fall back to nested booking data (for backwards compatibility)
+  if (!assignedBed && beData.booking?.bed?.id) {
+    assignedBed = beData.booking.bed.id.toString();
+  }
+  if (!assignedHall && beData.booking?.bed?.tent?.code) {
+    assignedHall = beData.booking.bed.tent.code;
+  }
+  if (!assignedHall && beData.booking?.bed?.tent?.id) {
+    assignedHall = beData.booking.bed.tent.id.toString();
+  }
+
   return {
     id: beData.id?.toString() || '',
     registrationNumber: beData.registrationNumber || '',
@@ -112,10 +139,10 @@ export function transformPilgrimFromBackend(beData: BackendPilgrim): Pilgrim {
     specialNeedsType: beData.specialNeedsType as SpecialNeedsType | undefined,
     specialNeedsNotes: beData.specialNeedsNotes || undefined,
     status: mapStatus(beData.status),
-    assignedBed: beData.booking?.bed?.id?.toString(),
-    assignedHall: beData.booking?.bed?.tent?.code || beData.booking?.bed?.tent?.id?.toString(),
-    groupId: (beData.agencyId ?? beData.agency?.id)?.toString(),
-    groupName: beData.agencyName || beData.agency?.name,
+    assignedBed,
+    assignedHall,
+    groupId: (beData.groupId ?? beData.agencyId ?? beData.agency?.id)?.toString(),
+    groupName: beData.groupName || beData.agencyName || beData.agency?.name,
     notes: beData.notes || undefined,
     createdAt,
     updatedAt,
