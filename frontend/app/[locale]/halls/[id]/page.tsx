@@ -157,7 +157,8 @@ export default function HallDetailPage() {
         setSelectedBed(prev => prev ? { ...prev, pilgrimId, status: 'occupied' } : null);
       }
     } catch (error) {
-      console.error('Failed to assign bed:', error);
+      // Re-throw the error to be caught by the dialog
+      throw error;
     }
   };
   

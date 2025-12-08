@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, User, Phone, MapPin, FileText, X } from 'lucide-react';
+import { Search, User, Phone, MapPin, FileText, X, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface AssignPilgrimDialogProps {
@@ -40,6 +40,7 @@ export function AssignPilgrimDialog({
   const isRTL = locale === 'ar';
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPilgrim, setSelectedPilgrim] = useState<Pilgrim | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const availablePilgrims = useMemo(() => {
     return pilgrims.filter(p => p.status === 'expected' || p.status === 'arrived');
@@ -63,16 +64,23 @@ export function AssignPilgrimDialog({
     });
   }, [availablePilgrims, searchQuery]);
 
-  const handleAssign = () => {
+  const handleAssign = async () => {
     if (selectedPilgrim && bed) {
-      onAssign(selectedPilgrim.id, bed.id);
-      handleClose();
+      setError(null);
+      try {
+        await onAssign(selectedPilgrim.id, bed.id);
+        handleClose();
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to assign pilgrim to bed';
+        setError(errorMessage);
+      }
     }
   };
 
   const handleClose = () => {
     setSearchQuery('');
     setSelectedPilgrim(null);
+    setError(null);
     onClose();
   };
 
@@ -90,6 +98,22 @@ export function AssignPilgrimDialog({
             {t('halls.assignDialog.description')}
           </DialogDescription>
         </DialogHeader>
+
+        {error && (
+          <div className="flex items-start gap-3 p-4 rounded-lg bg-red-50 border border-red-200">
+            <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="font-semibold text-red-900">{t('common.error')}</p>
+              <p className="text-red-800 text-sm mt-1">{error}</p>
+            </div>
+            <button
+              onClick={() => setError(null)}
+              className="text-red-600 hover:text-red-800 flex-shrink-0"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
 
         <div className="space-y-4">
           {/* Search Input */}
