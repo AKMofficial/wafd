@@ -539,6 +539,7 @@
       "phone": "Phone",
       "registrationNumber": "Registration Number",
       "arrivalDate": "Arrival Date",
+      "arrivalStatus": "Arrival Status",
       "location": "Location",
       "assignPilgrim": "Assign Pilgrim",
       "vacateBed": "Vacate Bed",
