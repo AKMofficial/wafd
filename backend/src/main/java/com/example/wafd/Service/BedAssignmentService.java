@@ -23,6 +23,12 @@ public class BedAssignmentService {
         if (pilgrim == null) {
             throw new ApiException("Pilgrim not found");
         }
+        
+        // Check if pilgrim already has an active booking
+        if (pilgrim.getBooking() != null && "Booked".equals(pilgrim.getBooking().getStatus())) {
+            throw new ApiException("Pilgrim already has an active booking");
+        }
+        
         Bed bed = bedRepository.findBedByIdWithTent(bedId);
         if (bed == null) {
             throw new ApiException("Bed not found");
@@ -30,6 +36,21 @@ public class BedAssignmentService {
 
         if (!bed.getStatus().equals("Available")) {
             throw new ApiException("Bed is not available");
+        }
+        
+        // Check gender compatibility
+        if (bed.getTent() != null) {
+            String tentType = bed.getTent().getType();
+            String pilgrimGender = pilgrim.getGender();
+            
+            // Normalize values for comparison
+            String normalizedTentType = tentType != null ? tentType.toLowerCase() : "male";
+            String normalizedPilgrimGender = pilgrimGender != null ? pilgrimGender.toLowerCase() : "male";
+            
+            // Check if genders match
+            if (!normalizedTentType.equals(normalizedPilgrimGender)) {
+                throw new ApiException("Cannot assign " + normalizedPilgrimGender + " pilgrim to " + normalizedTentType + " tent");
+            }
         }
 
         Booking booking = pilgrim.getBooking();
