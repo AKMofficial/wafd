@@ -94,3 +94,5 @@ public class PilgrimDTOOut {
         }
         
         return dto;
+    }
+}
