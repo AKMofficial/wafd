@@ -207,9 +207,11 @@ export function BedDetailsDialog({
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">
-                        {t('halls.bedDetailsDialog.arrivalDate')}
+                        {t('halls.bedDetailsDialog.status')}
                       </span>
-                      <span className="text-xs">{formatDate(pilgrim.arrivalDate)}</span>
+                      <Badge variant={pilgrim.status === 'arrived' ? 'default' : 'secondary'}>
+                        {pilgrim.status === 'arrived' ? t('pilgrims.status.arrived') : t('pilgrims.status.expected')}
+                      </Badge>
                     </div>
                   </>
                 )}
