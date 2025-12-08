@@ -1,6 +1,7 @@
 package com.example.wafd.DTO;
 
 import com.example.wafd.Model.Pilgrim;
+import com.example.wafd.Model.Bed;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -31,6 +32,8 @@ public class PilgrimDTOOut {
     private LocalDateTime updatedAt;
     private Integer groupId;
     private String groupName;
+    private String assignedBed;
+    private String assignedHall;
 
     public static PilgrimDTOOut fromEntity(Pilgrim pilgrim) {
         PilgrimDTOOut dto = new PilgrimDTOOut();
@@ -77,6 +80,14 @@ public class PilgrimDTOOut {
             dto.setGroupId(pilgrim.getAgency().getId());
             dto.setGroupName(pilgrim.getAgency().getName());
         }
+        
+        // Set bed and hall information from booking
+        if (pilgrim.getBooking() != null && pilgrim.getBooking().getBed() != null) {
+            Bed bed = pilgrim.getBooking().getBed();
+            dto.setAssignedBed(String.valueOf(bed.getId()));
+            if (bed.getTent() != null) {
+                dto.setAssignedHall(bed.getTent().getCode() != null ? bed.getTent().getCode() : "H" + bed.getTent().getId());
+            }
+        }
+        
         return dto;
-    }
-}

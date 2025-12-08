@@ -58,6 +58,14 @@ public interface PilgrimRepository extends JpaRepository<Pilgrim, Integer> {
            "WHERE p.id = :id")
     Optional<Pilgrim> findByIdWithDetails(@Param("id") Integer id);
 
+    // Optimized single pilgrim fetch by ID (non-Optional version)
+    @Query("SELECT p FROM Pilgrim p " +
+           "LEFT JOIN FETCH p.agency a " +
+           "LEFT JOIN FETCH p.booking b " +
+           "LEFT JOIN FETCH b.bed bed " +
+           "WHERE p.id = :id")
+    Pilgrim findPilgrimByIdWithDetails(@Param("id") Integer id);
+
     // Find pilgrims by agency
     @Query("SELECT p FROM Pilgrim p " +
            "LEFT JOIN FETCH p.booking b " +

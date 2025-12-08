@@ -19,7 +19,7 @@ public class BedAssignmentService {
     private final BookingRepository bookingRepository;
 
     public Bed assignBed(Integer pilgrimId, Integer bedId) {
-        Pilgrim pilgrim = pilgrimRepository.findPilgrimById(pilgrimId);
+        Pilgrim pilgrim = pilgrimRepository.findPilgrimByIdWithDetails(pilgrimId);
         if (pilgrim == null) {
             throw new ApiException("Pilgrim not found");
         }

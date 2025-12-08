@@ -43,7 +43,7 @@ public class BedController {
     }
 
     @PostMapping("/assign")
-    @CacheEvict(value = "beds", allEntries = true)
+    @CacheEvict(value = {"beds", "pilgrims", "pilgrimSearch"}, allEntries = true)
     public ResponseEntity<?> assignBed(@RequestBody Map<String, Integer> payload){
         Integer pilgrimId = payload.get("pilgrimId");
         Integer bedId = payload.get("bedId");
@@ -57,7 +57,7 @@ public class BedController {
     }
 
     @PutMapping("/vacate/{bedId}")
-    @CacheEvict(value = "beds", allEntries = true)
+    @CacheEvict(value = {"beds", "pilgrims", "pilgrimSearch"}, allEntries = true)
     public ResponseEntity<?> vacateBed(@PathVariable Integer bedId){
         bedAssignmentService.vacateBed(bedId);
         return ResponseEntity.ok(new ApiResponse("Bed vacated successfully"));
