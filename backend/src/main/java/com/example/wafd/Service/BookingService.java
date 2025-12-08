@@ -30,6 +30,12 @@ public class BookingService {
         if (pilgrim.getAgency() == null) {
             throw new ApiException("Pilgrim is not assigned to a group");
         }
+        
+        // Check if pilgrim already has an active booking
+        if (pilgrim.getBooking() != null && "Booked".equals(pilgrim.getBooking().getStatus())) {
+            throw new ApiException("Pilgrim already has an active booking");
+        }
+        
         Agency agency = agencyRepository.findAgencyById(pilgrim.getAgency().getId());
         if (agency == null){
             throw new ApiException("Agency not found");

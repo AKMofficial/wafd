@@ -81,8 +81,8 @@ public class PilgrimDTOOut {
             dto.setGroupName(pilgrim.getAgency().getName());
         }
         
-        // Set bed and hall information from booking
-        if (pilgrim.getBooking() != null && pilgrim.getBooking().getBed() != null) {
+        // Set bed and hall information from booking only if booking is active (Booked status)
+        if (pilgrim.getBooking() != null && "Booked".equals(pilgrim.getBooking().getStatus()) && pilgrim.getBooking().getBed() != null) {
             Bed bed = pilgrim.getBooking().getBed();
             dto.setAssignedBed(String.valueOf(bed.getId()));
             if (bed.getTent() != null) {
