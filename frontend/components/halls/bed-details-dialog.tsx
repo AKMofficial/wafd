@@ -147,7 +147,7 @@ export function BedDetailsDialog({
                 <span className="text-gray-600">
                   {t('halls.createDialog.hallCode')}
                 </span>
-                <span className="font-medium">{bed.hallCode}</span>
+                <span className="font-medium">{bed.hallCode || '-'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">
@@ -182,7 +182,7 @@ export function BedDetailsDialog({
                     {t('halls.bedDetailsDialog.name')}
                   </span>
                   <span className="font-medium">
-                    {bed.pilgrimName || (pilgrim?.fullName) || 'Unknown'}
+                    {bed.pilgrimName || pilgrim?.fullName || 'Unknown'}
                   </span>
                 </div>
                 {pilgrim && (

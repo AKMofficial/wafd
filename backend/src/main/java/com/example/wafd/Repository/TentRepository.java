@@ -29,10 +29,13 @@ public interface TentRepository extends JpaRepository<Tent, Integer> {
     java.util.List<Tent> findAll();
 
     @Query("SELECT DISTINCT t FROM Tent t " +
-           "JOIN FETCH t.beds b " +
-           "JOIN FETCH b.tent bt " +
-           "JOIN FETCH b.booking bk " +
-           "JOIN FETCH bk.pilgrim p " +
-           "WHERE p.agency.id = :agencyId")
+           "LEFT JOIN FETCH t.beds b " +
+           "LEFT JOIN FETCH b.tent bt " +
+           "LEFT JOIN FETCH b.booking bk " +
+           "LEFT JOIN FETCH bk.pilgrim p " +
+           "LEFT JOIN FETCH p.agency " +
+           "WHERE EXISTS (SELECT 1 FROM Bed bd " +
+           "  LEFT JOIN bd.booking bd_bk " +
+           "  WHERE bd.tent = t AND bd_bk.pilgrim.agency.id = :agencyId)")
     java.util.List<Tent> findTentsWithPilgrimsFromAgency(@Param("agencyId") Integer agencyId);
 }

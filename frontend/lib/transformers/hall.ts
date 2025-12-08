@@ -22,12 +22,19 @@ interface BackendTent {
 interface BackendBed {
   id: number;
   status: string; // Available, Booked, Checked_in, Checked_out
+  number?: string;
+  hallCode?: string;
+  hallId?: string;
+  pilgrimId?: number | string;
+  pilgrimName?: string;
   tent?: BackendTent;
   booking?: {
     id: number;
     status: string;
     pilgrim?: {
       id: number;
+      firstName?: string;
+      lastName?: string;
       passport_number: string;
     };
   };
@@ -57,13 +64,23 @@ export function mapBedStatusToBackend(feStatus: BedStatus): string {
 
 // Transform backend bed to frontend format
 function transformBedFromBackend(beData: BackendBed): Bed {
+  // Use hallCode from the new backend format (BedDTOOut), fallback to nested tent data
+  const hallCode = beData.hallCode || beData.tent?.code || beData.tent?.id?.toString() || '';
+  
+  // Use pilgrimName from the new backend format (BedDTOOut), fallback to nested booking pilgrim
+  let pilgrimName: string | undefined;
+  if (beData.pilgrimName && beData.pilgrimName !== 'None') {
+    pilgrimName = beData.pilgrimName;
+  }
+  
   return {
     id: beData.id?.toString() || '',
-    number: beData.id?.toString() || '', // Use ID as number for now
-    hallId: beData.tent?.id?.toString() || '',
-    hallCode: beData.tent?.code || beData.tent?.id?.toString() || '',
+    number: beData.number || beData.id?.toString() || '', // Use the number from backend if available
+    hallId: beData.hallId || beData.tent?.id?.toString() || '',
+    hallCode: hallCode,
     status: mapBedStatus(beData.status),
-    pilgrimId: beData.booking?.pilgrim?.id?.toString(),
+    pilgrimId: (beData.pilgrimId || beData.booking?.pilgrim?.id)?.toString(),
+    pilgrimName: pilgrimName,
     isSpecialNeeds: false,
     lastAssignedAt: beData.booking ? new Date(beData.created_at || '') : undefined,
   };
