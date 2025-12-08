@@ -40,10 +40,21 @@ public class BookingService {
         if (agency == null){
             throw new ApiException("Agency not found");
         }
+        
+        // Normalize pilgrim gender for comparison
+        String pilgrimGender = pilgrim.getGender() != null ? pilgrim.getGender().toLowerCase() : "male";
+        
         for (Tent tent : agency.getTents()){
             if (tent.getCapacity() == 0){
                 continue;
             }
+            
+            // Check tent gender matches pilgrim gender
+            String tentType = tent.getType() != null ? tent.getType().toLowerCase() : "male";
+            if (!tentType.equals(pilgrimGender)) {
+                continue;
+            }
+            
             for (Bed bed : tent.getBeds()){
                 if (bed.getStatus().equals("Booked")){
                     continue;
@@ -65,6 +76,12 @@ public class BookingService {
         if (pilgrim.getAgency() == null) {
             throw new ApiException("Pilgrim is not assigned to a group");
         }
+        
+        // Check if pilgrim already has an active booking
+        if (pilgrim.getBooking() != null && "Booked".equals(pilgrim.getBooking().getStatus())) {
+            throw new ApiException("Pilgrim already has an active booking");
+        }
+        
         Bed bed = bedRepository.findBedById(bed_id);
         if (bed == null){
             throw new ApiException("Bed not found");
@@ -72,6 +89,22 @@ public class BookingService {
         if (!bed.getStatus().equals("Available")){
             throw new ApiException("Bed is not available");
         }
+        
+        // Check gender compatibility
+        if (bed.getTent() != null) {
+            String tentType = bed.getTent().getType();
+            String pilgrimGender = pilgrim.getGender();
+            
+            // Normalize values for comparison
+            String normalizedTentType = tentType != null ? tentType.toLowerCase() : "male";
+            String normalizedPilgrimGender = pilgrimGender != null ? pilgrimGender.toLowerCase() : "male";
+            
+            // Check if genders match
+            if (!normalizedTentType.equals(normalizedPilgrimGender)) {
+                throw new ApiException("Cannot assign " + normalizedPilgrimGender + " pilgrim to " + normalizedTentType + " tent");
+            }
+        }
+        
         bed.setStatus("Booked");
         Booking booking = new Booking(null,"Booked",pilgrim,bed,null,null);
         bookingRepository.save(booking);
