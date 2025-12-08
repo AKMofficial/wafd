@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 public interface TentRepository extends JpaRepository<Tent, Integer> {
     @Query("SELECT DISTINCT t FROM Tent t " +
            "LEFT JOIN FETCH t.beds b " +
+           "LEFT JOIN FETCH b.tent bt " +
            "LEFT JOIN FETCH b.booking bk " +
            "LEFT JOIN FETCH bk.pilgrim p " +
            "LEFT JOIN FETCH p.agency " +
@@ -21,6 +22,7 @@ public interface TentRepository extends JpaRepository<Tent, Integer> {
     @NonNull
     @Query("SELECT DISTINCT t FROM Tent t " +
            "LEFT JOIN FETCH t.beds b " +
+           "LEFT JOIN FETCH b.tent bt " +
            "LEFT JOIN FETCH b.booking bk " +
            "LEFT JOIN FETCH bk.pilgrim p " +
            "LEFT JOIN FETCH p.agency")
@@ -28,6 +30,7 @@ public interface TentRepository extends JpaRepository<Tent, Integer> {
 
     @Query("SELECT DISTINCT t FROM Tent t " +
            "JOIN FETCH t.beds b " +
+           "JOIN FETCH b.tent bt " +
            "JOIN FETCH b.booking bk " +
            "JOIN FETCH bk.pilgrim p " +
            "WHERE p.agency.id = :agencyId")

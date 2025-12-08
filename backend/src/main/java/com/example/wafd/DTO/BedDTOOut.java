@@ -17,6 +17,7 @@ public class BedDTOOut {
     private String hallCode;
     private String status; // "available", "occupied", "maintenance", "reserved"
     private String pilgrimId;
+    private String pilgrimName;
     private Boolean isSpecialNeeds;
     private Boolean isDoubleBed;
     private String companionBedId;
@@ -58,9 +59,14 @@ public class BedDTOOut {
         };
         dto.setStatus(frontendStatus);
 
-        // Get pilgrim ID from booking if available
+        // Get pilgrim ID and name from booking if available
         if (bed.getBooking() != null && bed.getBooking().getPilgrim() != null) {
             dto.setPilgrimId(String.valueOf(bed.getBooking().getPilgrim().getId()));
+            String firstName = bed.getBooking().getPilgrim().getFirstName() != null ? bed.getBooking().getPilgrim().getFirstName() : "";
+            String lastName = bed.getBooking().getPilgrim().getLastName() != null ? bed.getBooking().getPilgrim().getLastName() : "";
+            dto.setPilgrimName(String.format("%s %s", firstName, lastName).trim());
+        } else {
+            dto.setPilgrimName("None");
         }
 
         // Default values for fields not in backend

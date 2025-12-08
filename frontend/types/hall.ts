@@ -26,6 +26,7 @@ export interface Bed {
   hallCode: string;
   status: BedStatus;
   pilgrimId?: string;
+  pilgrimName?: string;
   isSpecialNeeds: boolean;
   isDoubleBed?: boolean;
   companionBedId?: string;

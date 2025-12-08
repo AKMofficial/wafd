@@ -171,7 +171,7 @@ export function BedDetailsDialog({
           </Card>
           
           {/* Pilgrim Information (if occupied) */}
-          {bed.status === 'occupied' && pilgrim && !isLoading && (
+          {bed.status === 'occupied' && (
             <Card className="p-4 space-y-3">
               <h3 className="font-semibold text-sm">
                 {t('halls.bedDetailsDialog.pilgrimInfo')}
@@ -181,45 +181,72 @@ export function BedDetailsDialog({
                   <span className="text-gray-600">
                     {t('halls.bedDetailsDialog.name')}
                   </span>
-                  <span className="font-medium">{pilgrim.fullName}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">
-                    {t('halls.bedDetailsDialog.registrationNumber')}
+                  <span className="font-medium">
+                    {bed.pilgrimName || (pilgrim?.fullName) || 'Unknown'}
                   </span>
-                  <span className="font-medium">{pilgrim.registrationNumber}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">
-                    {t('pilgrims.detail.nationality')}
-                  </span>
-                  <span className="font-medium">{pilgrim.nationality}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">
-                    {t('halls.bedDetailsDialog.phone')}
-                  </span>
-                  <span className="font-medium" dir="ltr">{pilgrim.phoneNumber}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">
-                    {t('halls.bedDetailsDialog.arrivalDate')}
-                  </span>
-                  <span className="text-xs">{formatDate(pilgrim.arrivalDate)}</span>
-                </div>
+                {pilgrim && (
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">
+                        {t('halls.bedDetailsDialog.registrationNumber')}
+                      </span>
+                      <span className="font-medium">{pilgrim.registrationNumber}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">
+                        {t('pilgrims.detail.nationality')}
+                      </span>
+                      <span className="font-medium">{pilgrim.nationality}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">
+                        {t('halls.bedDetailsDialog.phone')}
+                      </span>
+                      <span className="font-medium" dir="ltr">{pilgrim.phoneNumber}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">
+                        {t('halls.bedDetailsDialog.arrivalDate')}
+                      </span>
+                      <span className="text-xs">{formatDate(pilgrim.arrivalDate)}</span>
+                    </div>
+                  </>
+                )}
               </div>
 
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full mt-3"
-                onClick={() => {
-                  router.push(`/${locale}/pilgrims/${pilgrim.id}`);
-                  onClose();
-                }}
-              >
-                {t('halls.bedDetailsDialog.viewPilgrimDetails')}
-              </Button>
+              {pilgrim && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full mt-3"
+                  onClick={() => {
+                    router.push(`/${locale}/pilgrims/${pilgrim.id}`);
+                    onClose();
+                  }}
+                >
+                  {t('halls.bedDetailsDialog.viewPilgrimDetails')}
+                </Button>
+              )}
+            </Card>
+          )}
+
+          {/* No Pilgrim Information */}
+          {bed.status !== 'occupied' && (
+            <Card className="p-4 space-y-3 bg-gray-50">
+              <h3 className="font-semibold text-sm">
+                {t('halls.bedDetailsDialog.pilgrimInfo')}
+              </h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">
+                    {t('halls.bedDetailsDialog.name')}
+                  </span>
+                  <span className="font-medium text-gray-400">
+                    None
+                  </span>
+                </div>
+              </div>
             </Card>
           )}
           
